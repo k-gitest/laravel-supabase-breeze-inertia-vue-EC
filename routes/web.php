@@ -1,0 +1,54 @@
+<?php
+
+use App\Http\Controllers\ProfileController;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+use App\Http\Middleware\WelcomeMiddleware;
+use App\Http\Controllers\TodoListController;
+use App\Http\Controllers\ContactController;
+
+/* 
+|--------------------------------------------------------------------------
+  ミドルウェアグループ
+  guest ログインしていないユーザーのみアクセスできる
+  auth ログインしているユーザーのみアクセスできる
+  verified メール認証しているユーザーのみアクセスできる
+|--------------------------------------------------------------------------
+*/  
+
+Route::get('/', function () {
+    return Inertia::render('Welcome', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion' => PHP_VERSION,
+    ]);
+});
+
+Route::get('/contact', [ContactController::class, 'create'])->name('contact.create');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+Route::get('/todo', [TodoListController::class, 'index'])->name('todo.index');
+
+Route::middleware('auth')->group(function () {
+  Route::get('/todo/register', [TodoListController::class, 'create'])->name('todo.register');
+  Route::post('/todo/register', [TodoListController::class, 'store'])->name('todo.store');
+  Route::get('/todo/edit/{id}', [TodoListController::class, 'edit'])->name('todo.edit');
+  Route::put('/todo/edit/{id}', [TodoListController::class, 'update'])->name('todo.update');
+  Route::delete('/todo/edit/{id}', [TodoListController::class, 'destroy'])->name('todo.destroy');
+});
+                                 
+// auth認証、メール認証の両方
+Route::get('/dashboard', function () {
+    return Inertia::render('Dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+// auth認証のみ
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
