@@ -4,7 +4,8 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
-use Tighten\Ziggy\Ziggy;
+use Tighten\Ziggy\Ziggy; 
+use App\Models\Category;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -20,6 +21,7 @@ class HandleInertiaRequests extends Middleware
      */
     public function version(Request $request): string|null
     {
+        // 
         return parent::version($request);
     }
 
@@ -41,6 +43,9 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success')
+            ],
+            'category' => [
+                'data' => Category::all(),
             ],
         ];
     }

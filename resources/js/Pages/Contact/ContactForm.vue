@@ -28,7 +28,7 @@
         }
       },
       onFinish: () => {
-        console.log("finish")
+        console.log("hoge")
       },
     })
   }

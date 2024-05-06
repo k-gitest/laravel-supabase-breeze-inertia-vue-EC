@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from "@inertiajs/vue3";
-import { onMounted } from "vue";
 
-const { component, props, url, version } = usePage();
+const { props } = usePage();
 const user = props?.auth?.user;
 
 defineProps<{
@@ -12,9 +11,6 @@ defineProps<{
     phpVersion: string;
 }>();
 
-onMounted(() => {
-    //console.log(user);
-});
 </script>
 
 <template>
@@ -31,11 +27,9 @@ onMounted(() => {
                 </Link>
                 <template v-else>
                     <Link :href="route('login')" class="btn"> Log in </Link>
-
-                    <Link v-if="canRegister" :href="route('register')" class="btn">
-                        Register
-                    </Link>
+                    <Link v-if="canRegister" :href="route('register')" class="btn">  Register  </Link>
                     <Link :href="route('todo.index')" class="btn"> Todo </Link>
+                    <Link :href="route('product.index')" class="btn"> EC </Link>
                     <Link :href="route('contact.create')" class="btn"> contact </Link>
                 </template>
             </nav>
@@ -43,7 +37,6 @@ onMounted(() => {
     </header>
 
     <main class="mt-6">
-
       <div class="hero min-h-screen bg-base-200">
         <div class="hero-content flex-col lg:flex-row">
           <img src="https://daisyui.com/images/stock/photo-1635805737707-575885ab0820.jpg" class="max-w-sm rounded-lg shadow-2xl" />

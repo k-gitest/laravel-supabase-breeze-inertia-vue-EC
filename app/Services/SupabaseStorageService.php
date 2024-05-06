@@ -26,10 +26,14 @@ class SupabaseStorageService
     /**
      * HttpファサードでのPOSTリクエスト
      */
-    public function uploadImage($file)
+    public function uploadImage($file, $path=null)
     {
       //Log::info("uploading file to supabase: {$file}");
-      $filepath = $file->getClientOriginalName();
+      if($path){
+        $filepath = $path;
+      } else {
+        $filepath = $file->getClientOriginalName();
+      }
 
       $response = Http::withHeaders([
         'Authorization' => 'Bearer ' . $this->apiKey,

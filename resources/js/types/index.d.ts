@@ -1,4 +1,6 @@
 import { Config } from "ziggy-js";
+import type { Category } from "./category";
+import type { Product } from "./product";
 
 export interface User {
     id: number;
@@ -18,4 +20,12 @@ export type PageProps<
         success: string;
         error: string;
     }
+    category: {
+      data: Category[];
+    }
+    totalPrice: {
+        total_price_excluding_tax: number;
+        total_price_including_tax: number;
+    }
+    //data: Category | Product;
 };

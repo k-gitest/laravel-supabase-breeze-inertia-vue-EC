@@ -6,16 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Middleware\WelcomeMiddleware;
 use App\Http\Controllers\TodoListController;
-use App\Http\Controllers\ContactController;
-
-/* 
-|--------------------------------------------------------------------------
-  ミドルウェアグループ
-  guest ログインしていないユーザーのみアクセスできる
-  auth ログインしているユーザーのみアクセスできる
-  verified メール認証しているユーザーのみアクセスできる
-|--------------------------------------------------------------------------
-*/  
+use App\Http\Controllers\ContactController; 
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -39,12 +30,10 @@ Route::middleware('auth')->group(function () {
   Route::delete('/todo/edit/{id}', [TodoListController::class, 'destroy'])->name('todo.destroy');
 });
                                  
-// auth認証、メール認証の両方
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// auth認証のみ
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -52,3 +41,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+require __DIR__.'/ec.php';

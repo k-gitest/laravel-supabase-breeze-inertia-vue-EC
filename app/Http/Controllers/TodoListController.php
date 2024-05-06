@@ -12,13 +12,13 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
 
+
 class TodoListController extends Controller
 {
     //
   public function index(Request $request): Response
   {
     $todoLists = TodoList::all();
-
     return Inertia::render('Todo/Index', [
         "data" => $todoLists,
     ]);
@@ -48,7 +48,6 @@ class TodoListController extends Controller
   public function edit(Request $request, $id): Response
   {
     $todo = TodoList::findOrFail($id);
-
     return Inertia::render('Todo/Edit', [
         'todoList' => $todo,
     ]);    
@@ -62,11 +61,9 @@ class TodoListController extends Controller
 
     $todo = TodoList::find($id);
     $todo->name = $request->name;
-
     if ($todo->isDirty()) {
         $todo->save();
     }
-
     return redirect(route('todo.index', absolute: false));
   }
 

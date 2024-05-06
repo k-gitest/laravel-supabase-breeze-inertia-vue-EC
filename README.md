@@ -2,7 +2,7 @@
 
 laravel11で構築されたwebアプリケーション
 
-- laravelのバージョン11がリリースされていたのでTODOとコンタクトフォームを開発する
+- laravelのバージョン11がリリースされていたのでTODOとコンタクトフォーム、ECを開発する
 - 認証はbreezeセットでinertia/vue/tsによるSSRでインストール
 - DBはsupabase databaseのpostgres、画像の保存先はsupabase storage、メール送信先はmailtrap
 
@@ -54,12 +54,14 @@ laravel11で構築されたwebアプリケーション
 │         │    ├── Contact
 │         │    ├── Profile
 │         │    ├── Todo
+│         │    ├── Ec
 │         │    ├── Dashboard
 │         │    └── Welcome
 │         ├── app.ts
 │         └── ssr.ts
 ├── routes
 │      ├── auth.php
+│      ├── ec.php
 │      └── web.php
 ├── storage
 ├── tests
@@ -75,7 +77,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 
 ```
 
-## 主な変更点
+## 11の主な変更点
 - デフォルトのプロバイダーやミドルウェアに関連するディレクトリとファイルがappから削除されbootstrapに集約
 - プロバイダー登録はbootstrap/providers、ミドルウェア登録はbootstrap/appとrouteで行う
 - イベント・リスナー・プロバイダーは自動的にbootstrap追加される
@@ -83,6 +85,9 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 ## 用意
 - todoのCRUD画面、コンタクトフォーム、画像アップローダー
 - todo_listsテーブル、contactsテーブル、imageバケット
+- ECは商品CRUD画面、画像アップローダー・プレビュー、カート
+- categories, products, images, carts, usersの各テーブル
+- productsを中心としたリレーション
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル
 - supabaseとmailtrapのenv設定

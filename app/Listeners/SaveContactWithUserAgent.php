@@ -28,7 +28,7 @@ class SaveContactWithUserAgent
           $message->from('xxxxxxxxx@gmail.com', "管理者")
                   ->to($event->formData["email"], $event->formData["name"])
                   ->subject('テストメール')
-                  ->text('テストメールだよ');
+                  ->text('お問い合わせありがとうございます');
       });
 
     }

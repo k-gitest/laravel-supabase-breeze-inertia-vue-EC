@@ -7,6 +7,7 @@ use Illuminate\Routing\UrlGenerator;
 use App\Models\User;
 use App\Models\TodoList;
 use Illuminate\Support\Facades\Gate;
+//use App\Services\SupabaseStorageService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,6 +16,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+       // Get the AliasLoader instance 
+      //$this->app->bind('SbStorage', SupabaseStorageService::class);
 
     }
 
@@ -26,9 +29,12 @@ class AppServiceProvider extends ServiceProvider
         //
       $url->forceScheme('https');
 
+      // Gateの定義　update-todo-listはポリシーネーム
       Gate::define('update-todo-list', function (User $user, TodoList $todoList){
         return $user->id === $todoList->user_id;
       });
+      //クラスコールバック配列でポリシーから呼び出すことも可能
+      //Gate::define('update-todo-list', [TodoList::class, 'update']);
       
     }
 }

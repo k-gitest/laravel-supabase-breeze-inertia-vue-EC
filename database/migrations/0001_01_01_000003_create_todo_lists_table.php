@@ -14,10 +14,7 @@ return new class extends Migration
         Schema::create('todo_lists', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
-            $table->timestamps();
-
-            $table->bigInteger('user_id')->unsigned()->default(1);
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->timestamps(); // timestamps()はcreated_atとupdated_atの2つのカラムを追加する
         });
     }
 
@@ -26,10 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('todo_lists', function (Blueprint $table) {
-            $table->dropForeign(['user_id']);
-        });
-        
         Schema::dropIfExists('todo_lists');
     }
 };

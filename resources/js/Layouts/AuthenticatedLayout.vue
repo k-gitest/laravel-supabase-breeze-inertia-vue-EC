@@ -42,13 +42,14 @@ const showingNavigationDropdown = ref(false);
                                 </NavLink>
                               </template>
                               <template v-else>
-                                
                                     <Link href="/" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-700 focus:outline-none focus:text-gray-700 dark:focus:text-gray-300 focus:border-gray-300 dark:focus:border-gray-700 transition duration-150 ease-in-out">Top</Link>
-                                
                               </template>
 
                                 <NavLink :href="route('todo.index')" :active="route().current('todo.index')">
                                     Todo
+                                </NavLink>
+                                <NavLink :href="route('product.index')" :active="route().current('product.create')">
+                                    EC
                                 </NavLink>
                                 <NavLink :href="route('contact.create')" :active="route().current('contact.create')">
                                     Contact
