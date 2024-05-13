@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from "@inertiajs/vue3";
+import { onMounted } from "vue";
 
 const { props } = usePage();
 const user = props?.auth?.user;
@@ -28,8 +29,11 @@ defineProps<{
                 <template v-else>
                     <Link :href="route('login')" class="btn"> Log in </Link>
                     <Link v-if="canRegister" :href="route('register')" class="btn">  Register  </Link>
+                    <Link :href="route('admin.login')" class="btn"> admin/Log in </Link>
+                    <Link v-if="canRegister" :href="route('admin.register')" class="btn">  admin/Register  </Link>
                     <Link :href="route('todo.index')" class="btn"> Todo </Link>
                     <Link :href="route('product.index')" class="btn"> EC </Link>
+                    <Link :href="route('admin.product.index')" class="btn"> EC </Link>
                     <Link :href="route('contact.create')" class="btn"> contact </Link>
                 </template>
             </nav>

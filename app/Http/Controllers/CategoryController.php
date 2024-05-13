@@ -59,8 +59,7 @@ class CategoryController extends Controller
      */
     public function show(Category $category, Request $request, $id)
     {
-        //
-      $result = Category::with(['product.category'])->find($id);
+      $result = Category::with(['product.image', 'product.category'])->find($id);
       
       if($result){
         $data = $result->product;

@@ -37,8 +37,7 @@
           <li>{{ category.description }}</li>
           <li>{{ category.created_at }}</li>
           <li>{{ category.updated_at }}</li>
-          <li><Link class="btn" :href="route('category.edit', {id: category.id})">編集</Link></li>
-          <li><button @click="deleteCategory(category.id)">削除</button></li>
+          <li><Link :href="route('category.show', { id: Number(category.id) })" class="btn">カテゴリ商品一覧</Link></li>
         </ul>
       </div>
     </EcLayout>

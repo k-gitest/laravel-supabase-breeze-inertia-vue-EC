@@ -5,6 +5,7 @@
   import type { Category } from '@/types/category'
   import type { PageProps } from '@/types'
   import EcLayout from "@/Layouts/EcLayout.vue"
+  import { supabaseURL, supabaseNoImage } from "@/lib/supabase"
 
   const { props } = usePage<PageProps & { category_name: string, data: Category }>()
 </script>
@@ -20,6 +21,12 @@
         <p>{{ props.data.name }}</p>
         <p>{{ props.data.description }}</p>
         <ul v-for="product of props.data.product" :key="product.id">
+          <li v-if="product.image && product.image.length">
+            <img :src="supabaseURL + product.image[0].path" class="rounded-lg" />
+          </li>
+          <li v-else>
+            <img :src="supabaseURL + supabaseNoImage" class="rounded-lg" />
+          </li>
           <li>{{product.name}}</li>
           <li>{{product.description}}</li>
           <li>{{product.category?.name}}</li>

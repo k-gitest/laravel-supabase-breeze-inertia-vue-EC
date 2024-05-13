@@ -4,14 +4,13 @@
   import type { Product } from '@/types/product'
   import type { PageProps } from '@/types'
   import EcLayout from "@/Layouts/EcLayout.vue"
+  import { supabaseURL, supabaseNoImage} from "@/lib/supabase"
 
   const { props } = usePage<PageProps & { data: Product }>()
-  console.log(props)
-  const supabaseURL = import.meta.env.VITE_SUPABASE_URL + "/storage/v1/object/public/"
 
   const form = useForm({
     product_id: props.data.id,
-    user_id: props.auth.user.id,
+    user_id: props?.auth?.user?.id,
     quantity: 1,
   })
 
@@ -21,7 +20,6 @@
       onSuccess: (res) => {
         console.log("success", res)
       },
-
     })
   }
 </script>
@@ -33,10 +31,13 @@
     </template>
     <EcLayout>
       <div v-if="props.data">
-        <div v-if="props.data.image">
+        <div v-if="props.data.image && props.data.image.length">
           <template v-for="image of props.data.image" :key="image.id">
             <img :src="supabaseURL + image.path" />
           </template>
+        </div>
+        <div v-else>
+          <img :src="supabaseURL + supabaseNoImage" />
         </div>
         <ul>
           <li>{{props.data.name}}</li>

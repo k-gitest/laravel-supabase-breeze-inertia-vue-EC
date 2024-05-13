@@ -11,4 +11,5 @@ export type Product = {
   category?: Category;
   tax_rate: number;
   image?: Image[];
+  created_at: string;
 }

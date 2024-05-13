@@ -100,6 +100,13 @@ const showingNavigationDropdown = ref(false);
                                         >
                                             Log Out
                                         </DropdownLink>
+                                        <DropdownLink
+                                            :href="route('admin.logout')"
+                                            method="post"
+                                            as="button"
+                                        >
+                                            admin/Log Out
+                                        </DropdownLink>
                                     </template>
                                 </Dropdown>
                             </div>

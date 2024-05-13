@@ -58,6 +58,7 @@ class ContactController extends Controller
         ]);
 
         event(new ContactFormSubmitted($request->all()));
+      
         return redirect()->route('contact.create')->with('success', '送信しました');
     }
 

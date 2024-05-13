@@ -16,7 +16,6 @@
       onSuccess: (res) => {
         console.log("success", res)
       },
-      
     })
   }
   

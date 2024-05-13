@@ -47,11 +47,11 @@ class ProductController extends Controller
       DB::transaction(function () use ($request) {
         
         $request->validate([
-          "name" => "required|unique:products,name",
-          "price_excluding_tax" => "required|numeric",
+          "name" => "required|unique:products,name", 
+          "price_excluding_tax" => "required|numeric", 
           "description" => "required|string|max:255",
           "tax_rate" => "required|numeric",
-          "category_id" => "required|exists:categories,id",
+          "category_id" => "required|exists:categories,id", 
         ]);
   
         $price_excluding_tax = $request->price_excluding_tax;
@@ -93,9 +93,8 @@ class ProductController extends Controller
                 'product_id' => $filename['product_id'],
             ]);
         }
-        //$result = Image::insert($filenames);
         
-      }, 3);
+      }, 3); 
       
       return redirect()->route('product.create', $result);
     }
@@ -105,7 +104,6 @@ class ProductController extends Controller
      */
     public function show(Product $product, $id)
     {
-        //
       $data = Product::with(['category', 'image'])->find($id);
       if($data){
         return inertia::render('EC/ProductDetail',[

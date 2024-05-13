@@ -31,7 +31,8 @@ laravel11で構築されたwebアプリケーション
 │    ├── Facades
 │    ├── Http
 │    │    ├── Controllers
-│    │    │      └── Auth
+│    │    │      ├── Auth
+│    │    │      └── Admin
 │    │    ├── Middleware
 │    │    └── Requests
 │    │           └── Auth
@@ -55,12 +56,15 @@ laravel11で構築されたwebアプリケーション
 │         │    ├── Profile
 │         │    ├── Todo
 │         │    ├── Ec
+│         │    │    └── Admin
 │         │    ├── Dashboard
 │         │    └── Welcome
+│         ├── types
 │         ├── app.ts
 │         └── ssr.ts
 ├── routes
 │      ├── auth.php
+│      ├── admin.php
 │      ├── ec.php
 │      └── web.php
 ├── storage
@@ -85,9 +89,10 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 ## 用意
 - todoのCRUD画面、コンタクトフォーム、画像アップローダー
 - todo_listsテーブル、contactsテーブル、imageバケット
-- ECは商品CRUD画面、画像アップローダー・プレビュー、カート
+- EC追加、商品CRUD画面、画像アップローダー・プレビュー
 - categories, products, images, carts, usersの各テーブル
 - productsを中心としたリレーション
+- マルチログイン追加、adminsテーブル追加
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル
 - supabaseとmailtrapのenv設定

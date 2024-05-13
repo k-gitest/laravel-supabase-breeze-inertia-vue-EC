@@ -53,11 +53,11 @@ class SupabaseStorageService
     /**
      * Deleteリクエスト
      */
-    public function deleteImage($file){
+    public function deleteImage($path){
       $response = Http::withHeaders([
           'Authorization' => 'Bearer ' . $this->apiKey,
       ])
-        ->delete("{$this->baseUrl}/storage/v1/object/{$this->bucketName}/{$file}");
+        ->delete("{$this->baseUrl}/storage/v1/object/{$path}");
 
       if($response->successful()){
         return $response->json();

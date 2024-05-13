@@ -30,7 +30,6 @@ class CartController extends Controller
      */
     public function store(Request $request)
     {
-        //
         $validated = $request->validate([
            'user_id' => 'required',
            'product_id' => 'required',
@@ -61,7 +60,7 @@ class CartController extends Controller
     {
         //
         $id = request()->user()->id;
-        $result = Cart::with(['product'])->where('user_id', $id)->get();
+        $result = Cart::with(['product.image'])->where('user_id', $id)->get();
         
         $total_price_excluding_tax = $result->sum(function ($item) {
             return $item->quantity * $item->product->price_excluding_tax;

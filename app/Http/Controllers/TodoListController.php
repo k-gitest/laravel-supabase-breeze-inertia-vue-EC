@@ -47,7 +47,7 @@ class TodoListController extends Controller
 
   public function edit(Request $request, $id): Response
   {
-    $todo = TodoList::findOrFail($id);
+    $todo = TodoList::findOrFail($id); 
     return Inertia::render('Todo/Edit', [
         'todoList' => $todo,
     ]);    
