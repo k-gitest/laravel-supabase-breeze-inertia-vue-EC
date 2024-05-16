@@ -1,10 +1,9 @@
 <script setup lang="ts">
   import { Head, Link, usePage, useForm } from "@inertiajs/vue3";
-  import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
   import type { Product } from '@/types/product'
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
-  import { supabaseURL, supabaseNoImage } from "@/lib/supabase"
+  import EcImageGallery from "@/Components/EcImageGallery.vue"
 
   const { props } = usePage<PageProps & { data: Product }>()
 
@@ -20,10 +19,10 @@
       onSuccess: (res) => {
         console.log("success", res)
       },
-
     })
   }
 </script>
+
 <template>
   <Head title="ProductAllList" />
   <AdminEcLayout>
@@ -31,14 +30,8 @@
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">ProductDetail</h2>
     </template>
       <div v-if="props.data" class="flex gap-2">
-        <div v-if="props.data.image && props.data.image.length">
-          <template v-for="image of props.data.image" :key="image.id">
-            <img :src="supabaseURL + image.path" />
-          </template>
-        </div>
-        <div v-else>
-          <img :src="supabaseURL + supabaseNoImage" />
-        </div>
+        <EcImageGallery :images="props.data.image" />
+
         <div class="flex flex-col gap-2">
           <ul>
             <li>{{props.data.name}}</li>

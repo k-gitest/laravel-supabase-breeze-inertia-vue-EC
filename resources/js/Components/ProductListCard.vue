@@ -23,6 +23,9 @@
   <div class="card w-96 bg-base-100 shadow-xl max-w-48 relative">
     <div v-if="created_at >= isoDateGenerator()">
       <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white z-10">new</span>
+      <!--
+      <span class="absolute top-0 start-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white z-10">new</span>
+      -->
     </div>
     
     <Link :href="route(route_show, {id: id})">

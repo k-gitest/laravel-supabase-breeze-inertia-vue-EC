@@ -20,6 +20,7 @@ class AdminProductController extends Controller
      */
     public function index()
     {
+        //
       $data = Product::with(['category', 'image'])->orderBy('created_at', 'desc')->get();
       return inertia::render('EC/Admin/ProductAllList',[
         "data" => $data,
@@ -31,6 +32,7 @@ class AdminProductController extends Controller
      */
     public function create(): Response
     {
+        //
       $data = Category::all();
       return Inertia::render('EC/Admin/ProductRegister',[
           "data" => $data,
@@ -42,6 +44,7 @@ class AdminProductController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        //
       DB::transaction(function () use ($request) {
 
         $request->validate([
@@ -91,8 +94,7 @@ class AdminProductController extends Controller
                 'product_id' => $filename['product_id'],
             ]);
         }
-
-      }, 3);
+      }, 3); 
 
       return redirect()->route('admin.product.create');
     }
@@ -102,6 +104,7 @@ class AdminProductController extends Controller
      */
     public function show(Product $product, $id)
     {
+        //
       $data = Product::with(['category', 'image'])->find($id);
       if($data){
         return inertia::render('EC/Admin/ProductDetail',[
@@ -118,6 +121,7 @@ class AdminProductController extends Controller
      */
     public function edit(Product $product, $id)
     {
+        //
       $data = Product::with('category', 'image')->find($id);
       return inertia::render('EC/Admin/ProductEdit',[
           "data" => $data,
@@ -129,6 +133,7 @@ class AdminProductController extends Controller
      */
     public function update(Request $request, $id)
     {
+        //
       DB::transaction(function () use ($request, $id){
         $product = Product::find($id);
         $request->validate([
@@ -163,7 +168,6 @@ class AdminProductController extends Controller
             $filename = pathinfo($latestImage->path, PATHINFO_FILENAME);
             $filenameParts = explode('_', $filename);
             $latestnumber = end($filenameParts) + 1;
-
             foreach ($request->file('image') as $i => $file) {
               $imageType = getimagesize($file)["mime"];
               $parts = explode("/", $imageType);
@@ -180,17 +184,13 @@ class AdminProductController extends Controller
         }
 
         $result = [];
-
         foreach ($filenames as $filename) {
             $result[] = Image::create([
                 'name' => $filename['name'],
                 'path' => $filename['path'],
                 'product_id' => $filename['product_id'],
             ]);
-        }
-
-        
-        
+        }    
       });
       
       return redirect()->route('admin.product.edit', $id)->with('success', '更新しました');
@@ -202,6 +202,7 @@ class AdminProductController extends Controller
      */
     public function destroy(Product $product, $id)
     {
+        //
       $product = Product::find($id);
       $product->delete();
       return redirect('admin/product')->with('success', '削除しました');

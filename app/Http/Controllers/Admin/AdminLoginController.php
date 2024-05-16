@@ -13,6 +13,7 @@ use Inertia\Response;
 
 class AdminLoginController extends Controller
 {
+    //
     public function create(): Response
     {
         return Inertia::render('Auth/Admin/Login', [
@@ -29,7 +30,6 @@ class AdminLoginController extends Controller
         $request->session()->regenerate();
         
         return redirect()->intended(route('admin.dashboard', absolute: false));
-        
     }
 
     public function destroy(Request $request): RedirectResponse

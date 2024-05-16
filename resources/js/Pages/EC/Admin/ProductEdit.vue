@@ -8,6 +8,7 @@
   import { Link } from "@inertiajs/vue3";
 
   const { props } = usePage<PageProps & { data: Product }>()
+  console.log(props)
   const fileImageElement = ref<HTMLInputElement | null>(null);
   let preview: { name: string; url: string; }[] = []
 

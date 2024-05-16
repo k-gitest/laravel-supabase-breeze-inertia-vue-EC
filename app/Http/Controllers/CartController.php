@@ -15,6 +15,25 @@ class CartController extends Controller
     public function index()
     {
         //
+        $id = request()->user()->id;
+        $result = Cart::with(['product.image'])->where('user_id', $id)->get();
+
+        $total_price_excluding_tax = $result->sum(function ($item) {
+            return $item->quantity * $item->product->price_excluding_tax;
+        });
+
+        $total_price_including_tax = $result->sum(function ($item) {
+            return $item->quantity * $item->product->price_including_tax;
+        });
+        $totalPrice = [
+            "total_price_excluding_tax" => $total_price_excluding_tax,
+            "total_price_including_tax" => $total_price_including_tax,
+        ];
+
+        return Inertia::render('EC/CartIndex', [
+            "data" => $result,
+            "totalPrice" => $totalPrice,
+        ]);
     }
 
     /**
@@ -30,6 +49,7 @@ class CartController extends Controller
      */
     public function store(Request $request)
     {
+        //
         $validated = $request->validate([
            'user_id' => 'required',
            'product_id' => 'required',
@@ -56,27 +76,13 @@ class CartController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit()
+    public function edit($id)
     {
         //
-        $id = request()->user()->id;
-        $result = Cart::with(['product.image'])->where('user_id', $id)->get();
-        
-        $total_price_excluding_tax = $result->sum(function ($item) {
-            return $item->quantity * $item->product->price_excluding_tax;
-        });
-
-        $total_price_including_tax = $result->sum(function ($item) {
-            return $item->quantity * $item->product->price_including_tax;
-        });
-        $totalPrice = [
-            "total_price_excluding_tax" => $total_price_excluding_tax,
-            "total_price_including_tax" => $total_price_including_tax,
-        ];
+        $result = Cart::with(['product.image'])->find($id);
         
         return Inertia::render('EC/CartEdit', [
             "data" => $result,
-            "totalPrice" => $totalPrice,
         ]);
     }
 
@@ -86,6 +92,16 @@ class CartController extends Controller
     public function update(Request $request, string $id)
     {
         //
+        $request->validate([
+            "quantity" => "required|numeric",
+        ]);
+
+        $cart = Cart::find($id);
+        $cart->quantity = $request->quantity;
+        if ($cart->isDirty()){
+            $cart->save();
+        };
+        return redirect()->route('cart.edit', $id)->with('success', '更新しました');
     }
 
     /**

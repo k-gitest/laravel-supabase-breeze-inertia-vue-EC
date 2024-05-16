@@ -18,7 +18,7 @@
     })
   }
 
-  const deleteCategory = (id: number) => {
+  const deleteCartItem = (id: number) => {
     form.delete(route('admin.cart.destroy', {id}),{
       preserveState: false,
       onSuccess: (res) => {
@@ -29,7 +29,7 @@
 </script>
 
 <template>
-  <Head title="CategoryEdit" />
+  <Head title="CartEdit" />
   <AdminEcLayout>
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Cart</h2>
@@ -63,7 +63,7 @@
           </li>
           <li class="flex gap-2">
             <button type="submit" class="btn" :disabled="form.processing">変更</button>
-            <button @click="deleteCategory(props.data.id)" class="btn">削除</button>
+            <button @click="deleteCartItem(props.data.id)" class="btn">削除</button>
         </li>
         </ul>
         </form>

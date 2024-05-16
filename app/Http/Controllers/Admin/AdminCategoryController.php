@@ -16,6 +16,7 @@ class AdminCategoryController extends Controller
      */
     public function index()
     {
+        //
       $category = Category::all();
 
       return inertia::render('EC/Admin/CategoryIndex', [
@@ -28,6 +29,7 @@ class AdminCategoryController extends Controller
      */
     public function create(): Response
     {
+        //
       $categoryData = Category::all();
       return Inertia::render('EC/Admin/CategoryRegister', [
           "data" => $categoryData,
@@ -39,6 +41,7 @@ class AdminCategoryController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        //
       $request->validate([
         "name" => "required|unique:categories,name",
         "description" => "required",
@@ -57,6 +60,7 @@ class AdminCategoryController extends Controller
      */
     public function show(Category $category, Request $request, $id)
     {
+        //
       $result = Category::with(['product.category', 'product.image'])->find($id);
 
       if($result){
@@ -77,6 +81,7 @@ class AdminCategoryController extends Controller
      */
     public function edit(Category $category, $id)
     {
+        //
       $category = Category::find($id);
 
       return inertia::render('EC/Admin/CategoryEdit', [
@@ -89,6 +94,7 @@ class AdminCategoryController extends Controller
      */
     public function update(Request $request, Category $category, $id)
     {
+        //
       $category = Category::find($id);
 
       $request->validate([
@@ -111,6 +117,7 @@ class AdminCategoryController extends Controller
      */
     public function destroy(Category $category, $id)
     {
+        //
       $category = Category::find($id);
       $category->delete();
       return redirect()->route('admin.category.index')->with('success', '削除しました');

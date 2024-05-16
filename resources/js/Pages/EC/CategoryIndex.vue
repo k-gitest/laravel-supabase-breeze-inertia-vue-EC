@@ -1,25 +1,15 @@
 <script setup lang="ts">
-  import { Head, Link, usePage, useForm } from "@inertiajs/vue3"
+  import { Head, usePage, Link } from "@inertiajs/vue3"
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue"
   import type { Category } from '@/types/category'
   import type { PageProps } from '@/types'
   import EcLayout from "@/Layouts/EcLayout.vue"
 
   const { props } = usePage<PageProps & { data: Category[] }>()
-  const form = useForm({})
-
-  const deleteCategory = (id: number) => {
-    form.delete(route('category.destroy', {id}),{
-      preserveState: false,
-      onSuccess: (res) => {
-        console.log("success", res)
-      },
-    })
-  }
 </script>
 
 <template>
-  <Head title="CategoryEdit" />
+  <Head title="CategoryIndex" />
   <AuthenticatedLayout>
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">CategoryIndex</h2>
@@ -35,9 +25,7 @@
           <li>{{ category.id }}</li>
           <li>{{ category.name }}</li>
           <li>{{ category.description }}</li>
-          <li>{{ category.created_at }}</li>
-          <li>{{ category.updated_at }}</li>
-          <li><Link :href="route('category.show', { id: Number(category.id) })" class="btn">カテゴリ商品一覧</Link></li>
+          <li><Link :href="route('category.show', { id: category.id })" class="btn">カテゴリ商品一覧</Link></li>
         </ul>
       </div>
     </EcLayout>

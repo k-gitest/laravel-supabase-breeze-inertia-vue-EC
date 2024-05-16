@@ -21,6 +21,7 @@
   let preview: { name: string; url: string; }[] = []
 
   const submit = () => {
+    console.log(form)
     form.post(route('admin.product.store'), {
       onSuccess: (res) => {
         console.log(res)
@@ -37,6 +38,7 @@
     const file = (target.files as FileList)[0]
     if(file){
       form.image.push(file)
+      console.log(form.image)
       const blob = URL.createObjectURL(file)
       preview.push({name: file.name, url: blob})
       setTimeout(() => {

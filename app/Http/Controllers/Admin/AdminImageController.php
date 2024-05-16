@@ -55,7 +55,14 @@ class AdminImageController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //    
+        //
+        dd($id, $request->name);
+        $files = $request->hasFile('image');
+        if(isset($files)){
+            dd($files);
+        }
+        $imageInfo = app()->make('SbStorage')->uploadImage();
+        
     }
 
     /**
@@ -64,7 +71,6 @@ class AdminImageController extends Controller
     public function destroy(Request $request, string $id): RedirectResponse
     {
         //
-        //dd($id, $request->query("path"));
         DB::transaction(function () use ($request, $id) {
             $imageInfo = app()->make("SbStorage")->deleteImage($request->query("path"));
             $result = Image::find($request->query("image_id"));

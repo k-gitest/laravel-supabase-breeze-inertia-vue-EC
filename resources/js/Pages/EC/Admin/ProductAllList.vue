@@ -1,13 +1,12 @@
 <script setup lang="ts">
-  import { Head, Link, usePage } from "@inertiajs/vue3";
-  import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+  import { Head, usePage } from "@inertiajs/vue3";
   import type { Product } from '@/types/product'
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
-  import { supabaseURL, supabaseNoImage } from "@/lib/supabase"
   import ProductListCard from "@/Components/ProductListCard.vue"
 
   const { props } = usePage<PageProps & { data: Product[] }>()
+
 </script>
 <template>
   <Head title="ProductAllList" />

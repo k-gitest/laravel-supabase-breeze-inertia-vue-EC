@@ -15,6 +15,7 @@ class AdminCartController extends Controller
      */
     public function index()
     {
+        //
         $result = Cart::with('product.image')->get();
         return Inertia::render('EC/Admin/CartIndex', [
             'data' => $result,
@@ -34,6 +35,7 @@ class AdminCartController extends Controller
      */
     public function store(Request $request)
     {
+        //
         $validated = $request->validate([
            'user_id' => 'required|integer|exists:users,id',
            'product_id' => 'required|integer|exists:products,id',
@@ -62,6 +64,7 @@ class AdminCartController extends Controller
      */
     public function edit(string $id)
     {
+        //
         $result = Cart::with('product.image')->find($id);
         return Inertia::render('EC/Admin/CartEdit', [
             'data' => $result,
@@ -73,6 +76,7 @@ class AdminCartController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        //
         $request->validate([
             'quantity' => 'required|integer|between:1,99',
         ]);
@@ -92,6 +96,7 @@ class AdminCartController extends Controller
      */
     public function destroy(string $id)
     {
+        //
         $result = Cart::find($id);
         $result->delete();
         return redirect()->route('admin.cart.edit')->with('success', '削除しました');

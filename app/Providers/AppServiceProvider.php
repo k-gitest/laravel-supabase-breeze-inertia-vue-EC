@@ -31,7 +31,6 @@ class AppServiceProvider extends ServiceProvider
 
       Gate::define('update-todo-list', function (User $user, TodoList $todoList){
         return $user->id === $todoList->user_id;
-      });
-      
+      });      
     }
 }
