@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { Head, usePage, useForm } from "@inertiajs/vue3";
+  import { Head, Link, usePage, useForm } from "@inertiajs/vue3";
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
   import type { Product } from '@/types/product'
   import type { PageProps } from '@/types'
@@ -20,7 +20,6 @@
       onSuccess: (res) => {
         console.log("success", res)
       },
-
     })
   }
   

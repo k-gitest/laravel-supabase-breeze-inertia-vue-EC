@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { router } from '@inertiajs/vue3'
+  import { router, Link } from '@inertiajs/vue3'
   import type { Cart } from "@/types/cart"
   import { supabaseURL, supabaseNoImage } from "@/lib/supabase"
   

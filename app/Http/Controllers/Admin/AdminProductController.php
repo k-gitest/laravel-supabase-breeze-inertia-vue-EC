@@ -2,26 +2,26 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use Inertia\inertia;
-use App\Models\Product;
-use Illuminate\Http\Request;
-use App\Models\Category;
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Image;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Image;
 
 class AdminProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): Response
     {
-        //
       $data = Product::with(['category', 'image'])->orderBy('created_at', 'desc')->get();
+      
       return inertia::render('EC/Admin/ProductAllList',[
         "data" => $data,
       ]);
@@ -32,8 +32,8 @@ class AdminProductController extends Controller
      */
     public function create(): Response
     {
-        //
       $data = Category::all();
+      
       return Inertia::render('EC/Admin/ProductRegister',[
           "data" => $data,
       ]);
@@ -48,7 +48,7 @@ class AdminProductController extends Controller
       DB::transaction(function () use ($request) {
 
         $request->validate([
-          "name" => "required|unique:products,name", 
+          "name" => "required|unique:products,name",
           "price_excluding_tax" => "required|numeric",
           "description" => "required|string|max:255",
           "tax_rate" => "required|numeric",
@@ -57,6 +57,7 @@ class AdminProductController extends Controller
 
         $price_excluding_tax = $request->price_excluding_tax;
         $tax_rate = $request->tax_rate;
+
         $price_including_tax = $price_excluding_tax + ($price_excluding_tax * $tax_rate / 100);
 
         $result = Product::create([
@@ -94,7 +95,8 @@ class AdminProductController extends Controller
                 'product_id' => $filename['product_id'],
             ]);
         }
-      }, 3); 
+
+      }, 3);
 
       return redirect()->route('admin.product.create');
     }
@@ -102,9 +104,8 @@ class AdminProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Product $product, $id)
+    public function show(Product $product, $id): Response | RedirectResponse
     {
-        //
       $data = Product::with(['category', 'image'])->find($id);
       if($data){
         return inertia::render('EC/Admin/ProductDetail',[
@@ -119,10 +120,10 @@ class AdminProductController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Product $product, $id)
+    public function edit(Product $product, $id): Response
     {
-        //
       $data = Product::with('category', 'image')->find($id);
+      
       return inertia::render('EC/Admin/ProductEdit',[
           "data" => $data,
       ]);
@@ -131,9 +132,8 @@ class AdminProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): RedirectResponse
     {
-        //
       DB::transaction(function () use ($request, $id){
         $product = Product::find($id);
         $request->validate([
@@ -146,6 +146,7 @@ class AdminProductController extends Controller
 
         $price_excluding_tax = $request->price_excluding_tax;
         $tax_rate = $request->tax_rate;
+
         $price_including_tax = $price_excluding_tax + ($price_excluding_tax * $tax_rate / 100);
 
         $product->name = $request->name;
@@ -159,7 +160,6 @@ class AdminProductController extends Controller
             $product->save();
         }
 
-        
         $file = $request->file('image');
         $filenames = [];
 
@@ -190,7 +190,8 @@ class AdminProductController extends Controller
                 'path' => $filename['path'],
                 'product_id' => $filename['product_id'],
             ]);
-        }    
+        }
+        
       });
       
       return redirect()->route('admin.product.edit', $id)->with('success', '更新しました');
@@ -200,11 +201,13 @@ class AdminProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Product $product, $id)
+    public function destroy(Product $product, $id): RedirectResponse
     {
-        //
-      $product = Product::find($id);
-      $product->delete();
+      DB::transaction(function () use ($id) {
+        $product = Product::find($id);
+        $product->delete();
+      });
+      
       return redirect('admin/product')->with('success', '削除しました');
     }
 }

@@ -11,6 +11,7 @@
     <Link :href="route('product.index')" class="btn btn-sm"> product index </Link>
     <template v-if="props.auth.user">
       <Link :href="route('cart.index')" class="btn btn-sm"> cart</Link>
+      <Link :href="route('order.index')" class="btn btn-sm"> order</Link>
     </template>
   </div>
 </template>

@@ -3,19 +3,18 @@
 namespace App\Http\Controllers;
 
 use Inertia\Inertia;
-use App\Models\Category;
-use Illuminate\Http\Request;
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use App\Models\Category;
 
 class CategoryController extends Controller
 {
     /**
      * 一覧画面表示
      */
-    public function index()
+    public function index(): Response
     {
-        //
       $category = Category::all();
 
       return inertia::render('EC/CategoryIndex', [
@@ -26,11 +25,10 @@ class CategoryController extends Controller
     /**
      * 特定IDデータの画面表示
      */
-    public function show(Category $category, Request $request, $id)
+    public function show(Category $category, Request $request, $id): Response
     {
-        //
       $result = Category::with(['product.image', 'product.category'])->find($id);
-
+      
       if($result){
         $data = $result->product;
         $categoryName = $result->name;

@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use Inertia\Inertia;
+use Inertia\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\TodoRequest;
-use App\Models\TodoList;
-use Inertia\Inertia;
-use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
+use App\Models\TodoList;
+use App\Http\Requests\TodoRequest;
 
 class TodoListController extends Controller
 {
@@ -30,21 +30,23 @@ class TodoListController extends Controller
   
   public function store(Request $request): RedirectResponse
   {
-    $request->validate([
-      'name' => 'required|string|max:100',
-    ]);
+    DB::transaction(function () use ($request) {
+      $request->validate([
+        'name' => 'required|string|max:100',
+      ]);
 
-    $userId = $request->user()->id;
-    
-    $todoList = TodoList::create([
-      'name' => $request->name,
-      'user_id' => $userId,
-    ]);
+      $userId = $request->user()->id;
+
+      $todoList = TodoList::create([
+        'name' => $request->name,
+        'user_id' => $userId,
+      ]);
+    });
     
     return redirect(route('todo.index', absolute: false));
   }
 
-  public function edit(Request $request, $id): Response
+  public function edit(Request $request, int $id): Response
   {
     $todo = TodoList::findOrFail($id); 
     return Inertia::render('Todo/Edit', [
@@ -52,21 +54,24 @@ class TodoListController extends Controller
     ]);    
   }
 
-  public function update(Request $request, $id, TodoList $todolist): RedirectResponse
+  public function update(Request $request, int $id, TodoList $todolist): RedirectResponse
   {
-    if (Gate::allows('update-todo-list', $todolist)) {
-        abort(403);
-    }
+    DB::transaction(function () use ($request, $id, $todolist){
+      if (Gate::allows('update-todo-list', $todolist)) {
+          abort(403);
+      }
 
-    $todo = TodoList::find($id);
-    $todo->name = $request->name;
-    if ($todo->isDirty()) {
-        $todo->save();
-    }
+      $todo = TodoList::find($id);
+      $todo->name = $request->name;
+      if ($todo->isDirty()) {
+          $todo->save();
+      }
+    });
+
     return redirect(route('todo.index', absolute: false));
   }
 
-  public function destroy(Request $request, $id): RedirectResponse
+  public function destroy(Request $request, int $id): RedirectResponse
   {
     DB::transaction(function () use ($id)  {
         $todo = TodoList::find($id);

@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('todo_lists', function (Blueprint $table) {
+        Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 100);
-            $table->timestamps(); 
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('total_amount');
+            $table->text('payment_intent_id');
+            $table->string('status');
+            $table->string('currency');
+            $table->timestamps();
         });
     }
 
@@ -23,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('todo_lists');
+        Schema::dropIfExists('orders');
     }
 };

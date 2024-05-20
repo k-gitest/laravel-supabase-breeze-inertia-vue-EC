@@ -33,8 +33,7 @@
             :created_at="product.created_at"
             :route_show="'admin.product.show'"
           />
-        </template>
-        
+        </template>        
       </div>
       <div v-else>
         登録商品がありません

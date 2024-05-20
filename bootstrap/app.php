@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->web(append: [
       \App\Http\Middleware\HandleInertiaRequests::class,
       \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+      WelcomeMiddleware::class,
       AdminRedirectIfAuthenticated::class,
     ]);
 
@@ -27,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
       return route('login');
     });
+
+    $middleware->validateCsrfTokens(except: [
+        'stripe/*',
+    ]);
     
   })
   ->withExceptions(function (Exceptions $exceptions) {

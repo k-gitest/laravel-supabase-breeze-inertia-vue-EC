@@ -1,8 +1,7 @@
 <?php
+
+use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CartController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminCartController;
@@ -10,7 +9,6 @@ use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminRegisterController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminImageController;
-use Inertia\Inertia;
 
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', [AdminLoginController::class, 'create'])->name('admin.login');
@@ -18,7 +16,6 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/admin/register', [AdminRegisterController::class, 'create'])->name('admin.register');
     Route::post('/admin/register', [AdminRegisterController::class, 'store'])->name('admin.register');
-
 });
 
 Route::get('/admin/dashboard', function () {

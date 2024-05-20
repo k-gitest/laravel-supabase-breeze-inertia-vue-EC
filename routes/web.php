@@ -1,12 +1,11 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
+use Inertia\Inertia;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use App\Http\Middleware\WelcomeMiddleware;
 use App\Http\Controllers\TodoListController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [

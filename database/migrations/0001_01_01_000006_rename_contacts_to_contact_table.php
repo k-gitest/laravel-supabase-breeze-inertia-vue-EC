@@ -11,7 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-      // rename()はテーブル名の変更rename('現在のテーブル名', '変更テーブル名')
         //Schema::rename('contacts', 'contact');
     }
 

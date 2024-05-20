@@ -4,13 +4,14 @@ laravel11で構築されたwebアプリケーション
 
 - laravelのバージョン11がリリースされていたのでTODOとコンタクトフォーム、ECを開発する
 - 認証はbreezeセットでinertia/vue/tsによるSSRでインストール
-- DBはsupabase databaseのpostgres、画像の保存先はsupabase storage、メール送信先はmailtrap
+- DBはsupabase databaseのpostgres、画像の保存先はsupabase storage、メール送信先はmailtrap、決済はstripe
 
 ## 開発環境
 
 - php 8.2
 - inertiajs 1.0
 - laravel 11.0
+- cashier 15.3
 - ziggy 2.0
 - breeze 2.0
 - larastan 2.9
@@ -23,6 +24,7 @@ laravel11で構築されたwebアプリケーション
 - tailwindcss 3.2.1
 - supabase database/storage
 - mailtrap
+- stripe
 
 ```text
 /
@@ -89,8 +91,11 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 ## 用意
 - todoのCRUD画面、コンタクトフォーム、画像アップローダー
 - todo_listsテーブル、contactsテーブル、imageバケット
-- EC追加、商品CRUD画面、画像アップローダー・プレビュー
+- EC追加、商品CRUD画面、画像アップローダー・プレビュ
 - categories, products, images, carts, usersの各テーブル
+- stripeによる決済、laravel cashierを追加する
+- PaymentIntentとCard Elementを使用、webhookで結果を受け取る
+- Orders,OrderItemsテーブルを追加する、決済／履歴画面追加する
 - productsを中心としたリレーション
 - マルチログイン追加、adminsテーブル追加
 - コードや型チェックでlarastanとeslint、eslintはflat config

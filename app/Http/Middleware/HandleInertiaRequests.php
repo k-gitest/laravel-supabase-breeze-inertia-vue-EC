@@ -47,5 +47,6 @@ class HandleInertiaRequests extends Middleware
                 'data' => Category::all(),
             ],
         ];
+
     }
 }

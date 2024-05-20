@@ -3,25 +3,26 @@
 namespace App\Http\Controllers;
 
 use Inertia\inertia;
-use App\Models\Product;
-use Illuminate\Http\Request;
-use App\Models\Category;
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Image;
 use Illuminate\Support\Facades\DB;
+use App\Models\Product;
+use App\Models\Category;
 use App\Models\Cart;
+use App\Models\Image;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): Response
     {
         //
       $data = Product::with(['category', 'image'])->orderBy('created_at', 'desc')->get();
+      
       return inertia::render('EC/ProductAllList',[
         "data" => $data,
       ]);
@@ -30,13 +31,14 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Product $product, $id)
+    public function show(Product $product, $id): Response | RedirectResponse
     {
         //
-      $user_id = Auth::user()->id;
+      $auth_check = Auth::check();
       $isInCart = false;
-      if($user_id){
-        $cart = Cart::where('user_id', $user_id)->where('product_id', $id)->first();
+      if($auth_check){
+        $user_id = auth()->user()->id;
+        $cart = Cart::where('user_id', $user_id)->where('product_id', $user_id)->first();
         $isInCart = $cart ? true : false;
       }
 

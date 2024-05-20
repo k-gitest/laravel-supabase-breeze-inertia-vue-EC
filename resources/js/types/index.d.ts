@@ -27,5 +27,5 @@ export type PageProps<
         total_price_excluding_tax: number;
         total_price_including_tax: number;
     }
-    //data: Category | Product;
+    clientSecret: string;
 };

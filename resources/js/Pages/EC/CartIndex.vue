@@ -27,7 +27,6 @@
       </div>
       <div v-if="props.data" class="overflow-x-auto">
         <table class="table">
-          <!-- head -->
           <thead>
             <tr>
               <th>商品名</th>
@@ -36,8 +35,9 @@
               <th></th>
             </tr>
           </thead>
+
           <CartTableBody :carts="props.data" />"
-          <!-- foot -->
+          
           <tfoot>
             <tr>
               <th colspan="2">合計</th>
@@ -53,6 +53,9 @@
             </tr>
           </tfoot>
         </table>
+        <div>
+          <Link :href="route('payment.index')" class="btn">購入画面</Link>
+        </div>
       </div>
     </EcLayout>
   </AuthenticatedLayout>

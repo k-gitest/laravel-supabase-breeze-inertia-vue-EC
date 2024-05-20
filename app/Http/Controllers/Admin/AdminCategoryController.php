@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use Inertia\Inertia;
-use App\Models\Category;
-use Illuminate\Http\Request;
 use Inertia\Response;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use App\Models\Category;
 
 class AdminCategoryController extends Controller
 {
     /**
      * 一覧画面表示
      */
-    public function index()
+    public function index(): Response
     {
-        //
       $category = Category::all();
 
       return inertia::render('EC/Admin/CategoryIndex', [
@@ -29,7 +29,6 @@ class AdminCategoryController extends Controller
      */
     public function create(): Response
     {
-        //
       $categoryData = Category::all();
       return Inertia::render('EC/Admin/CategoryRegister', [
           "data" => $categoryData,
@@ -41,16 +40,17 @@ class AdminCategoryController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        //
-      $request->validate([
-        "name" => "required|unique:categories,name",
-        "description" => "required",
-      ]);
+      DB::transaction(function () use ($request) {
+        $request->validate([
+          "name" => "required|unique:categories,name",
+          "description" => "required",
+        ]);
 
-      $result = Category::create([
-        "name" => $request->name,
-        "description" => $request->description,
-      ]);
+        $result = Category::create([
+          "name" => $request->name,
+          "description" => $request->description,
+        ]);
+      });
 
       return redirect()->route('admin.category.create', $result);
     }
@@ -58,9 +58,8 @@ class AdminCategoryController extends Controller
     /**
      * 特定IDデータの画面表示
      */
-    public function show(Category $category, Request $request, $id)
+    public function show(Category $category, Request $request, $id): Response | RedirectResponse
     {
-        //
       $result = Category::with(['product.category', 'product.image'])->find($id);
 
       if($result){
@@ -79,9 +78,8 @@ class AdminCategoryController extends Controller
     /**
      * 編集フォーム画面表示
      */
-    public function edit(Category $category, $id)
+    public function edit(Category $category, $id): Response
     {
-        //
       $category = Category::find($id);
 
       return inertia::render('EC/Admin/CategoryEdit', [
@@ -92,22 +90,24 @@ class AdminCategoryController extends Controller
     /**
      * 編集処理->DB
      */
-    public function update(Request $request, Category $category, $id)
+    public function update(Request $request, Category $category, $id): RedirectResponse
     {
-        //
-      $category = Category::find($id);
+      $category = DB::transaction(function () use ($request, $category, $id) {
+        $category = Category::find($id);
 
-      $request->validate([
-         "name" => "required|unique:categories,name,{$category->id}",
-         "description" => "required",
-      ]);
+        $request->validate([
+           "name" => "required|unique:categories,name,{$category->id}",
+           "description" => "required",
+        ]);
 
-      $category->name = $request->name;
-      $category->description = $request->description;
+        $category->name = $request->name;
+        $category->description = $request->description;
 
-      if ($category->isDirty()) {
-          $category->save();
-      }
+        if ($category->isDirty()) {
+            $category->save();
+        }
+        return $category;
+      });
 
       return redirect()->route('admin.category.edit', $category)->with('success', '更新しました');
     }
@@ -115,11 +115,13 @@ class AdminCategoryController extends Controller
     /**
      * 削除処理->DB
      */
-    public function destroy(Category $category, $id)
+    public function destroy(Category $category, $id): RedirectResponse
     {
-        //
-      $category = Category::find($id);
-      $category->delete();
+      DB::transaction(function () use ($category, $id) {
+        $category = Category::find($id);
+        $category->delete();
+      });
+      
       return redirect()->route('admin.category.index')->with('success', '削除しました');
     }
 }

@@ -5,6 +5,7 @@
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
 
   const { props } = usePage<PageProps & { data: Category }>()
+  console.log(props)
 
   const form = useForm({
     id: props.data.id,
