@@ -98,6 +98,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - Orders,OrderItemsテーブルを追加する、決済／履歴画面追加する
 - productsを中心としたリレーション
 - マルチログイン追加、adminsテーブル追加
+- commets, favoritesテーブル追加、コメント投稿とお気に入り画面追加
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル
 - supabaseとmailtrapのenv設定

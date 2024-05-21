@@ -10,7 +10,7 @@
   const destroy = async (id: string) => {
     await form.delete(route('todo.destroy', { id }), {
       preserveScroll: true,
-      preserveState: false,
+      preserveState: false, 
       onFinish: () => {
       },
     })

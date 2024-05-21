@@ -96,7 +96,7 @@ class AdminProductController extends Controller
             ]);
         }
 
-      }, 3);
+      }, 3); 
 
       return redirect()->route('admin.product.create');
     }

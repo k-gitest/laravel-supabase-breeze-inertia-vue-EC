@@ -7,7 +7,6 @@
   import CartTableBody from "@/Components/CartTableBody.vue"
 
   const { props } = usePage<PageProps & { data: Cart[] }>()
-
 </script>
 
 <template>
@@ -21,7 +20,6 @@
           {{ props.flash.success }}
         </p>
       </div>
-
     <div v-if="props.data" class="overflow-x-auto">
       <table class="table">
         <thead>

@@ -12,6 +12,8 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Cart;
 use App\Models\Image;
+use App\Models\Comment;
+use App\Models\Favorite;
 
 class ProductController extends Controller
 {
@@ -21,7 +23,7 @@ class ProductController extends Controller
     public function index(): Response
     {
         //
-      $data = Product::with(['category', 'image'])->orderBy('created_at', 'desc')->get();
+      $data = Product::with(['category', 'image', 'favorite'])->orderBy('created_at', 'desc')->get();
       
       return inertia::render('EC/ProductAllList',[
         "data" => $data,
@@ -36,18 +38,28 @@ class ProductController extends Controller
         //
       $auth_check = Auth::check();
       $isInCart = false;
+      $isInComment = false;
+      $isInFavorite = false;
       if($auth_check){
         $user_id = auth()->user()->id;
-        $cart = Cart::where('user_id', $user_id)->where('product_id', $user_id)->first();
+        $cart = Cart::where('user_id', $user_id)->where('product_id', $id)->first();
         $isInCart = $cart ? true : false;
+
+        $comment = Comment::where('user_id', $user_id)->where('product_id', $id)->first();
+        $isInComment = $comment ? true : false;
+
+        $favorite = Favorite::where('user_id', $user_id)->where('product_id', $id)->first();
+        $isInFavorite = $favorite ? true : false;
       }
 
-      $data = Product::with(['category', 'image'])->find($id);
+      $data = Product::with(['category', 'image', 'comment'])->find($id);
 
       if($data){
         return inertia::render('EC/ProductDetail',[
             "data" => $data,
             "isInCart" => $isInCart,
+            "isInComment" => $isInComment,
+            "isInFavorite" => $isInFavorite,
         ]);
       } else {
         return redirect("/");

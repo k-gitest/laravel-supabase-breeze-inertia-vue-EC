@@ -11,7 +11,6 @@ defineProps<{
     laravelVersion: string;
     phpVersion: string;
 }>();
-
 </script>
 
 <template>

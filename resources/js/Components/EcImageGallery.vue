@@ -24,7 +24,7 @@
   <div v-if="images && images.length" class="flex gap-2">
     <div class="flex flex-col gap-2">
       <template v-for="image of images" :key="image.id">
-        <div class="size-10 border overflow-hidden" @click="selectImage(image.path)">
+        <div class="size-10 border overflow-hidden cursor-pointer" @click="selectImage(image.path)">
           <img :src="supabaseURL + image.path" class="object-cover" />
         </div>
       </template>

@@ -25,4 +25,13 @@ class Product extends Model
   public function image() {
     return $this->hasMany(Image::class);
   }
+
+  public function favorite(){
+    return $this->hasMany(Favorite::class);
+  }
+
+  public function comment(){
+    return $this->hasMany(Comment::class);
+  }
+  
 }

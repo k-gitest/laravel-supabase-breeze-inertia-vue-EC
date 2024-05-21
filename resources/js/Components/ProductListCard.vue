@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { supabaseURL, supabaseNoImage } from "@/lib/supabase"
-  import { Link } from "@inertiajs/vue3";
+  import { Link, router } from "@inertiajs/vue3";
   import type { Image } from "@/types/image";
   import { isoDateGenerator } from "@/lib/isoDateGenerator";
 
@@ -16,13 +16,30 @@
     route_show: string;
     route_edit?: string;
     route_destroy?: string;
+    mode?: string;
   }>();
+
+  const addFavorite = (id: number) => {
+    router.post(`/favorite`,{
+      product_id: id,
+      preserveState: false,
+    })
+  }
+  
+  const deleteFavorite = (id: number) => {
+    router.delete(`/favorite/${id}`,{
+       preserveState: false,
+    })
+  }
 </script>
 
 <template>
   <div class="card w-96 bg-base-100 shadow-xl max-w-48 relative">
     <div v-if="created_at >= isoDateGenerator()">
       <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white z-10">new</span>
+      <!--
+      <span class="absolute top-0 start-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white z-10">new</span>
+      -->
     </div>
     
     <Link :href="route(route_show, {id: id})">
@@ -42,6 +59,9 @@
         <div class="card-actions justify-end">
           <div class="badge badge-outline text-xs">{{ category_name }}</div>
         </div>
+        <button v-if="mode === 'favorite.enable'" @click.stop.prevent="addFavorite(id)" class="btn btn-sm">お気に入りに追加</button>
+        <button v-if="mode === 'favorite.disable'" class="btn btn-sm" disabled>お気に入りに追加</button>
+        <button v-if="mode === 'favorite.delete'" @click.stop.prevent="deleteFavorite(id)" class="btn btn-sm">削除</button>
       </div>
     </Link>
   </div>

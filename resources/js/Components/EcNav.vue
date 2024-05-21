@@ -12,6 +12,8 @@
     <template v-if="props.auth.user">
       <Link :href="route('cart.index')" class="btn btn-sm"> cart</Link>
       <Link :href="route('order.index')" class="btn btn-sm"> order</Link>
-    </template>
+      <Link :href="route('favorite.index')" class="btn btn-sm"> favorite</Link>
+      <Link :href="route('comment.index')" class="btn btn-sm"> comment</Link>
+</template>
   </div>
 </template>

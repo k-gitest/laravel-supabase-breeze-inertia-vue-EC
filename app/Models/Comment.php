@@ -6,29 +6,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use DateTimeInterface;
 
-class Cart extends Model
+class Comment extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
         'product_id',
-        'quantity',
+        'title',
+        'content',
     ];
 
-    public function product(){
-        return $this->belongsTo(Product::class, 'product_id');
+    public function product() {
+        return $this->belongsTo(Product::class);
     }
 
-    /**
-     * 配列/JSONシリアル化の日付の準備
-     *
-     * @param  \DateTimeInterface  $date
-     * @return string
-     */
     protected function serializeDate(DateTimeInterface $date)
     {
-        //return $date->format('Y-m-d-h');
         return $date->format('Y年m月d日h時m分');
     }
 }

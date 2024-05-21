@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { Head, usePage } from "@inertiajs/vue3";
+  import { Head, usePage, router } from "@inertiajs/vue3";
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
   import type { Product } from '@/types/product'
   import type { PageProps } from '@/types'
@@ -32,6 +32,7 @@
               :category_name="product.category?.name"
               :created_at="product.created_at"
               :route_show="`product.show`"
+              :mode="product.favorite && product.favorite.length ? `favorite.disable` : `favorite.enable`"
             />
           </template>
         </div>

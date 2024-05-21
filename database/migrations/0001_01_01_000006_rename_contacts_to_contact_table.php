@@ -11,7 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //Schema::rename('contacts', 'contact');
     }
 
     /**
@@ -19,6 +18,5 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //Schema::rename('contact', 'contacts');
     }
 };
