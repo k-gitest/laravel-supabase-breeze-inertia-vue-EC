@@ -61,7 +61,14 @@
         console.error(error);
         error_message.value = error.message;
       } else {
-        router.visit('/cart/index')
+        router.visit('/cart/index', {
+          method: 'get',
+          preserveScroll: true,
+          preserveState: true,
+          onFinish: () => {
+            router.reload();
+          }
+        })
       }
     }
   }

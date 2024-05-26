@@ -11,6 +11,7 @@ defineProps<{
     laravelVersion: string;
     phpVersion: string;
 }>();
+
 </script>
 
 <template>
@@ -31,8 +32,8 @@ defineProps<{
                     <Link :href="route('admin.login')" class="btn"> admin/Log in </Link>
                     <Link v-if="canRegister" :href="route('admin.register')" class="btn">  admin/Register  </Link>
                     <Link :href="route('todo.index')" class="btn"> Todo </Link>
-                    <Link :href="route('product.index')" class="btn"> EC </Link>
-                    <Link :href="route('admin.product.index')" class="btn"> EC </Link>
+                    <Link :href="route('product.index')" class="btn"> EC/user </Link>
+                    <Link :href="route('admin.product.index')" class="btn"> EC/admin </Link>
                     <Link :href="route('contact.create')" class="btn"> contact </Link>
                 </template>
             </nav>
@@ -42,7 +43,7 @@ defineProps<{
     <main class="mt-6">
       <div class="hero min-h-screen bg-base-200">
         <div class="hero-content flex-col lg:flex-row">
-          <img src="https://daisyui.com/images/stock/photo-1635805737707-575885ab0820.jpg" class="max-w-sm rounded-lg shadow-2xl" />
+          <img src="https://img.daisyui.com/images/stock/photo-1635805737707-575885ab0820.jpg" class="max-w-sm rounded-lg shadow-2xl" />
           <div>
             <h1 class="text-5xl font-bold">Box Office News!</h1>
             <p class="py-6">Provident cupiditate voluptatem et in. Quaerat fugiat ut assumenda excepturi exercitationem quasi. In deleniti eaque aut repudiandae et a id nisi.</p>
@@ -53,29 +54,29 @@ defineProps<{
 
       <div class="carousel rounded-box">
         <div class="carousel-item">
-          <img src="https://daisyui.com/images/stock/photo-1559703248-dcaaec9fab78.jpg" alt="Burger" />
+          <img src="https://img.daisyui.com/images/stock/photo-1559703248-dcaaec9fab78.jpg" alt="Burger" />
         </div> 
         <div class="carousel-item">
-          <img src="https://daisyui.com/images/stock/photo-1565098772267-60af42b81ef2.jpg" alt="Burger" />
+          <img src="https://img.daisyui.com/images/stock/photo-1565098772267-60af42b81ef2.jpg" alt="Burger" />
         </div> 
         <div class="carousel-item">
-          <img src="https://daisyui.com/images/stock/photo-1572635148818-ef6fd45eb394.jpg" alt="Burger" />
+          <img src="https://img.daisyui.com/images/stock/photo-1572635148818-ef6fd45eb394.jpg" alt="Burger" />
         </div> 
         <div class="carousel-item">
-          <img src="https://daisyui.com/images/stock/photo-1494253109108-2e30c049369b.jpg" alt="Burger" />
+          <img src="https://img.daisyui.com/images/stock/photo-1494253109108-2e30c049369b.jpg" alt="Burger" />
         </div> 
         <div class="carousel-item">
-          <img src="https://daisyui.com/images/stock/photo-1550258987-190a2d41a8ba.jpg" alt="Burger" />
+          <img src="https://img.daisyui.com/images/stock/photo-1550258987-190a2d41a8ba.jpg" alt="Burger" />
         </div> 
         <div class="carousel-item">
-          <img src="https://daisyui.com/images/stock/photo-1559181567-c3190ca9959b.jpg" alt="Burger" />
+          <img src="https://img.daisyui.com/images/stock/photo-1559181567-c3190ca9959b.jpg" alt="Burger" />
         </div> 
         <div class="carousel-item">
-          <img src="https://daisyui.com/images/stock/photo-1601004890684-d8cbf643f5f2.jpg" alt="Burger" />
+          <img src="https://img.daisyui.com/images/stock/photo-1601004890684-d8cbf643f5f2.jpg" alt="Burger" />
         </div>
       </div>
 
-      <div class="hero min-h-screen" style="background-image: url(https://daisyui.com/images/stock/photo-1507358522600-9f71e620c44e.jpg);">
+      <div class="hero min-h-screen" style="background-image: url(https://img.daisyui.com/images/stock/photo-1507358522600-9f71e620c44e.jpg);">
         <div class="hero-overlay bg-opacity-60"></div>
         <div class="hero-content text-center text-neutral-content">
           <div class="max-w-md">

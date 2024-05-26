@@ -3,7 +3,7 @@
   import type { Category } from '@/types/category'
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
-  import ProductListCard from "@/Components/ProductListCard.vue"
+  import AdminProductListCard from "@/Components/AdminProductListCard.vue"
 
   const { props } = usePage<PageProps & { category_name: string, data: Category }>()
 </script>
@@ -22,7 +22,7 @@
       <div v-if="props.data.product && props.data.product.length" class="grid grid-cols-4 gap-5 justify-center columns-3">
 
         <template v-for="product of props.data.product" :key="product.id">
-          <ProductListCard 
+          <AdminProductListCard 
             :image="product.image" 
             :name="product.name" 
             :id="product.id" 
@@ -33,7 +33,7 @@
             :created_at="product.created_at"
             :route_show="'admin.product.show'"
           />
-        </template>        
+        </template>
       </div>
       <div v-else>
         登録商品がありません

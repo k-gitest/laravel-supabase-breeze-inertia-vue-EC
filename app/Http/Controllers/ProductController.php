@@ -23,7 +23,7 @@ class ProductController extends Controller
     public function index(): Response
     {
         //
-      $data = Product::with(['category', 'image', 'favorite'])->orderBy('created_at', 'desc')->get();
+      $data = Product::with(['category', 'image', 'favorite', 'stock'])->orderBy('created_at', 'desc')->withSum('stock', 'quantity')->get();
       
       return inertia::render('EC/ProductAllList',[
         "data" => $data,
@@ -52,7 +52,7 @@ class ProductController extends Controller
         $isInFavorite = $favorite ? true : false;
       }
 
-      $data = Product::with(['category', 'image', 'comment'])->find($id);
+      $data = Product::with(['category', 'image', 'comment', 'stock', 'favorite'])->withSum('stock', 'quantity')->find($id);
 
       if($data){
         return inertia::render('EC/ProductDetail',[

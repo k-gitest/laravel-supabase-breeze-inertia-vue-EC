@@ -34,11 +34,14 @@ class PaymentController extends Controller
       
     Stripe::setApiKey(config('services.stripe.secret'));
 
+    $warehouse_id = config('services.stripe.warehouse_id');
+
     $paymentIntent = PaymentIntent::create([
-        'amount' => round($total_price_including_tax),
+        'amount' => round($total_price_including_tax), 
         'currency' => 'jpy',
         'metadata' => [
            'user_id' => auth()->user()->id,
+           'warehouse_id' => $warehouse_id,
         ],
     ]);
     

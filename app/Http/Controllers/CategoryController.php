@@ -27,7 +27,14 @@ class CategoryController extends Controller
      */
     public function show(Category $category, Request $request, $id): Response
     {
-      $result = Category::with(['product.image', 'product.category'])->find($id);
+      $result = Category::with(['product' => function ($query) {
+          $query->with([
+              'image',
+              'category',
+              'favorite',
+              'stock'
+          ])->withSum('stock', 'quantity');
+      }])->find($id);
       
       if($result){
         $data = $result->product;

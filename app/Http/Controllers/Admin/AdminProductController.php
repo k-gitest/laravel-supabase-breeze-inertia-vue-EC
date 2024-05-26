@@ -48,16 +48,15 @@ class AdminProductController extends Controller
       DB::transaction(function () use ($request) {
 
         $request->validate([
-          "name" => "required|unique:products,name",
+          "name" => "required|unique:products,name", 
           "price_excluding_tax" => "required|numeric",
           "description" => "required|string|max:255",
           "tax_rate" => "required|numeric",
-          "category_id" => "required|exists:categories,id",
+          "category_id" => "required|exists:categories,id", 
         ]);
 
         $price_excluding_tax = $request->price_excluding_tax;
         $tax_rate = $request->tax_rate;
-
         $price_including_tax = $price_excluding_tax + ($price_excluding_tax * $tax_rate / 100);
 
         $result = Product::create([
@@ -96,7 +95,7 @@ class AdminProductController extends Controller
             ]);
         }
 
-      }, 3); 
+      }, 3);
 
       return redirect()->route('admin.product.create');
     }
@@ -146,7 +145,6 @@ class AdminProductController extends Controller
 
         $price_excluding_tax = $request->price_excluding_tax;
         $tax_rate = $request->tax_rate;
-
         $price_including_tax = $price_excluding_tax + ($price_excluding_tax * $tax_rate / 100);
 
         $product->name = $request->name;

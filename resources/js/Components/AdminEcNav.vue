@@ -9,5 +9,7 @@
     <Link :href="route('admin.product.index')" class="btn btn-sm"> product index </Link>
     <Link :href="route('admin.product.create')" class="btn btn-sm"> product create </Link>
     <Link :href="route('admin.cart.index')" class="btn btn-sm"> cart</Link>
-  </div>
+    <Link :href="route('admin.stock.index')" class="btn btn-sm"> stock</Link>
+    <Link :href="route('admin.warehouse.index')" class="btn btn-sm"> warehouse</Link>
+</div>
 </template>

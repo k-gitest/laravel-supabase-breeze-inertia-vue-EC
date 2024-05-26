@@ -52,7 +52,6 @@
     if (fileImageElement.value) {
         fileImageElement.value.value = "";
     }
-
   }
 
 </script>

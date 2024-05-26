@@ -7,6 +7,7 @@ use Illuminate\Routing\UrlGenerator;
 use App\Models\User;
 use App\Models\TodoList;
 use Illuminate\Support\Facades\Gate;
+//use App\Services\SupabaseStorageService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+      //$this->app->bind('SbStorage', SupabaseStorageService::class);
 
     }
 

@@ -33,5 +33,9 @@ class Product extends Model
   public function comment(){
     return $this->hasMany(Comment::class);
   }
+
+  public function stock(){
+    return $this->hasMany(Stock::class);
+  }
   
 }

@@ -1,0 +1,97 @@
+<script setup lang="ts">
+  import { Head, Link, usePage, useForm, router } from "@inertiajs/vue3";
+  import type { Product } from '@/types/product'
+  import type { Warehouse } from '@/types/warehouse'
+  import type { PageProps } from '@/types'
+  import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
+  import EcImageGallery from "@/Components/EcImageGallery.vue"
+  import WarehouseStockSelectbox from "@/Components/WarehouseStockSelectbox.vue"
+  import StockTableHead from "@/Components/StockTableHead.vue"
+  import { ref, computed } from 'vue';
+
+  const { props } = usePage<PageProps & { data: Product, warehouse: Warehouse[] }>()
+
+  const quantity = ref<Record<number, number>>({});
+  const reservedQuantity = ref<Record<number, number>>({});
+
+  if(props.data.stock){
+      for (const stock of props.data.stock) {
+        quantity.value[stock.id] = stock.quantity;
+        reservedQuantity.value[stock.id] = stock.reserved_quantity;
+      }
+  }
+  
+  const submit = (id: number, quantity: number, reserved: number) => {
+    router.put('/stock/update', {
+      data: {
+        id: id,
+        quantity: quantity,
+        reserved_quantity: reserved,
+      },
+      preserveState: false,
+    })
+  }
+
+  const deleteStock = (id: number) => {
+    router.delete('/stock/delete', {
+      data: {
+        id: id,
+      },
+      preserveState: false,
+    })
+  }
+</script>
+
+<template>
+  <Head title="Stock Show" />
+  <AdminEcLayout>
+    <template #header>
+      <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Stock Show</h2>
+    </template>
+      <div v-if="props.data" class="flex gap-2">
+        <EcImageGallery :images="props.data.image" />
+        <div class="flex flex-col gap-2">
+          <ul>
+            <li>{{props.data.name}}</li>
+            <li>{{props.data.description}}</li>
+            <li>{{props.data.category?.name}}</li>
+            <li>{{props.data.price_excluding_tax}}</li>
+            <li>{{ props.data.price_including_tax }}</li>
+          </ul>
+          <div v-if="props.data.stock && props.data.stock.length">
+            <div class="overflow-x-auto">
+              <table class="table">
+                <StockTableHead />
+                <tbody>
+                  <template v-for="stock of props.data.stock" :key="stock.id">
+                    <template v-if="stock.warehouse">
+                    <tr>
+                      <th>{{ stock.warehouse.id }}</th>
+                      <td>{{ stock.warehouse.name }}</td>
+                      <td>{{ stock.warehouse.location }}</td>
+                      <td>
+                        <input type="number" v-model="quantity[stock.id]" min="0" max="100" />
+                      </td>
+                      <td>
+                        <input type="number" v-model="reservedQuantity[stock.id]" min="0" max="100" />
+                      </td>
+                      <td class="flex gap-2"><button @click="submit(stock.id, quantity[stock.id], reservedQuantity[stock.id])" class="btn btn-sm">変更</button>
+                        <button @click="deleteStock(stock.id)" class="btn btn-sm">削除</button>
+                      </td>
+                    </tr>
+                    </template>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <WarehouseStockSelectbox :warehouse="props.warehouse" :product_id="props.data.id" :stock="props.data.stock" />
+          <div v-show="props.errors">
+            {{ props.errors.quantity }}
+            {{ props.errors.user_id }}
+            {{ props.errors.product_id }}
+          </div>
+        </div>
+      </div>
+    </AdminEcLayout>
+</template>

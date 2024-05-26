@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { Head, usePage } from "@inertiajs/vue3";
+  import { Head, usePage, router } from "@inertiajs/vue3";
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
   import type { Category } from '@/types/category'
   import type { PageProps } from '@/types'
@@ -7,6 +7,20 @@
   import ProductListCard from "@/Components/ProductListCard.vue"
 
   const { props } = usePage<PageProps & { category_name: string, data: Category }>()
+
+  const addFavorite = (id: number) => {
+    router.visit(`/favorite`,{
+      method: 'post',
+      data: {
+        product_id: id,
+      },
+      preserveState: false,
+      preserveScroll: true,
+      onSuccess: (res) => {
+        router.reload();
+      },
+    })
+  }
 </script>
 
 <template>
@@ -33,6 +47,10 @@
               :category_name="props.category_name"
               :created_at="product.created_at"
               :route_show="`product.show`"
+              :mode="product.favorite?.some(item=> item.user_id === props.auth.user?.id) ? `favorite.disable` : `favorite.enable`"
+              @addFavorite="addFavorite"
+              :count="product.favorite?.length"
+              :stock="product.stock_sum_quantity"
             />
           </template>
         </div>

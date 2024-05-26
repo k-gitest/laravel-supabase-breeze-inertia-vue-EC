@@ -11,7 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //Schema::rename('contacts', 'contact');
+        Schema::create('warehouses', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 255);
+            $table->text('location');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -19,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //Schema::rename('contact', 'contacts');
+        Schema::dropIfExists('warehouses');
     }
 };

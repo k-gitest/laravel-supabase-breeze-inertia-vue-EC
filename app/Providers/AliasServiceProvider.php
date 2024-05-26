@@ -12,10 +12,8 @@ class AliasServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-      // Get the AliasLoader instance
       $loader = AliasLoader::getInstance();
 
-      // Add your aliases
       $loader->alias('SB', \App\Services\SupabaseStorageService::class);
       $loader->alias('SbStorage', \App\Services\SupabaseStorageService::class);
     }

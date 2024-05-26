@@ -32,9 +32,6 @@
                   <NavLink :href="route('product.index')" :active="route().current('product.create')">
                       EC
                   </NavLink>
-                  <NavLink :href="route('subscribe')" :active="route().current('subscribe')">
-                        Subscribe
-                    </NavLink>
                   <NavLink :href="route('contact.create')" :active="route().current('contact.create')">
                       Contact
                   </NavLink>

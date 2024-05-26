@@ -10,6 +10,7 @@ use Stripe\Exception\SignatureVerificationException;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Cart;
+use App\Models\Stock;
 
 class WebhookController extends CashierController
 {
@@ -72,6 +73,22 @@ class WebhookController extends CashierController
             'price_excluding_tax' => $cartItem->product->price_excluding_tax,
             'price_including_tax' => $cartItem->product->price_including_tax,
         ]);
+
+        $stock = Stock::where('product_id', $cartItem->product_id)
+        ->where('warehouse_id', $paymentIntent->metadata->warehouse_id)
+        ->first();
+
+        if ($stock) {
+            if ($stock->quantity >= $cartItem->quantity) {
+                $stock->quantity -= $cartItem->quantity;
+                $stock->save();
+            } else {
+                throw new \Exception('在庫が不足しています。');
+            }
+        } else {
+            throw new \Exception('在庫が見つかりません。');
+        }
+        
       };
 
       Cart::where('user_id', $paymentIntent->metadata->user_id)->delete();
@@ -82,6 +99,7 @@ class WebhookController extends CashierController
 
   protected function handlePaymentIntentFailed($paymentIntent)
   {
+      // 
   }
 
 }

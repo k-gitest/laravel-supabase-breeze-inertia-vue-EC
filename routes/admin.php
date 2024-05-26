@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminRegisterController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminImageController;
+use App\Http\Controllers\Admin\AdminStockController;
+use App\Http\Controllers\Admin\AdminWarehouseController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', [AdminLoginController::class, 'create'])->name('admin.login');
@@ -46,6 +48,23 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth:admi
     Route::delete('/product/delete/{id}', [AdminProductController::class, 'destroy'])->name('product.destroy');
 
     Route::delete('/image/delete/{id}', [AdminImageController::class, 'destroy'])->name('image.destroy');
+
+    Route::get('/stock', [AdminStockController::class, 'index'])->name('stock.index');
+    Route::get('/stock/register', [AdminStockController::class, 'create'])->name('stock.create');
+    Route::post('/stock/store', [AdminStockController::class, 'store'])->name('stock.store');
+    Route::get('/stock/show/{id}', [AdminStockController::class, 'show'])->name('stock.show');
+    Route::get('/stock/edit/{id}', [AdminStockController::class, 'edit'])->name('stock.edit');
+    Route::put('/stock/update', [AdminStockController::class, 'update'])->name('stock.update');
+    Route::delete('/stock/delete', [AdminStockController::class, 'destroy'])->name('stock.destroy');
+
+    Route::get('/warehouse', [AdminWarehouseController::class, 'index'])->name('warehouse.index');
+    Route::get('/warehouse/register', [AdminWarehouseController::class, 'create'])->name('warehouse.create');
+    Route::post('/warehouse/store', [AdminWarehouseController::class, 'store'])->name('warehouse.store');
+    Route::get('/warehouse/show/{id}', [AdminWarehouseController::class, 'show'])->name('warehouse.show');
+    Route::get('/warehouse/edit/{id}', [AdminWarehouseController::class, 'edit'])->name('warehouse.edit');
+    Route::put('/warehouse/update/{id}', [AdminWarehouseController::class, 'update'])->name('warehouse.update');
+    Route::delete('/warehouse/delete/{id}', [AdminWarehouseController::class, 'destroy'])->name('warehouse.destroy');
+    
 });
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => 'auth:admin'], function (){

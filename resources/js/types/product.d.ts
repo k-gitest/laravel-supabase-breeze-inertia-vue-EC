@@ -2,6 +2,7 @@ import type { Category } from './category'
 import type { Image } from './image'
 import type { Favorite } from './favorite'
 import type { Comment } from './comment'
+import type { Stock } from './stock'
 
 export type Product = {
   id: number;
@@ -16,4 +17,6 @@ export type Product = {
   created_at: string;
   favorite?: Favorite[];
   comment?: Comment[];
+  stock?: Stock[];
+  stock_sum_quantity?: number;
 }

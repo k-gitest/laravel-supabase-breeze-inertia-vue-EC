@@ -7,6 +7,20 @@
   import ProductListCard from "@/Components/ProductListCard.vue"
 
   const { props } = usePage<PageProps & { data: Product[] }>()
+
+  const addFavorite = (id: number) => {
+    router.visit(`/favorite`,{
+      method: 'post',
+      data: {
+        product_id: id,
+      },
+      preserveState: false,
+      preserveScroll: true,
+      onSuccess: (res) => {
+        router.reload();
+      },
+    })
+  }
 </script>
 
 <template>
@@ -32,7 +46,10 @@
               :category_name="product.category?.name"
               :created_at="product.created_at"
               :route_show="`product.show`"
-              :mode="product.favorite && product.favorite.length ? `favorite.disable` : `favorite.enable`"
+              :mode="product.favorite?.some(item=> item.user_id === props.auth.user?.id) ? `favorite.disable` : `favorite.enable`"
+              @addFavorite="addFavorite"
+              :count="product.favorite?.length"
+              :stock="product?.stock_sum_quantity"
             />
           </template>
         </div>

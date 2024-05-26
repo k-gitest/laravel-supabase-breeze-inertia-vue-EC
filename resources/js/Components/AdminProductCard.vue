@@ -29,7 +29,7 @@
   const handleFavorite = (id: number) => {
     emit('addFavorite', id); 
   }
-  
+
   const deleteFavorite = (id: number) => {
     router.delete(`/favorite/${id}`,{
        preserveState: false,
@@ -45,7 +45,7 @@
       <span class="absolute top-0 start-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white z-10">new</span>
       -->
     </div>
-    
+
     <Link :href="route(route_show, {id: id})">
       <figure v-if="image && image.length">
         <img :src="supabaseURL + image[0].path" class="rounded-lg" />
@@ -63,14 +63,12 @@
         <div class="card-actions justify-end">
           <div class="badge badge-outline text-xs">{{ category_name }}</div>
         </div>
-        
-        <div v-if="stock > 0 && stock < 5">
-          在庫数：残り僅か
+        <div v-if="stock">
+          在庫数：{{ stock }}
         </div>
-        <div v-else-if="stock === 0 || !stock">
-          <p class="text-red-400">売り切れ</p>
+        <div v-else>
+          <p class="text-red-400">在庫を登録してください</p>
         </div>
-
         <button v-if="mode === 'favorite.enable'" @click.stop.prevent="handleFavorite(id)" class="btn btn-sm">お気に入りに追加<span class="badge">{{ count }}</span></button>
         <button v-if="mode === 'favorite.disable'" class="btn btn-sm" disabled>お気に入りに追加<span class="badge">{{ count }}</span></button>
         <button v-if="mode === 'favorite.delete'" @click.stop.prevent="deleteFavorite(id)" class="btn btn-sm">削除</button>

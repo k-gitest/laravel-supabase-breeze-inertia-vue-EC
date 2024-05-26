@@ -104,6 +104,6 @@ class CartController extends Controller
       $result->delete();
     });
     
-    return redirect()->route('cart.edit')->with('success', '削除しました');
+    return redirect()->route('cart.index')->with('success', '削除しました');
   }
 }

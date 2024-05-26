@@ -7,6 +7,7 @@
   import CartTableBody from "@/Components/CartTableBody.vue"
 
   const { props } = usePage<PageProps & { data: Cart[] }>()
+
 </script>
 
 <template>
@@ -15,11 +16,11 @@
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Cart</h2>
     </template>
-      <div v-show="props.flash.success">
-        <p class="text-sm text-red-600 dark:text-red-400">
-          {{ props.flash.success }}
-        </p>
-      </div>
+    <div v-show="props.flash.success">
+      <p class="text-sm text-red-600 dark:text-red-400">
+        {{ props.flash.success }}
+      </p>
+    </div>
     <div v-if="props.data" class="overflow-x-auto">
       <table class="table">
         <thead>
@@ -35,5 +36,5 @@
         
       </table>
     </div>
-    </AdminEcLayout>
+  </AdminEcLayout>
 </template>

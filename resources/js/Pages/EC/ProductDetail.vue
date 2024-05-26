@@ -7,7 +7,6 @@
   import EcImageGallery from "@/Components/EcImageGallery.vue"
 
   const { props } = usePage<PageProps & { data: Product }>()
-  console.log(props)
 
   const form = useForm({
     product_id: props.data.id,
@@ -71,6 +70,12 @@
             <li>{{props.data.price_excluding_tax}}</li>
             <li>{{ props.data.price_including_tax }}</li>
           </ul>
+          <div v-if="props.data.stock_sum_quantity > 0 && props.data.stock_sum_quantity < 5">
+            在庫数：残り僅か
+          </div>
+          <div v-else-if="props.data.stock_sum_quantity === 0 || !props.data.stock_sum_quantity">
+            <p class="text-red-400">売り切れ</p>
+          </div>
           <div v-if="props.auth.user" class="flex flex-col gap-2">
             <div v-if="props.isInCart">
               <button class="btn" disabled>カートに追加済み</button>
@@ -136,7 +141,9 @@
             </div>
           </div>
           <div v-else>
-            <Link class="btn" :href="route('login')">ログインして購入</Link>
+            <div v-if="props.data.stock_sum_quantity > 0">
+              <Link class="btn" :href="route('login')">ログインして購入</Link>
+            </div>
           </div>
         </div>
       </div>
