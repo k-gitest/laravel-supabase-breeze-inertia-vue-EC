@@ -7,6 +7,7 @@
   import ProductListCard from "@/Components/ProductListCard.vue"
 
   const { props } = usePage<PageProps & { category_name: string, data: Category }>()
+  console.log(props)
 
   const addFavorite = (id: number) => {
     router.visit(`/favorite`,{

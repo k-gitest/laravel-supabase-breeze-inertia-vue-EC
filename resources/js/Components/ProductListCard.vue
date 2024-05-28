@@ -64,7 +64,7 @@
           <div class="badge badge-outline text-xs">{{ category_name }}</div>
         </div>
         
-        <div v-if="stock > 0 && stock < 5">
+        <div v-if="stock && stock > 0 && stock < 5">
           在庫数：残り僅か
         </div>
         <div v-else-if="stock === 0 || !stock">

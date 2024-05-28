@@ -87,6 +87,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - デフォルトのプロバイダーやミドルウェアに関連するディレクトリとファイルがappから削除されbootstrapに集約
 - プロバイダー登録はbootstrap/providers、ミドルウェア登録はbootstrap/appとrouteで行う
 - イベント・リスナー・プロバイダーは自動的にbootstrap追加される
+- スケジューラーのkernelが削除されroutes/consoleとbootsrap/appで行う
 
 ## 用意
 - todoのCRUD画面、コンタクトフォーム、画像アップローダー
@@ -100,6 +101,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - マルチログイン追加、adminsテーブル追加
 - comments, favoritesテーブル追加、コメント投稿とお気に入り画面追加
 - stocks, warehousesテーブル追加、在庫と倉庫画面追加
+- メールマガジン登録、ジョブキューとスケジュール処理追加
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル設定
 - supabaseとmailtrapとstripeのenv設定

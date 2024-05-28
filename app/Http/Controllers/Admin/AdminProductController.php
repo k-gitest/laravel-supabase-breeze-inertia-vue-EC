@@ -52,7 +52,7 @@ class AdminProductController extends Controller
           "price_excluding_tax" => "required|numeric",
           "description" => "required|string|max:255",
           "tax_rate" => "required|numeric",
-          "category_id" => "required|exists:categories,id", 
+          "category_id" => "required|exists:categories,id",
         ]);
 
         $price_excluding_tax = $request->price_excluding_tax;

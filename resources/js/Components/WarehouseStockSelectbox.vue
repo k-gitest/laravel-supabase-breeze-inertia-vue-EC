@@ -10,9 +10,9 @@
   import { ref, computed } from 'vue';
 
   const props = defineProps<{
-    warehouse: Warehouse,
+    warehouse: Warehouse[],
     product_id: number | undefined | null,
-    stock: Stock,
+    stock: Stock[],
   }>()
 
   const form = useForm({

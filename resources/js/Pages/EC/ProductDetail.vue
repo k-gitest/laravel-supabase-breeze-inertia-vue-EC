@@ -70,7 +70,7 @@
             <li>{{props.data.price_excluding_tax}}</li>
             <li>{{ props.data.price_including_tax }}</li>
           </ul>
-          <div v-if="props.data.stock_sum_quantity > 0 && props.data.stock_sum_quantity < 5">
+          <div v-if="props.data.stock_sum_quantity && props.data.stock_sum_quantity > 0 && props.data.stock_sum_quantity < 5">
             在庫数：残り僅か
           </div>
           <div v-else-if="props.data.stock_sum_quantity === 0 || !props.data.stock_sum_quantity">
@@ -141,7 +141,7 @@
             </div>
           </div>
           <div v-else>
-            <div v-if="props.data.stock_sum_quantity > 0">
+            <div v-if="props.data.stock_sum_quantity && props.data.stock_sum_quantity > 0">
               <Link class="btn" :href="route('login')">ログインして購入</Link>
             </div>
           </div>

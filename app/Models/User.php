@@ -33,6 +33,11 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function newsletterSubscriptions()
+    {
+        return $this->hasMany(NewsletterSubscription::class);
+    }
+
     /**
      * キャストする必要のある属性を取得します
      *

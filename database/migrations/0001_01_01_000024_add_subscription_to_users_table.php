@@ -11,7 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //Schema::rename('contacts', 'contact');
+        Schema::table('users', function (Blueprint $table) {
+            //
+            $table->boolean('subscribed')->default(false);
+        });
     }
 
     /**
@@ -19,6 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //Schema::rename('contact', 'contacts');
+        Schema::table('users', function (Blueprint $table) {
+            //
+            $table->dropColumn('subscribed');
+        });
     }
 };

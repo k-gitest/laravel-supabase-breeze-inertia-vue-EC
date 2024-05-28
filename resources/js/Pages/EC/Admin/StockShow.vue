@@ -40,6 +40,7 @@
       preserveState: false,
     })
   }
+
 </script>
 
 <template>
@@ -85,13 +86,16 @@
               </table>
             </div>
           </div>
-          <WarehouseStockSelectbox :warehouse="props.warehouse" :product_id="props.data.id" :stock="props.data.stock" />
+          <template v-if="props.data.stock && props.data.stock.length">
+            <WarehouseStockSelectbox :warehouse="props.warehouse" :product_id="props.data.id" :stock="props.data.stock" />
+          </template>
           <div v-show="props.errors">
             {{ props.errors.quantity }}
             {{ props.errors.user_id }}
             {{ props.errors.product_id }}
           </div>
         </div>
+        
       </div>
     </AdminEcLayout>
 </template>

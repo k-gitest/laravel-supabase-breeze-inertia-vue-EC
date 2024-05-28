@@ -6,7 +6,6 @@
   import AdminProductListCard from "@/Components/AdminProductListCard.vue"
 
   const { props } = usePage<PageProps & { category_name: string, data: Warehouse }>()
-  console.log(props)
 </script>
 
 <template>
