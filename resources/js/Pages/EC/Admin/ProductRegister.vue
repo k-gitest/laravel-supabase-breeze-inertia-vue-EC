@@ -74,37 +74,7 @@
       </div>
       <template v-else>
       <form @submit.prevent="submit" enctype="multipart/form-data">
-        <div class="flex flex-col items-center justify-center w-full max-w-md gap-2">
-          <div class="flex flex-col">
-            <label for="name">商品名</label>
-            <input type="text" id="name" v-model="form.name" class="border" />
-          </div>
-          <div class="flex flex-col">
-            <label for="description">商品の説明</label>
-            <textarea type="text" id="description" v-model="form.description" class="border" />
-          </div>
-          <div v-if="props.data.length" class="flex flex-col">
-            <label for="category">カテゴリ</label>
-            <select id="category" v-model="form.category_id" class="select-sm border w-full max-w-xs">
-              <option disabled selected>選択してください</option>
-              <option v-for="category of props.data" :key="category.id" :value="category.id">{{ category.name }}</option>
-            </select>
-          </div>
-          <div class="flex flex-col">
-            <label for="price_excluding_tax">税抜き価格</label>
-            <input type="text" id="price_excluding_tax" v-model="form.price_excluding_tax" class="border" />
-          </div>
-          <div class="flex flex-col">
-            <label for="price_including_tax">税込み価格</label>
-            <input type="text" id="price_including_tax" v-model="price_including_tax" class="border" disabled />
-          </div>
-          <div class="flex flex-col">
-            <label for="tax_rate">税率</label>
-            <div clas="flex">
-              <input type="text" id="tax_rate" v-model="form.tax_rate" class="border grow" />
-              <span class="w-full">%</span>
-            </div>
-          </div>
+        <div class="flex gap-2">
           <div class="flex flex-col">
             <label for="image">商品画像</label>
             <input type="file" id="image" ref="fileImageElement" class="hidden" accept="image/*" @input="handleFileChange" />
@@ -118,21 +88,54 @@
               </div>
             </template>
           </div>
-          <div v-show="form.errors">
-            <p class="text-sm text-red-600 dark:text-red-400">
-              {{ form.errors.name }}
-            </p>
-            <p class="text-sm text-red-600 dark:text-red-400">
-              {{ form.errors.description }}
-            </p>
-          </div>
-          <div v-show="props.flash">
-            <p class="text-sm text-red-600 dark:text-red-400">
-              {{ props.flash.success }}
-            </p>
-          </div>
-          <div>
-            <button type="submit" class="btn" :disabled="form.processing">送信</button>
+
+          <div class="flex flex-col items-center justify-center w-full max-w-md gap-2">
+            <div class="flex flex-col">
+              <label for="name">商品名</label>
+              <input type="text" id="name" v-model="form.name" class="border" />
+            </div>
+            <div class="flex flex-col">
+              <label for="description">商品の説明</label>
+              <textarea type="text" id="description" v-model="form.description" class="border" />
+            </div>
+            <div v-if="props.data.length" class="flex flex-col">
+              <label for="category">カテゴリ</label>
+              <select id="category" v-model="form.category_id" class="select-sm border w-full max-w-xs">
+                <option disabled selected>選択してください</option>
+                <option v-for="category of props.data" :key="category.id" :value="category.id">{{ category.name }}</option>
+              </select>
+            </div>
+            <div class="flex flex-col">
+              <label for="price_excluding_tax">税抜き価格</label>
+              <input type="text" id="price_excluding_tax" v-model="form.price_excluding_tax" class="border" />
+            </div>
+            <div class="flex flex-col">
+              <label for="price_including_tax">税込み価格</label>
+              <input type="text" id="price_including_tax" v-model="price_including_tax" class="border" disabled />
+            </div>
+            <div class="flex flex-col">
+              <label for="tax_rate">税率</label>
+              <div clas="flex">
+                <input type="text" id="tax_rate" v-model="form.tax_rate" class="border grow" />
+                <span class="w-full">%</span>
+              </div>
+            </div>
+            <div v-show="form.errors">
+              <p class="text-sm text-red-600 dark:text-red-400">
+                {{ form.errors.name }}
+              </p>
+              <p class="text-sm text-red-600 dark:text-red-400">
+                {{ form.errors.description }}
+              </p>
+            </div>
+            <div v-show="props.flash">
+              <p class="text-sm text-red-600 dark:text-red-400">
+                {{ props.flash.success }}
+              </p>
+            </div>
+            <div>
+              <button type="submit" class="btn" :disabled="form.processing">送信</button>
+            </div>
           </div>
         </div>
       </form>

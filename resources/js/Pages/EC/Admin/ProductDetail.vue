@@ -40,16 +40,6 @@
             <li>{{props.data.price_excluding_tax}}</li>
             <li>{{ props.data.price_including_tax }}</li>
           </ul>
-          <div v-if="props.auth.user">
-            <form @submit.prevent="submit">
-              <div class="flex flex-col gap-2">
-                <label for="quantity">数量
-                  <input type="text" id="quantity" v-model="form.quantity" />
-                </label>
-                <button class="btn">カートに追加</button>
-              </div>
-            </form>
-          </div>
           <div v-show="form.errors">
             <p class="text-sm text-red-600 dark:text-red-400">
               {{ form.errors.quantity }}
@@ -64,6 +54,7 @@
           </div>
           <div class="flex gap-2">
             <Link :href="route('admin.product.edit', { id: props.data.id })" class="btn">編集</Link>
+            <Link :href="route('admin.stock.show', { id: props.data.id })" class="btn">在庫</Link>
             <Link :href="route('admin.product.destroy', {id: props.data.id })" class="btn">削除</Link>
           </div>
         </div>

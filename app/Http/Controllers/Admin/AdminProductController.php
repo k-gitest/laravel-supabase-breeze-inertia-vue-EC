@@ -18,13 +18,15 @@ class AdminProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-      $data = Product::with(['category', 'image'])->orderBy('created_at', 'desc')->get();
-      
-      return inertia::render('EC/Admin/ProductAllList',[
-        "data" => $data,
+      $result = Product::with(['image', 'category'])->withSum('stock', 'quantity')->orderBy('created_at', 'desc');
+      $data = $result->paginate(10);
+
+      return inertia::render('EC/Admin/ProductAllList', [
+          'pagedata' => $data,
       ]);
+
     }
 
     /**
@@ -48,7 +50,7 @@ class AdminProductController extends Controller
       DB::transaction(function () use ($request) {
 
         $request->validate([
-          "name" => "required|unique:products,name", 
+          "name" => "required|unique:products,name",
           "price_excluding_tax" => "required|numeric",
           "description" => "required|string|max:255",
           "tax_rate" => "required|numeric",
@@ -87,6 +89,7 @@ class AdminProductController extends Controller
         }
 
         $result = [];
+
         foreach ($filenames as $filename) {
             $result[] = Image::create([
                 'name' => $filename['name'],
@@ -95,7 +98,7 @@ class AdminProductController extends Controller
             ]);
         }
 
-      }, 3);
+      }, 3); 
 
       return redirect()->route('admin.product.create');
     }
@@ -182,6 +185,7 @@ class AdminProductController extends Controller
         }
 
         $result = [];
+
         foreach ($filenames as $filename) {
             $result[] = Image::create([
                 'name' => $filename['name'],
@@ -207,5 +211,19 @@ class AdminProductController extends Controller
       });
       
       return redirect('admin/product')->with('success', '削除しました');
+    }
+
+    public function bulkDestroy(Product $product, Request $request): RedirectResponse
+    {
+      DB::transaction(function () use ($request) {
+        $request->validate([
+            "ids" => "required|array",
+            'ids.*' => 'integer',
+        ]);
+        $selectedItems = $request->ids;
+        $result = Product::whereIn('id', $selectedItems)->delete();
+      });
+  
+      return redirect()->back()->with('success', '削除しました');
     }
 }

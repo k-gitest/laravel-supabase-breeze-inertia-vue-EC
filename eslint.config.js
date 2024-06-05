@@ -22,6 +22,7 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.node,
+        route: true,
       },
     },
   },
@@ -34,6 +35,9 @@ export default [
       "vue/max-attributes-per-line": "off",
       "vue/attributes-order": "off",
       "vue/multi-word-component-names": "off",
+      "vue/no-v-text-v-html-on-component": "off",
+      "vue/camelcase": "off",
+      "vue/prop-name-casing": "off",
     },
   },
 ];

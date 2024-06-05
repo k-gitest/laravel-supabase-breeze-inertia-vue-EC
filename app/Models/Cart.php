@@ -28,7 +28,6 @@ class Cart extends Model
      */
     protected function serializeDate(DateTimeInterface $date)
     {
-        //return $date->format('Y-m-d-h');
         return $date->format('Y年m月d日h時m分');
     }
 }

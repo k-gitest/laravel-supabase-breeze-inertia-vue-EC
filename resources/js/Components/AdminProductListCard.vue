@@ -2,7 +2,6 @@
   import { supabaseURL, supabaseNoImage } from "@/lib/supabase"
   import { Link, router } from "@inertiajs/vue3";
   import type { Image } from "@/types/image";
-  import type { Stock } from "@/types/stock"
   import { isoDateGenerator } from "@/lib/isoDateGenerator";
 
   defineProps<{

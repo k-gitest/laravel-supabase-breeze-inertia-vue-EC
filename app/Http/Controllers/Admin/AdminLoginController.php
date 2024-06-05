@@ -14,7 +14,6 @@ use App\Http\Requests\Auth\AdminLoginRequest;
 
 class AdminLoginController extends Controller
 {
-  //
   public function create(): Response
   {
     return Inertia::render('Auth/Admin/Login', [

@@ -1,14 +1,13 @@
 <script setup lang="ts">
-  import { Head, useForm, usePage, router } from '@inertiajs/vue3'
+  import { Head, useForm, usePage, router, Link } from '@inertiajs/vue3'
   import { ref, computed } from 'vue'
   import type { Product } from '@/types/product'
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
-  import { supabaseURL, supabaseNoImage } from "@/lib/supabase"
-  import { Link } from "@inertiajs/vue3";
+  import EcImageGallery from "@/Components/EcImageGallery.vue"
+  import AdminEcImageEditor from "@/Components/AdminEcImageEditor.vue"
 
   const { props } = usePage<PageProps & { data: Product }>()
-  const fileImageElement = ref<HTMLInputElement | null>(null);
   let preview: { name: string; url: string; }[] = []
 
   const form = useForm({
@@ -59,34 +58,16 @@
     }
   }
 
-  const clickHandleFile = (event: Event) => {
-    event.preventDefault();
-    fileImageElement.value?.click()
-  }
-
   const handleFileDelete = (event: Event) => {
     const currentTarget = event.currentTarget as HTMLDivElement 
     form.image = form.image.filter(file => file.name !== currentTarget.id);
     preview = preview.filter(file => file.name !== currentTarget.id)
-    if (fileImageElement.value) {
-        fileImageElement.value.value = "";
-    }
   }
 
-  const imageForm = useForm({})
-
-  const imageDelete = (product_id: number, image_id: number, path: string) => {
-    imageForm.delete(route('admin.image.destroy', { id: product_id, image_id: image_id, path: path}),{
-      preserveState: false,
-      onSuccess: (res) => {
-        console.log(res)
-      }
-    })
-  }
 </script>
 
 <template>
-  <Head title="ProductRegister" />
+  <Head title="ProductEdit" />
   <AdminEcLayout>
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Product Edit</h2>
@@ -94,34 +75,10 @@
       <div v-if="props.data">
         <form @submit.prevent="submit" enctype="multipart/form-data" class="flex gap-2">
           <div class="flex flex-col gap-2">
-            <div v-if="props.data.image && props.data.image.length" class="grid grid-cols-3 gap-2">
-              <template v-for="image of props.data.image" :key="image.id">
-                <div class="max-w-28">
-                  <button type="button" @click="imageDelete(image.product_id, image.id, image.path)">
-                    <img :src="supabaseURL + image.path"/>
-                  </button>
-                </div>
-              </template>
-            </div>
-            <div v-else class="max-w-52 max-h-52">
-              <img :src="supabaseURL + supabaseNoImage" />
-            </div>
-            <div class="flex flex-col">
-              <label for="image">商品画像を追加</label>
-              <input type="file" id="image" ref="fileImageElement" class="hidden" accept="image/*" @input="handleFileChange" />
-              <button @click="clickHandleFile" class="btn">ファイルを選択</button>
-            </div>
-            <div v-if="form.image.length > 0" class="flex gap-2">
-              <template v-for="(file, index) in form.image" :key="file.name">
-                <div :id="`${file.name}`" @click="handleFileDelete" class="max-w-32 flex flex-col justify-between items-center cursor-pointer">
-                  <img :src="preview[index].url" class="max-w-32" />
-                  <p class="cursor-pointer">{{ file.name }}</p>
-                </div>
-              </template>
-            </div>
+            <EcImageGallery :images="props.data.image" />
           </div>
           
-          <div class="flex flex-col items-center justify-center w-full max-w-md gap-2">
+          <div class="flex flex-col items-start justify-start w-full max-w-md gap-2">
             <div class="flex flex-col">
               <label for="name">商品名</label>
               <input type="text" id="name" v-model="form.name" class="border" />
@@ -156,6 +113,15 @@
                 <span class="w-full">%</span>
               </div>
             </div>
+
+            <AdminEcImageEditor 
+              :images="props.data.image" 
+              :formImage="form.image" 
+              :preview="preview" 
+              @handleFileChange="handleFileChange" 
+              @handleFileDelete="handleFileDelete" 
+              />
+            
             <div v-show="form.errors">
               <p class="text-sm text-red-600 dark:text-red-400">
                 {{ form.errors.name }}
@@ -169,8 +135,9 @@
                 {{ props.flash.success }}
               </p>
             </div>
-            <div>
+            <div class="flex gap-2">
               <button type="submit" class="btn" :disabled="form.processing">編集</button>
+              <Link :href="route('admin.stock.show', {id: props.data.id})" class="btn">在庫</Link>
               <button @click="deleteProduct" class="btn" :disabled="form.processing">削除</button>
             </div>
           </div>

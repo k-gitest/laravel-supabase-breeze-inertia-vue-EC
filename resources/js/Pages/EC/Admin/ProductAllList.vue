@@ -1,12 +1,25 @@
 <script setup lang="ts">
-  import { Head, usePage } from "@inertiajs/vue3";
-  import type { Product } from '@/types/product'
+  import { Head, usePage, router } from "@inertiajs/vue3";
+  import type { PageData } from '@/types/page'
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
-  import AdminProductListCard from "@/Components/AdminProductListCard.vue"
+  import AdminStockTableList from "@/Components/AdminStockTableList.vue"
+  import Pagination from "@/Components/Pagination.vue"
+  import SearchBox from "@/Components/SearchBox.vue"
 
-  const { props } = usePage<PageProps & { data: Product[] }>()
+  const { props } = usePage<PageProps & { pagedata: PageData }>()
 
+  const searchSubmit = (formdata: { q: string, category_ids: number[] }) => {
+    router.get(route('admin.search'), 
+      { q: formdata.q, category_ids: formdata.category_ids },
+      {
+        preserveState: false,
+        preserveScroll: true,
+        onSuccess: () => {
+          console.log('success');
+        },
+    })
+  }
 </script>
 <template>
   <Head title="ProductAllList" />
@@ -14,22 +27,17 @@
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">ProductAllList</h2>
     </template>
-    <div v-if="props.data.length" class="grid grid-cols-4 gap-5 justify-center columns-3">
-      <template v-for="product of props.data" :key="product.id">
-        <AdminProductListCard 
-          :image="product.image" 
-          :name="product.name" 
-          :id="product.id" 
-          :description="product.description" 
-          :price_excluding_tax="product.price_excluding_tax.toString()" 
-          :price_including_tax="product.price_including_tax.toString()" 
-          :category_name="product.category?.name" 
-          :created_at="product.created_at"
-          :route_show="'admin.product.show'"
-          :route_edit="'admin.product.edit'"
-          :route_destroy="'admin.product.destroy'"
-        />
-      </template>
+    <div class="flex gap-5 w-full">
+      <SearchBox @searchSubmit="searchSubmit" :categories="props.category" :filters="props.filters" />
+      <div class="grow">
+        <div v-if="props.pagedata.data.length">
+          <AdminStockTableList :data="props.pagedata.data" />
+        </div>
+        <div v-else>
+          <p class="text-center">該当商品がありません</p>
+        </div>
+        <Pagination :links="props.pagedata.links" />
+      </div>
     </div>
   </AdminEcLayout>
 </template>

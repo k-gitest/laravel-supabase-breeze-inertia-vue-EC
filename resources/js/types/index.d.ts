@@ -29,4 +29,8 @@ export type PageProps<
         total_price_including_tax: number;
     }
     clientSecret: string;
+    filters: {
+        q: string | undefined;
+        category_ids: number[] | undefined;
+    }
 };

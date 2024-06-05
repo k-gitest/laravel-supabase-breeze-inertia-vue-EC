@@ -1,18 +1,13 @@
 <script setup lang="ts">
-  import { Head, Link, usePage, useForm, router } from "@inertiajs/vue3";
-  import type { Product } from '@/types/product'
+  import { Link, useForm } from "@inertiajs/vue3";
   import type { Warehouse } from '@/types/warehouse'
   import type { Stock } from '@/types/stock'
-  import type { PageProps } from '@/types'
-  import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
-  import EcImageGallery from "@/Components/EcImageGallery.vue"
-  import WarehouseStockSelectbox from "@/Components/WarehouseStockSelectbox.vue"
-  import { ref, computed } from 'vue';
+  import { computed } from 'vue';
 
   const props = defineProps<{
-    warehouse: Warehouse[],
+    warehouses: Warehouse[],
     product_id: number | undefined | null,
-    stock: Stock[],
+    stock?: Stock[],
   }>()
 
   const form = useForm({
@@ -23,7 +18,7 @@
   })
 
   const stockSubmit = () => {
-    form.post(route('admin.stock.store'), {
+    form.post('/admin/stock/store', {
       preserveState: false,
       onSuccess: (res) => {
         console.log("success", res)
@@ -50,16 +45,15 @@
 
 <template>
   <div>
-    <div v-if="props.warehouse && props.warehouse.length">
+    <div v-if="props.warehouses && props.warehouses.length">
       <form @submit.prevent="stockSubmit">
         <div class="flex flex-col gap-2">
           <div class="flex flex-col gap-2">
             <label for="warehouse">倉庫を選択</label>
             <select id="warehouse" v-model="form.warehouse_id" class="select select-bordered select-sm w-full">
               <option disabled selected value="">倉庫を選択してください</option>
-              <template v-for="warehouse of props.warehouse" :key="warehouse.id">
-                <option v-if="isWarehouseIdPresent(warehouse.id)" 
-                   :value="warehouse.id">
+              <template v-for="warehouse of props.warehouses" :key="warehouse.id">
+                <option v-if="isWarehouseIdPresent(warehouse.id)" :value="warehouse.id">
                   {{ warehouse.name }}
                 </option>
               </template>

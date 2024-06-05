@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminImageController;
 use App\Http\Controllers\Admin\AdminStockController;
 use App\Http\Controllers\Admin\AdminWarehouseController;
+use App\Http\Controllers\Admin\AdminSearchController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', [AdminLoginController::class, 'create'])->name('admin.login');
@@ -34,7 +35,6 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth:admi
     Route::get('/category/index', [AdminCategoryController::class, 'index'])->name('category.index');
     Route::get('/category/register', [AdminCategoryController::class, 'create'])->name('category.create');
     Route::post('/category/register', [AdminCategoryController::class, 'store'])->name('category.store');
-    Route::get('/category/show/{id}', [AdminCategoryController::class, 'show'])->name('category.show');
     Route::get('/category/edit/{id}', [AdminCategoryController::class, 'edit'])->name('category.edit');
     Route::put('/category/update/{id}', [AdminCategoryController::class, 'update'])->name('category.update');
     Route::delete('/category/delete/{id}', [AdminCategoryController::class, 'destroy'])->name('category.destroy');
@@ -46,14 +46,12 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth:admi
     Route::get('/product/edit/{id}', [AdminProductController::class, 'edit'])->name('product.edit');
     Route::put('/product/update/{id}', [AdminProductController::class, 'update'])->name('product.update');
     Route::delete('/product/delete/{id}', [AdminProductController::class, 'destroy'])->name('product.destroy');
+    Route::delete('/product/bulk/delete', [AdminProductController::class, 'bulkDestroy'])->name('product.bulkDestroy');
 
     Route::delete('/image/delete/{id}', [AdminImageController::class, 'destroy'])->name('image.destroy');
 
-    Route::get('/stock', [AdminStockController::class, 'index'])->name('stock.index');
-    Route::get('/stock/register', [AdminStockController::class, 'create'])->name('stock.create');
     Route::post('/stock/store', [AdminStockController::class, 'store'])->name('stock.store');
     Route::get('/stock/show/{id}', [AdminStockController::class, 'show'])->name('stock.show');
-    Route::get('/stock/edit/{id}', [AdminStockController::class, 'edit'])->name('stock.edit');
     Route::put('/stock/update', [AdminStockController::class, 'update'])->name('stock.update');
     Route::delete('/stock/delete', [AdminStockController::class, 'destroy'])->name('stock.destroy');
 
@@ -64,6 +62,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth:admi
     Route::get('/warehouse/edit/{id}', [AdminWarehouseController::class, 'edit'])->name('warehouse.edit');
     Route::put('/warehouse/update/{id}', [AdminWarehouseController::class, 'update'])->name('warehouse.update');
     Route::delete('/warehouse/delete/{id}', [AdminWarehouseController::class, 'destroy'])->name('warehouse.destroy');
+
+    Route::get('/product/search', [AdminSearchController::class, 'index'])->name('search');
     
 });
 

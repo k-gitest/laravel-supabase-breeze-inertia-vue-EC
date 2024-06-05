@@ -8,7 +8,7 @@
   }>()
 
   const deleteCartItem = (id: number) => {
-    router.delete(route('cart.destroy', {id}),{
+    router.delete(`/cart/destroy/${id}`,{
       preserveState: false,
       onSuccess: (res) => {
         console.log("success", res)
@@ -19,6 +19,7 @@
 
 <template>
   <tbody>
+    <template v-if="carts.length">
     <template v-for="cart of carts" :key="cart.id">
       <template v-if="cart.product">
         <tr>
@@ -43,7 +44,7 @@
           <td>{{ cart.quantity }}</td>
           <td>
             {{ cart.product.price_excluding_tax }}
-            <br/>
+            <br />
             <span class="badge badge-ghost badge-sm">{{ cart.product.price_including_tax }}</span>
           </td>
           <th class="flex gap-2">
@@ -52,6 +53,10 @@
           </th>
         </tr>
       </template>
+    </template>
+    </template>
+    <template v-else>
+      カートには何も入っていません
     </template>
   </tbody>
 </template>

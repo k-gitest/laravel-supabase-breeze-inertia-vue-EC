@@ -15,34 +15,6 @@ use App\Models\Warehouse;
 class AdminStockController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    public function index(): Response
-    {
-        //
-        $result = Product::with(['image', 'category'])->withSum('stock', 'quantity')->get();
-
-        return inertia::render('EC/Admin/StockIndex', [
-            'data' => $result,
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): Response
-    {
-        $product = Product::all();
-        $warehouse = Warehouse::all();
-        return inertia::render('EC/Admin/StockRegister', [
-            "data" => [
-                "product" => $product,
-                "warehouse" => $warehouse,
-            ],
-        ]);
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): RedirectResponse
@@ -63,17 +35,17 @@ class AdminStockController extends Controller
             ]);
         });
 
-        return redirect()->route('admin.stock.index')->with('success', '在庫登録が成功しました');
+        return redirect()->route('admin.product.index')->with('success', '在庫登録が成功しました');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): Response
     {
-        //
-        $result = Product::with(['stock.warehouse'])->find($id);
+        $result = Product::with(['stock.warehouse', 'image'])->find($id);
         $warehouse = Warehouse::all();
+        
         return inertia::render('EC/Admin/StockShow',[
             'data' => $result,
             'warehouse' => $warehouse,
@@ -81,21 +53,9 @@ class AdminStockController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-        $result = Stock::with(['product.image', 'product.category', 'warehouse'])->find($id);
-        return inertia::render('EC/Admin/StockEdit',[
-            'data' => $result,                    
-        ]);
-    }
-
-    /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update(Request $request): RedirectResponse
     {
         DB::transaction(function () use ($request){
             $request->validate([
@@ -118,7 +78,7 @@ class AdminStockController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request)
+    public function destroy(Request $request): RedirectResponse
     {
         DB::transaction(function () use ($request){
             $request->validate([

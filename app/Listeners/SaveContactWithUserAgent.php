@@ -23,7 +23,6 @@ class SaveContactWithUserAgent
      */
     public function handle(ContactFormSubmitted $event): void
     {
-        //
       Mail::send([], [], function ($message) use ($event) {
           $message->from('xxxxxxxxx@gmail.com', "管理者")
                   ->to($event->formData["email"], $event->formData["name"])

@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import type { Image } from '@/types/image'
   import { supabaseURL, supabaseNoImage } from "@/lib/supabase"
-  import { ref, onMounted, watch } from "vue"
+  import { ref } from "vue"
   
   const props = defineProps<{
     images: Image[] | undefined,
@@ -29,8 +29,8 @@
         </div>
       </template>
     </div>
-    <div class="artboard phone-1">
-      <img :src="selectedImage" />
+    <div class="w-96 h-lg border flex justify-center items-center overflow-hidden">
+      <img :src="selectedImage" class="object-cover w-full" />
     </div>
   </div>
   <div v-else class="max-w-48">

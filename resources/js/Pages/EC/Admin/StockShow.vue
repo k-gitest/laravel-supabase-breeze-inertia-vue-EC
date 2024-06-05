@@ -22,7 +22,7 @@
   }
   
   const submit = (id: number, quantity: number, reserved: number) => {
-    router.put('/stock/update', {
+    router.put('/admin/stock/update', {
       data: {
         id: id,
         quantity: quantity,
@@ -33,7 +33,7 @@
   }
 
   const deleteStock = (id: number) => {
-    router.delete('/stock/delete', {
+    router.delete('/admin/stock/delete', {
       data: {
         id: id,
       },
@@ -58,6 +58,10 @@
             <li>{{props.data.category?.name}}</li>
             <li>{{props.data.price_excluding_tax}}</li>
             <li>{{ props.data.price_including_tax }}</li>
+            <li class="flex gap-2">
+              <Link :href="route('admin.product.edit', { id: props.data.id })" class="btn">商品編集</Link>
+            <Link :href="route('admin.product.destroy', { id: props.data.id })" class="btn">商品削除</Link>
+            </li>
           </ul>
           <div v-if="props.data.stock && props.data.stock.length">
             <div class="overflow-x-auto">
@@ -86,9 +90,15 @@
               </table>
             </div>
           </div>
+
           <template v-if="props.data.stock && props.data.stock.length">
-            <WarehouseStockSelectbox :warehouse="props.warehouse" :product_id="props.data.id" :stock="props.data.stock" />
+            <WarehouseStockSelectbox :warehouses="props.warehouse" :product_id="props.data.id" :stock="props.data.stock" />
           </template>
+          <template v-else>
+            在庫が登録されていません
+            <WarehouseStockSelectbox :warehouses="props.warehouse" :product_id="props.data.id" />
+          </template>
+
           <div v-show="props.errors">
             {{ props.errors.quantity }}
             {{ props.errors.user_id }}

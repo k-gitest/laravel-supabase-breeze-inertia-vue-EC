@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 
 class AdminCategoryController extends Controller
 {
@@ -40,7 +41,7 @@ class AdminCategoryController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-      DB::transaction(function () use ($request) {
+      $result = DB::transaction(function () use ($request) {
         $request->validate([
           "name" => "required|unique:categories,name",
           "description" => "required",
@@ -53,26 +54,6 @@ class AdminCategoryController extends Controller
       });
 
       return redirect()->route('admin.category.create', $result);
-    }
-
-    /**
-     * 特定IDデータの画面表示
-     */
-    public function show(Category $category, Request $request, $id): Response | RedirectResponse
-    {
-      $result = Category::with(['product.category', 'product.image'])->find($id);
-
-      if($result){
-        $data = $result->product;
-        $categoryName = $result->name;
-      } else {
-        return redirect("/");
-      }
-
-      return Inertia::render('EC/Admin/CategoryProductList', [
-          "data" => $result,
-          "category_name" => $categoryName,
-      ]);
     }
 
     /**

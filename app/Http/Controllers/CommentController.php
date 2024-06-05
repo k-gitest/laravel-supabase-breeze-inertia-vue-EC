@@ -16,20 +16,11 @@ class CommentController extends Controller
      */
     public function index(): Response
     {
-        //
         $comment = Comment::with('product')->get();
 
         return Inertia::render('EC/CommentIndex', [
             'data' => $comment,
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -53,30 +44,6 @@ class CommentController extends Controller
         });
 
         return redirect()->route('product.show', $request->product_id)->with('success', 'コメントを投稿しました');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Comment $comment)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Comment $comment)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Comment $comment)
-    {
-        //
     }
 
     /**

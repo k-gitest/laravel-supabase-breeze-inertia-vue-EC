@@ -28,13 +28,14 @@
         }
       },
       onFinish: () => {
-        console.log("hoge")
+        form.reset();
       },
     })
   }
 
   const handleFileChange = (event: Event) => {
     const target = event.target as HTMLInputElement
+    //const file = target.files.[0]
     const file = (target.files as FileList)[0]
     if(file){
       form.image.push(file)
@@ -43,6 +44,7 @@
 
   const clickHandleFile = (event: Event) => {
     event.preventDefault();
+    //document.getElementById("image")?.click()
     fileImageElement.value?.click()
   }
 
@@ -52,6 +54,12 @@
     if (fileImageElement.value) {
         fileImageElement.value.value = "";
     }
+    /*
+    const imageElement = document.getElementById("image") as HTMLInputElement;
+    if (imageElement) {
+      imageElement.value = "";
+    }
+    */
   }
 
 </script>

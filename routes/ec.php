@@ -2,7 +2,6 @@
 
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\PaymentController;
@@ -10,6 +9,7 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\SearchController;
 
 Route::middleware('auth')->group(function (){
     Route::get('/cart/index', [CartController::class, 'index'])->name('cart.index');
@@ -33,8 +33,7 @@ Route::middleware('auth')->group(function (){
 
 Route::post('stripe/webhook', [WebhookController::class, 'handleWebhook']);
 
-Route::get('/category/index', [CategoryController::class, 'index'])->name('category.index');
-Route::get('/category/show/{id}', [CategoryController::class, 'show'])->name('category.show');
-
 Route::get('/product', [ProductController::class, 'index'])->name('product.index');
 Route::get('/product/show/{id}', [ProductController::class, 'show'])->name('product.show');
+
+Route::get('/product/search', [SearchController::class, 'index'])->name('search');

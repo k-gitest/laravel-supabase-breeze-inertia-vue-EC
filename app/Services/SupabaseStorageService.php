@@ -17,7 +17,6 @@ class SupabaseStorageService
      */
     public function __construct()
     {
-        //
         $this->baseUrl = env('SUPABASE_URL');
         $this->apiKey = env('SUPABASE_KEY');
         $this->bucketName = env('SUPABASE_BUCKET');

@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from "@inertiajs/vue3";
-import { onMounted } from "vue";
 
 const { props } = usePage();
-//const { component, props, url, version } = usePage(); // usePageは$pageと同じ
-// $pageはscript内で使用するとエラーになる、template内では使用出来る
 const user = props?.auth?.user;
 
 defineProps<{
@@ -13,11 +10,6 @@ defineProps<{
     laravelVersion: string;
     phpVersion: string;
 }>();
-
-onMounted(() => {
-    //console.log(component, props, url, version)
-    //console.log(user);
-});
 </script>
 
 <template>

@@ -25,8 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(UrlGenerator $url): void
     {
-        //
       $url->forceScheme('https');
+      $this->app['request']->server->set('HTTPS','on');
 
       Gate::define('update-todo-list', function (User $user, TodoList $todoList){
         return $user->id === $todoList->user_id;

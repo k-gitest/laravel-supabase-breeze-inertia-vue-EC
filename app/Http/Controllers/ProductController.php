@@ -21,12 +21,13 @@ class ProductController extends Controller
      * Display a listing of the resource.
      */
     public function index(): Response
-    {
-        //
-      $data = Product::with(['category', 'image', 'favorite', 'stock'])->orderBy('created_at', 'desc')->withSum('stock', 'quantity')->get();
+    { 
+      $data = Product::with(['category', 'image', 'favorite', 'stock'])->orderBy('created_at', 'desc')->withSum('stock', 'quantity');
+
+      $result = $data->paginate(10);
       
       return inertia::render('EC/ProductAllList',[
-        "data" => $data,
+        "pagedata" => $result,
       ]);
     }
 
@@ -35,7 +36,6 @@ class ProductController extends Controller
      */
     public function show(Product $product, $id): Response | RedirectResponse
     {
-        //
       $auth_check = Auth::check();
       $isInCart = false;
       $isInComment = false;

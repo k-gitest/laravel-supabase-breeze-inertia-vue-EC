@@ -15,9 +15,8 @@ class AdminWarehouseController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): Response
     {
-        //
         $result  = Warehouse::all();
 
         return Inertia::render('EC/Admin/WarehouseIndex', [
@@ -28,9 +27,8 @@ class AdminWarehouseController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): Response
     {
-        //
         return Inertia::render('EC/Admin/WarehouseRegister');
     }
 
@@ -58,9 +56,10 @@ class AdminWarehouseController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): Response
     {
         $result = Warehouse::with(['stock.product.category'])->find($id);
+        
         return Inertia::render('EC/Admin/WarehouseShow', [
             'data' => $result,
         ]);
@@ -69,10 +68,10 @@ class AdminWarehouseController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $id): Response
     {
-        //
         $result = Warehouse::find($id);
+        
         return Inertia::render('EC/Admin/WarehouseEdit', [
             'data' => $result,
         ]);
@@ -105,7 +104,7 @@ class AdminWarehouseController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id): RedirectResponse
     {
         DB::transaction(function () use ($id){
             $warehouse = Warehouse::find($id);

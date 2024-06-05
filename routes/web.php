@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TodoListController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\NewsletterController;  
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [

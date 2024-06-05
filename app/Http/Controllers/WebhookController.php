@@ -99,7 +99,7 @@ class WebhookController extends CashierController
 
   protected function handlePaymentIntentFailed($paymentIntent)
   {
-      // 
+      // 支払い失敗の処理を行う
   }
 
 }

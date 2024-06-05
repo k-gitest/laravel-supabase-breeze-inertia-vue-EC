@@ -21,8 +21,7 @@ class ContactFormSubmitted
      */
     public function __construct(array $formData)
     {
-        //
-        $this->formData = collect($formData);
+        $this->formData = collect($formData); 
     }
 
     /**

@@ -2,7 +2,6 @@
   import { supabaseURL, supabaseNoImage } from "@/lib/supabase"
   import { Link, router } from "@inertiajs/vue3";
   import type { Image } from "@/types/image";
-  import type { Stock } from "@/types/stock"
   import { isoDateGenerator } from "@/lib/isoDateGenerator";
 
   defineProps<{
@@ -38,22 +37,21 @@
 </script>
 
 <template>
-  <div class="card w-96 bg-base-100 shadow-xl max-w-48 relative">
+  <div class="card bg-base-100 shadow-xl relative">
     <div v-if="created_at >= isoDateGenerator()">
       <span class="absolute top-0 end-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-y-1/2 translate-x-1/2 bg-red-500 text-white z-10">new</span>
       <!--
       <span class="absolute top-0 start-0 inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white z-10">new</span>
       -->
     </div>
-    
-    <Link :href="route(route_show, {id: id})">
-      <figure v-if="image && image.length">
-        <img :src="supabaseURL + image[0].path" class="rounded-lg" />
+    <Link :href="route(route_show, {id: id})" class="flex flex-col h-full justify-between rounded-lg">
+      <figure v-if="image && image.length" class="h-56">
+        <img :src="supabaseURL + image[0].path" />
       </figure>
-      <figure v-else>
+      <figure v-else class="h-56">
         <img :src="supabaseURL + supabaseNoImage" class="rounded-lg" />
       </figure>
-      <div class="card-body p-2">
+      <div class="card-body p-2 justify-end">
         <h2 class="card-title">
           {{ name }}
         </h2>
@@ -63,14 +61,12 @@
         <div class="card-actions justify-end">
           <div class="badge badge-outline text-xs">{{ category_name }}</div>
         </div>
-        
         <div v-if="stock && stock > 0 && stock < 5">
           在庫数：残り僅か
         </div>
         <div v-else-if="stock === 0 || !stock">
           <p class="text-red-400">売り切れ</p>
         </div>
-
         <button v-if="mode === 'favorite.enable'" @click.stop.prevent="handleFavorite(id)" class="btn btn-sm">お気に入りに追加<span class="badge">{{ count }}</span></button>
         <button v-if="mode === 'favorite.disable'" class="btn btn-sm" disabled>お気に入りに追加<span class="badge">{{ count }}</span></button>
         <button v-if="mode === 'favorite.delete'" @click.stop.prevent="deleteFavorite(id)" class="btn btn-sm">削除</button>

@@ -14,10 +14,10 @@ use App\Http\Requests\TodoRequest;
 
 class TodoListController extends Controller
 {
-    //
   public function index(Request $request): Response
   {
     $todoLists = TodoList::all();
+    
     return Inertia::render('Todo/Index', [
         "data" => $todoLists,
     ]);
@@ -48,7 +48,8 @@ class TodoListController extends Controller
 
   public function edit(Request $request, int $id): Response
   {
-    $todo = TodoList::findOrFail($id); 
+    $todo = TodoList::findOrFail($id);
+    
     return Inertia::render('Todo/Edit', [
         'todoList' => $todo,
     ]);    

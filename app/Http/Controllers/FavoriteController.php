@@ -17,7 +17,6 @@ class FavoriteController extends Controller
      */
     public function index(): Response
     {
-        //
         $favorite = Favorite::with('product.category')->get();
 
         return Inertia::render('EC/FavoriteIndex', [
@@ -26,17 +25,9 @@ class FavoriteController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         DB::transaction(function () use ($request){
             $request->validate([
@@ -49,30 +40,7 @@ class FavoriteController extends Controller
             ]);
         });
 
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Favorite $favorite)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Favorite $favorite)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Favorite $favorite)
-    {
-        //
+        return redirect()->back()->with('success', 'お気に入りに追加しました');
     }
 
     /**

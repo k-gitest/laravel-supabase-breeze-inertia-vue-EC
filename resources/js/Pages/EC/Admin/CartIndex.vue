@@ -32,7 +32,7 @@
           </tr>
         </thead>
 
-        <CartTableBody :carts="props.data" />"
+        <CartTableBody :carts="props.data" />
         
       </table>
     </div>

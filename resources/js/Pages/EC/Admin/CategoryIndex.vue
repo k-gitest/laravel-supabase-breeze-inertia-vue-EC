@@ -24,6 +24,9 @@
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">CategoryIndex</h2>
     </template>
+      <div>
+        <Link :href="route('admin.category.create')" class="btn btn-sm">新規作成</Link>
+      </div>
       <div v-if="props.data.length">
         <div v-show="props.flash.success">
           <p class="text-sm text-red-600 dark:text-red-400">
@@ -37,11 +40,13 @@
           <li>{{ category.created_at }}</li>
           <li>{{ category.updated_at }}</li>
           <li class="flex gap-2">
-            <Link class="btn" :href="route('admin.category.show', {id: category.id})">一覧</Link>
             <Link class="btn" :href="route('admin.category.edit', {id: category.id})">編集</Link>
             <button @click="deleteCategory(category.id)" class="btn">削除</button>
           </li>
         </ul>
+      </div>
+      <div v-else>
+        <p>カテゴリーが登録されていません</p>
       </div>
     </AdminEcLayout>
 </template>
