@@ -37,8 +37,9 @@ class PaymentController extends Controller
     $warehouse_id = config('services.stripe.warehouse_id');
 
     $paymentIntent = PaymentIntent::create([
-        'amount' => round($total_price_including_tax),
+        'amount' => round($total_price_including_tax), 
         'currency' => 'jpy',
+        'payment_method' => 'pm_card_visa',
         'metadata' => [
            'user_id' => auth()->user()->id,
            'warehouse_id' => $warehouse_id,

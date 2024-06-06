@@ -13,6 +13,6 @@
       <Link :href="route('order.index')" class="btn btn-sm"> order</Link>
       <Link :href="route('favorite.index')" class="btn btn-sm"> favorite</Link>
       <Link :href="route('comment.index')" class="btn btn-sm"> comment</Link>
-    </template>
+</template>
   </div>
 </template>

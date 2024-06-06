@@ -102,7 +102,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - comments, favoritesテーブル追加、コメント投稿とお気に入り画面追加
 - stocks, warehousesテーブル追加、在庫と倉庫画面追加
 - メールマガジン登録、ジョブキューとスケジュール処理追加
-- テキスト検索追加、検索結果ページネーション追加
+- テキスト、カテゴリ、店舗在庫、価格帯の検索追加、ページネーション追加
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル設定
 - supabaseとmailtrapとstripeのenv設定
@@ -121,5 +121,6 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - laravelだけでも覚える事が多くinertia/ziggyなどもあるので、フロントエンドの開発者はapi onlyで使った方が分かりやすいかも知れない
 - inertiaのPartial reloadsは検索結果表示やページネーションとの相性が悪いと感じる
 - DB処理後の更新としてrouter.reloadの使いどころは多いと感じる
+- whereHasは言われているほど遅くも重くもない
 - hotwire/livewireは次の機会に使ってみようと思う
 

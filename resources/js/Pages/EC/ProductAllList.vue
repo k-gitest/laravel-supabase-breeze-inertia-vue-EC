@@ -24,9 +24,9 @@
     })
   }
 
-  const searchSubmit = (formdata: { q: string, category_ids: number[] }) => {
+  const searchSubmit = (formdata: { q: string, category_ids: number[], warehouse_check: boolean, price_range: string[]  }) => {
     router.get(route('search'), 
-      { q: formdata.q, category_ids: formdata.category_ids },
+      { q: formdata.q, category_ids: formdata.category_ids, warehouse_check: formdata.warehouse_check, price_range: formdata.price_range },
       {
         preserveState: false,
         preserveScroll: true,
@@ -45,7 +45,7 @@
     </template>
     <EcLayout>
       <div class="flex gap-5 w-full">
-        <SearchBox @searchSubmit="searchSubmit" :categories="props.category" :filters="props.filters" />
+        <SearchBox @searchSubmit="searchSubmit" :categories="props.category" :filters="props?.filters" />
         <div class="grow">
           <div v-if="props.pagedata.data.length">
             <div class="text-center mb-5">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { Head, usePage, router } from "@inertiajs/vue3";
+  import { Head, usePage, router, Link } from "@inertiajs/vue3";
   import type { PageData } from '@/types/page'
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
@@ -8,10 +8,11 @@
   import SearchBox from "@/Components/SearchBox.vue"
 
   const { props } = usePage<PageProps & { pagedata: PageData }>()
+  console.log(props)
 
-  const searchSubmit = (formdata: { q: string, category_ids: number[] }) => {
+  const searchSubmit = (formdata: { q: string, category_ids: number[], warehouse_check: boolean, price_range: string[] }) => {
     router.get(route('admin.search'), 
-      { q: formdata.q, category_ids: formdata.category_ids },
+      { q: formdata.q, category_ids: formdata.category_ids, warehouse_check: formdata.warehouse_check, price_range: formdata.price_range },
       {
         preserveState: false,
         preserveScroll: true,
@@ -28,8 +29,16 @@
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">ProductAllList</h2>
     </template>
     <div class="flex gap-5 w-full">
-      <SearchBox @searchSubmit="searchSubmit" :categories="props.category" :filters="props.filters" />
+      <SearchBox 
+        @searchSubmit="searchSubmit" 
+        :categories="props.category" 
+        :filters="props.filters" 
+        :price_ranges="props.price_ranges"
+        />
       <div class="grow">
+        <div class="flex justify-end">
+          <Link :href="route('admin.product.create')" class="btn btn-sm">新規作成</Link>
+        </div>
         <div v-if="props.pagedata.data.length">
           <AdminStockTableList :data="props.pagedata.data" />
         </div>

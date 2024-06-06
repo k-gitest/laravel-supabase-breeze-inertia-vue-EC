@@ -32,5 +32,7 @@ export type PageProps<
     filters: {
         q: string | undefined;
         category_ids: number[] | undefined;
+        warehouse_check: boolean | undefined;
     }
+    price_ranges: Record<string, [number, number | null]>;
 };

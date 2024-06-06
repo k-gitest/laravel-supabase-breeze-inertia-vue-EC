@@ -36,9 +36,6 @@
 </script>
 <template>
   <div class="overflow-x-auto">
-    <div class="flex justify-end">
-      <Link :href="route('admin.product.create')" class="btn btn-sm">新規作成</Link>
-    </div>
     <table class="table">
       <thead>
         <tr>

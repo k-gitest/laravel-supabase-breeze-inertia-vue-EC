@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Warehouse;
+use App\Models\Product;
 
 class AdminWarehouseController extends Controller
 {
@@ -58,10 +59,19 @@ class AdminWarehouseController extends Controller
      */
     public function show(string $id): Response
     {
-        $result = Warehouse::with(['stock.product.category'])->find($id);
+        $warehouse = Warehouse::findOrFail($id);
+        $result = $warehouse->product()
+            ->with(['category', 'stock', 'image'])
+            ->withSum(['stock' => function ($query) use ($id) {
+                if ($id) {
+                    $query->where('warehouse_id', $id);
+                }
+            }], 'quantity')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
         
         return Inertia::render('EC/Admin/WarehouseShow', [
-            'data' => $result,
+            'pagedata' => $result,
         ]);
     }
 

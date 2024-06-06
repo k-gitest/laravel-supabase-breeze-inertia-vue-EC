@@ -20,11 +20,22 @@ class AdminProductController extends Controller
      */
     public function index(Request $request): Response
     {
-      $result = Product::with(['image', 'category'])->withSum('stock', 'quantity')->orderBy('created_at', 'desc');
+      $id = config('constants.NET_WAREHOUSE_ID');
+      $search_price_ranges = config('constants.PRICE_RANGES');
+      
+      $result = Product::with(['image', 'category'])
+        ->withSum(['stock' => function ($query) use ($id) {
+                      if ($id) {
+                          $query->where('warehouse_id', $id);
+                      }
+                  }],'quantity')
+        ->orderBy('created_at', 'desc');
+      
       $data = $result->paginate(10);
 
       return inertia::render('EC/Admin/ProductAllList', [
           'pagedata' => $data,
+          'price_ranges' => $search_price_ranges,
       ]);
 
     }
