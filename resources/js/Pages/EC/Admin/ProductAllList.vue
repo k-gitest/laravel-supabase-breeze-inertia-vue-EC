@@ -12,7 +12,10 @@
 
   const searchSubmit = (formdata: { q: string, category_ids: number[], warehouse_check: boolean, price_range: string[] }) => {
     router.get(route('admin.search'), 
+               /*
       { q: formdata.q, category_ids: formdata.category_ids, warehouse_check: formdata.warehouse_check, price_range: formdata.price_range },
+      */
+      formdata,
       {
         preserveState: false,
         preserveScroll: true,

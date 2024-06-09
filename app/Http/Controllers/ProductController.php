@@ -24,10 +24,20 @@ class ProductController extends Controller
     { 
       $data = Product::with(['category', 'image', 'favorite', 'stock'])->orderBy('created_at', 'desc')->withSum('stock', 'quantity');
 
-      $result = $data->paginate(10);
+      $result = $data->paginate(12);
+
+      $search_price_ranges = config('constants.PRICE_RANGES');
       
       return inertia::render('EC/ProductAllList',[
         "pagedata" => $result,
+        'price_ranges' => $search_price_ranges,
+        'filters'  => [
+              'category_ids' => [],
+              'q'  => "",
+              'price_range' => [],
+              'warehouse_check' => false,
+              'sort_option' => "newest",
+        ],
       ]);
     }
 

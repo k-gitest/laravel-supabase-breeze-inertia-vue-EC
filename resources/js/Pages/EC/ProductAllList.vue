@@ -7,8 +7,11 @@
   import ProductListCard from "@/Components/ProductListCard.vue"
   import Pagination from "@/Components/Pagination.vue"
   import SearchBox from "@/Components/SearchBox.vue"
+  import SortSelect from "@/Components/SortSelect.vue"
+  import { ref } from "vue"
 
   const { props } = usePage<PageProps & { pagedata: PageData }>()
+  const filters = ref({...props.filters});
 
   const addFavorite = (id: number) => {
     router.visit(`/favorite`,{
@@ -24,9 +27,9 @@
     })
   }
 
-  const searchSubmit = (formdata: { q: string, category_ids: number[], warehouse_check: boolean, price_range: string[]  }) => {
+  const searchSubmit = () => {
     router.get(route('search'), 
-      { q: formdata.q, category_ids: formdata.category_ids, warehouse_check: formdata.warehouse_check, price_range: formdata.price_range },
+      filters.value,
       {
         preserveState: false,
         preserveScroll: true,
@@ -34,6 +37,19 @@
           console.log('success');
         },
     })
+  }
+
+  const sortSubmit = (sortdata: string) => {
+    filters.value.sort_option = sortdata;
+    router.get(route('search'),
+     filters.value,
+     {
+        preserveState: false,
+        preserveScroll: true,
+        onSuccess: () => {
+          console.log('success');
+        },
+     })
   }
 </script>
 
@@ -45,11 +61,22 @@
     </template>
     <EcLayout>
       <div class="flex gap-5 w-full">
-        <SearchBox @searchSubmit="searchSubmit" :categories="props.category" :filters="props?.filters" />
+        <SearchBox 
+          @searchSubmit="searchSubmit" 
+          :categories="props.category" 
+          v-model:filters="filters"
+          :price_ranges="props.price_ranges"
+          />
         <div class="grow">
           <div v-if="props.pagedata.data.length">
             <div class="text-center mb-5">
               <p class="font-semibold text-xl text-gray-800">商品一覧</p>
+            </div>
+            <div class="text-right mb-5">
+              <SortSelect 
+                :sort_option="filters?.sort_option"
+                @sortSubmit="sortSubmit"
+                />
             </div>
             <div class="grid grid-cols-4 gap-5 justify-items-center">
               <template v-for="product of props.pagedata.data" :key="product.id">

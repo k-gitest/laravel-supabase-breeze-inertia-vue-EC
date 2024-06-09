@@ -30,9 +30,12 @@ export type PageProps<
     }
     clientSecret: string;
     filters: {
-        q: string | undefined;
-        category_ids: number[] | undefined;
-        warehouse_check: boolean | undefined;
+        q: string;
+        category_ids: number[];
+        warehouse_check: boolean;
+        price_range: string[],
+        sort_option: string;
     }
     price_ranges: Record<string, [number, number | null]>;
+    sort_options: Record<string, [number, number | null]>;
 };

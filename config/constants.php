@@ -9,4 +9,12 @@ return [
         '10000-30000' => [10000, 30000],
         '30000-' => [30000, null],
     ],
+
+    'SORT_OPTIONS' => [
+        'price_asc' => ['price_excluding_tax', 'asc'],
+        'price_desc' => ['price_excluding_tax', 'desc'],
+        'favorites_asc' => ['favorites_count', 'asc'],
+        'favorites_desc' => ['favorite_count', 'desc'],
+        'newest' => ['created_at', 'desc'],
+    ],
 ];

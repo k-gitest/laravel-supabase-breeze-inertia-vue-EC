@@ -103,6 +103,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - stocks, warehousesテーブル追加、在庫と倉庫画面追加
 - メールマガジン登録、ジョブキューとスケジュール処理追加
 - テキスト、カテゴリ、店舗在庫、価格帯の検索追加、ページネーション追加
+- 上記の検索結果をソートする機能を追加
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル設定
 - supabaseとmailtrapとstripeのenv設定
@@ -122,5 +123,6 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - inertiaのPartial reloadsは検索結果表示やページネーションとの相性が悪いと感じる
 - DB処理後の更新としてrouter.reloadの使いどころは多いと感じる
 - whereHasは言われているほど遅くも重くもない
+- defineModelでオプショナルがあるとbuild時に型は通ってもInvalid assignment targetのエラーが出るので初期値を設定する必要がある
 - hotwire/livewireは次の機会に使ってみようと思う
 
