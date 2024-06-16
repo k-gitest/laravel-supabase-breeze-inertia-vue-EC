@@ -2,6 +2,7 @@
   import { Head, usePage, router } from "@inertiajs/vue3";
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
   import type { PageData } from '@/types/page'
+  import type { Product } from '@/types/product'
   import type { PageProps } from '@/types'
   import EcLayout from "@/Layouts/EcLayout.vue"
   import ProductListCard from "@/Components/ProductListCard.vue"
@@ -10,7 +11,7 @@
   import SortSelect from "@/Components/SortSelect.vue"
   import { ref } from "vue"
 
-  const { props } = usePage<PageProps & { pagedata: PageData }>()
+  const { props } = usePage<PageProps & { pagedata: PageData<Product> }>()
   const filters = ref({...props.filters});
 
   const addFavorite = (id: number) => {

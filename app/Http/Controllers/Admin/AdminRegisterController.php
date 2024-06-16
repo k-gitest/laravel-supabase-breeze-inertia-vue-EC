@@ -23,19 +23,26 @@ class AdminRegisterController extends Controller
 
   public function store(Request $request): RedirectResponse
   {
-    DB::transaction(function () use ($request) {
-      $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|string|lowercase|email|max:255|unique:'.Admin::class,
-        'password' => ['required', 'confirmed', Rules\Password::defaults()],
-      ]);
+    $request->validate([
+      'name' => 'required|string|max:255',
+      'email' => 'required|string|lowercase|email|max:255|unique:'.Admin::class,
+      'password' => ['required', 'confirmed', Rules\Password::defaults()],
+    ]);
 
-      $admin = Admin::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-      ]);
-    });
+    try{
+      $admin = DB::transaction(function () use ($request) {
+        return $admin = Admin::create([
+          'name' => $request->name,
+          'email' => $request->email,
+          'password' => Hash::make($request->password),
+        ]);
+      });
+      Log::info('Admin create succeeded');
+    }
+    catch (\Exception $e){
+      Log::error('Failed to create admin.', ['error' => $e->getMessage()]);
+      return redirect()->back()->withErrors(['error' => 'Failed to create admin. Please try again.']);
+    }
 
     event(new Registered($admin));
 

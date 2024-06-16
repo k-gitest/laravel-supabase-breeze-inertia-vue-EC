@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Stock;
 use App\Models\Product;
 use App\Models\Warehouse;
+use Log;
 
 class AdminStockController extends Controller
 {
@@ -19,21 +20,28 @@ class AdminStockController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $stock = DB::transaction(function () use ($request){
-           $request->validate([
-                'product_id' => 'required',
-                'warehouse_id' => 'required',
-                'quantity' => 'required',
-                'reserved_quantity' => 'required',
-           ]);
+        $request->validate([
+            'product_id' => 'required',
+            'warehouse_id' => 'required',
+            'quantity' => 'required',
+            'reserved_quantity' => 'required',
+        ]);
 
-            return $stock = Stock::create([
-                'product_id' => $request->product_id,
-                'warehouse_id' => $request->warehouse_id,
-                'quantity' => $request->quantity,
-                'reserved_quantity' => $request->reserved_quantity,
-            ]);
-        });
+        try{
+            $stock = DB::transaction(function () use ($request){
+                return $stock = Stock::create([
+                    'product_id' => $request->product_id,
+                    'warehouse_id' => $request->warehouse_id,
+                    'quantity' => $request->quantity,
+                    'reserved_quantity' => $request->reserved_quantity,
+                ]);
+            });
+            Log::info('Stock create succeeded');
+        }
+        catch(\Exception $e){
+            Log::error('Failed to create stock.', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to create stock. Please try again.']);
+        }
 
         return redirect()->route('admin.product.index')->with('success', '在庫登録が成功しました');
     }
@@ -57,19 +65,26 @@ class AdminStockController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
-        DB::transaction(function () use ($request){
-            $request->validate([
-               "quantity" => "required",
-               "reserved_quantity" => "required",
-            ]);
+        $request->validate([
+           "quantity" => "required",
+           "reserved_quantity" => "required",
+        ]);
 
-            $stock = Stock::find($request->id);
-            $stock->quantity = $request->quantity;
-            $stock->reserved_quantity = $request->reserved_quantity;
-            if($stock->isDirty()){
-                $stock->save();
-            }
-        });
+        try{
+            DB::transaction(function () use ($request){
+                $stock = Stock::find($request->id);
+                $stock->quantity = $request->quantity;
+                $stock->reserved_quantity = $request->reserved_quantity;
+                if($stock->isDirty()){
+                    $stock->save();
+                }
+            });
+            Log::info('Stock update succeeded');
+        }
+        catch(\Exception $e){
+            Log::error('Failed to update stock.', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to update stock. Please try again.']);
+        }
         
         return redirect()->route('admin.stock.index')->with('success', '在庫情報を更新しました');
         
@@ -80,14 +95,21 @@ class AdminStockController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        DB::transaction(function () use ($request){
-            $request->validate([
-               "id" => "required",                
-            ]);
+        $request->validate([
+           "id" => "required",                
+        ]);
 
-            $stock = Stock::find($request->id);
-            $stock->delete();
-        });
+        try{
+            DB::transaction(function () use ($request){
+                $stock = Stock::find($request->id);
+                $stock->delete();
+            });
+            Log::info('Stock delete succeeded');
+        }
+        catch(\Exception $e){
+            Log::error('Failed to delete stock.', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to delete stock. Please try again.']);
+        }
 
         return redirect()->route('admin.stock.index')->with('success', '在庫情報を削除しました');
         

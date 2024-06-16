@@ -37,7 +37,7 @@
   })
 
   const deleteProduct = () => {
-    form.delete(route('product.destroy', { id: props.data.id}), {
+    form.delete(route('admin.product.destroy', { id: props.data.id}), {
       preserveState: false,
       onSuccess: (res) => {
         console.log(res)

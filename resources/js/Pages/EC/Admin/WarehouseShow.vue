@@ -1,13 +1,14 @@
 <script setup lang="ts">
   import { Head, usePage } from "@inertiajs/vue3";
   import type { Warehouse } from '@/types/warehouse'
+  import type { Product } from '@/types/product'
   import type { PageData } from "@/types/page"
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
   import AdminStockTableList from "@/Components/AdminStockTableList.vue"
   import Pagination from "@/Components/Pagination.vue"
 
-  const { props } = usePage<PageProps & { category_name: string, pagedata: PageData }>()
+  const { props } = usePage<PageProps & { category_name: string, pagedata: PageData<Product> }>()
 </script>
 
 <template>

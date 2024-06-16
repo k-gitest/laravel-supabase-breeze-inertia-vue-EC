@@ -10,6 +10,8 @@ use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use Exception;
 use App\Models\Cart;
+use Log;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -36,15 +38,24 @@ class PaymentController extends Controller
 
     $warehouse_id = config('services.stripe.warehouse_id');
 
-    $paymentIntent = PaymentIntent::create([
-        'amount' => round($total_price_including_tax), 
-        'currency' => 'jpy',
-        'payment_method' => 'pm_card_visa',
-        'metadata' => [
-           'user_id' => auth()->user()->id,
-           'warehouse_id' => $warehouse_id,
-        ],
-    ]);
+    try{
+      $paymentIntent = DB::transaction(function () use ($total_price_including_tax, $warehouse_id){
+        return $paymentIntent = PaymentIntent::create([
+            'amount' => round($total_price_including_tax), 
+            'currency' => 'jpy',
+            'payment_method' => 'pm_card_visa',
+            'metadata' => [
+               'user_id' => auth()->user()->id,
+               'warehouse_id' => $warehouse_id,
+            ],
+        ]);
+      });
+      Log::info('paymentIntent create succeeded');
+    }
+    catch(\Exception $e){
+      Log::error('Failed to create paymentIntent.', ['error' => $e->getMessage()]);
+      return redirect()->back()->withErrors(['error' => 'Failed to create paymentIntent. Please try again.']);
+    }
     
     return Inertia::render('EC/PaymentComponent', [
         'clientSecret' => $paymentIntent->client_secret,

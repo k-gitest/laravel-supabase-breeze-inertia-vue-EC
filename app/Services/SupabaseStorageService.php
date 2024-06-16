@@ -4,30 +4,63 @@ namespace App\Services;
 
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Http;
+use Log;
 
 class SupabaseStorageService
 {
 
     protected $baseUrl;
     protected $apiKey;
-    protected $bucketName;
+    protected $contactsBucket;
+    protected $productsBucket;
+    protected $storage_endpoint;
+    protected $product_path;
   
     /**
      * Create a new class instance.
      */
     public function __construct()
     {
-        $this->baseUrl = env('SUPABASE_URL');
-        $this->apiKey = env('SUPABASE_KEY');
-        $this->bucketName = env('SUPABASE_BUCKET');
+        $this->baseUrl = config('services.supabase.url');
+        $this->apiKey = config('services.supabase.key');
+        $this->contactsBucket = config('services.supabase.contacts_bucket');
+        $this->productsBucket = config('services.supabase.products_bucket');
+        $this->storageEndpoint = config('services.supabase.storage_endpoint');
+        $this->product_path = config('services.supabase.product_path');
+    }
+
+    public function uploadImageToContacts($file, $i)
+    {
+      $originalName = $file->getClientOriginalName($file);
+      $originalNameParts = explode(".", $originalName);
+      $imageName = reset($originalNameParts);
+      $imageType = getimagesize($file)["mime"];
+      $parts = explode("/", $imageType);
+      $extension = end($parts);
+      $date = date('Y-m-d-H-i-s');
+      $path = "/{$date}/{$imageName}_{$i}_{$date}.{$extension}";
+      
+      return $this->uploadImage($file, $path, $this->contactsBucket);
+    }
+  
+    public function uploadImageToProducts($file, $product_id, $index, $latestnumber = 0)
+    {
+      $imageType = getimagesize($file)["mime"];
+      $parts = explode("/", $imageType);
+      $extension = end($parts);
+      $fileNumber = $index + $latestnumber;
+      $path = $this->product_path . "/{$product_id}/{$product_id}_{$fileNumber}.{$extension}";
+
+      return $this->uploadImage($file, $path, $this->productsBucket);
     }
   
     /**
      * HttpファサードでのPOSTリクエスト
      */
-    public function uploadImage($file, $path=null)
+    private function uploadImage($file, $path=null, $backetName)
     {
-      //Log::info("uploading file to supabase: {$file}");
+      Log::info("uploading file to supabase: {$file}");
+      
       if($path){
         $filepath = $path;
       } else {
@@ -39,29 +72,37 @@ class SupabaseStorageService
       ])
         ->attach('file', $file->get(), $file->getClientOriginalName())
         ->post(
-          "{$this->baseUrl}/storage/v1/object/{$this->bucketName}/{$filepath}"
+          $this->baseUrl . $this->storageEndpoint .  "{$backetName}/{$filepath}"
         );
 
       if ($response->successful()) {
         return $response->json();
       } else {
-        throw new \Exception('Failed to upload image to Supabase: ' . $response->body());
+        Log::error('Failed to upload image to Supabase');
+        throw new \Exception('Failed to upload image to Supabase' . $response->body());
       }
     }
 
     /**
      * Deleteリクエスト
      */
-    public function deleteImage($path){
-      $response = Http::withHeaders([
-          'Authorization' => 'Bearer ' . $this->apiKey,
-      ])
-        ->delete("{$this->baseUrl}/storage/v1/object/{$path}");
+    public function deleteImage(array $fileKeys){
+      Log::info("deleting file to supabase: ", $fileKeys);
+      
+      foreach( $fileKeys as $key){
 
-      if($response->successful()){
-        return $response->json();
-      } else {
-        throw new \Exception('Failed to upload image to Supabase: ' . $response->body());
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+        ])
+          ->delete($this->baseUrl . $this->storageEndpoint . $key);
+
+        if($response->successful()){
+          return $response->json();
+          Log::info("Deleted file to Supabase: " . $key);
+        } else {
+          Log::error('Failed to delete image to Supabase');
+          throw new \Exception('Failed to delete image to Supabase: ' . $response->body());
+        }
       }
     }
 }

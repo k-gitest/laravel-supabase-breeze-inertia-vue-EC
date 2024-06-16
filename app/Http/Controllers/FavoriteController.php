@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\Product;
+use Log;
 
 class FavoriteController extends Controller
 {
@@ -29,16 +30,23 @@ class FavoriteController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        DB::transaction(function () use ($request){
-            $request->validate([
-                'product_id' => 'required|integer',
-            ]);
+        $request->validate([
+            'product_id' => 'required|integer',
+        ]);
 
-            Favorite::create([
-                'user_id' => auth()->user()->id,
-                'product_id' => $request->product_id,
-            ]);
-        });
+        try{
+            DB::transaction(function () use ($request){
+                Favorite::create([
+                    'user_id' => auth()->user()->id,
+                    'product_id' => $request->product_id,
+                ]);
+            });
+            Log::info('Favorite created');
+        }
+        catch (\Exception $e){
+            Log::error('Failed to create favorite.', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to create favorite. Please try again.']);
+        }
 
         return redirect()->back()->with('success', 'お気に入りに追加しました');
     }
@@ -48,11 +56,19 @@ class FavoriteController extends Controller
      */
     public function destroy(Favorite $favorite, $id): RedirectResponse
     {
-        DB::transaction(function () use ($id){
-            $user_id = auth()->user()->id;
-            $favorite = Favorite::where('user_id', $user_id)->find($id);
-            $favorite->delete();
-        });
+        $user_id = auth()->user()->id;
+        $favorite = Favorite::where('user_id', $user_id)->find($id);
+        
+        try{
+            DB::transaction(function () use ($favorite){
+                $favorite->delete();
+            });
+            Log::info('Favorite deleted');
+        }
+        catch(\Exception $e){
+            Log::error('Failed to delete favorite.', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to delete favorite. Please try again.']);
+        }
 
         return redirect()->route('favorite.index')->with('success', 'お気に入りから削除しました');
     }

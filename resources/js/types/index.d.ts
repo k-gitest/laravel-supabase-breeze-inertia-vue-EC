@@ -37,5 +37,5 @@ export type PageProps<
         sort_option: string;
     }
     price_ranges: Record<string, [number, number | null]>;
-    sort_options: Record<string, [number, number | null]>;
+    //sort_options: Record<string, [number, number | null]>;
 };

@@ -38,17 +38,24 @@ class AdminWarehouseController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        DB::transaction(function () use ($request){
-            $request->validate([
-                'name' => 'required|string|max:255|unique:warehouses,name',
-                'location' => 'required|string|max:255',
-            ]);
-            
-            $warehouse = Warehouse::create([
-                'name' => $request->name,
-                'location' => $request->location,                           
-            ]);
-        });
+        $request->validate([
+            'name' => 'required|string|max:255|unique:warehouses,name',
+            'location' => 'required|string|max:255',
+        ]);
+
+        try{
+            DB::transaction(function () use ($request){
+                $warehouse = Warehouse::create([
+                    'name' => $request->name,
+                    'location' => $request->location,                           
+                ]);
+            });
+            Log::info('Warehouse create succeeded');
+        }
+        catch(\Exception $e){
+            Log::error('Failed to create Warehouse.', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to create warehouse. Please try again.']);
+        }
 
         return redirect()->route('admin.warehouse.index');
         
@@ -92,21 +99,27 @@ class AdminWarehouseController extends Controller
      */
     public function update(Request $request, string $id): RedirectResponse
     {
-        $warehouse = DB::transaction(function () use ($request, $id){
-            $warehouse = Warehouse::find($id);
-            $request->validate([
-                "name" => "required|string|max:255|unique:warehouses,name,{$warehouse->id}",
-                "location" => "required|string|max:255",               
-            ]);
+        $request->validate([
+            "name" => "required|string|max:255|unique:warehouses,name,{$warehouse->id}",
+            "location" => "required|string|max:255",               
+        ]);
 
-            $warehouse->name = $request->name;
-            $warehouse->location = $request->location;
+        $warehouse = Warehouse::find($id);
+        $warehouse->name = $request->name;
+        $warehouse->location = $request->location;
 
-            if( $warehouse->isDirty() ){
-                $warehouse->save();
-            };
-            return $warehouse;
-        });
+        try{
+            DB::transaction(function () use ($warehouse){
+                if( $warehouse->isDirty() ){
+                    $warehouse->save();
+                };
+            });
+            Log::info('Warehouse update succeeded');
+        }
+        catch(\Exception $e){
+            Log::error( 'Failed to update Warehouse.', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to update warehouse. Please try again.']);
+        }
 
         return redirect()->route('admin.warehouse.edit', $id);
     }
@@ -116,10 +129,17 @@ class AdminWarehouseController extends Controller
      */
     public function destroy(string $id): RedirectResponse
     {
-        DB::transaction(function () use ($id){
-            $warehouse = Warehouse::find($id);
-            $warehouse->delete();
-        });
+        $warehouse = Warehouse::find($id);
+        try{
+            DB::transaction(function () use ($warehouse){
+                $warehouse->delete();
+            });
+            Log::info('Warehouse delete succeeded');
+        }
+        catch(\Exception $e){
+            Log::error('Failed to delete Warehouse.', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to delete warehouse. Please try again.']);
+        }
 
         return redirect()->route('admin.warehouse.index');
     }

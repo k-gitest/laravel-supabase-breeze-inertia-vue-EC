@@ -9,6 +9,15 @@
     data: Product[],
   }>()
 
+  const deleteProduct = (id: number) => {
+    router.delete(route('admin.product.destroy', { id: id}), {
+      preserveState: false,
+      onSuccess: (res) => {
+        console.log(res)
+      }
+    })
+  }
+  
   const selectedItems = ref<number[]>([]);
 
   const allSelected = computed({
@@ -104,7 +113,7 @@
           <th>
             <Link :href="route('admin.product.edit', {id: product.id})" class="btn btn-ghost btn-xs">商品</Link>
             <Link :href="route('admin.stock.show', {id: product.id})" class="btn btn-ghost btn-xs">在庫</Link>
-            <Link :href="route('admin.product.destroy', {id: product.id})" class="btn btn-ghost btn-xs">削除</Link>
+          <button @click="deleteProduct(product.id)" class="btn btn-ghost btn-xs" >削除</button>
           </th>
         </tr>
         </template>

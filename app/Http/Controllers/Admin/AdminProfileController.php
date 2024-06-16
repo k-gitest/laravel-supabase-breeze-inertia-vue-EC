@@ -31,13 +31,13 @@ class AdminProfileController extends Controller
    */
   public function update(AdminProfileUpdateRequest $request): RedirectResponse
   {
+    $request->user()->fill($request->validated());
+
+    if ($request->user()->isDirty('email')) {
+      $request->user()->email_verified_at = null;
+    }
+
     DB::transaction(function () use ($request) {
-      $request->user()->fill($request->validated());
-
-      if ($request->user()->isDirty('email')) {
-        $request->user()->email_verified_at = null;
-      }
-
       $request->user()->save();
     });
 
@@ -49,20 +49,20 @@ class AdminProfileController extends Controller
    */
   public function destroy(Request $request): RedirectResponse
   {
+    $request->validate([
+      'password' => ['required', 'current_password'],
+    ]);
+
+    $user = $request->user();
+
+    Auth::logout();
+    
     DB::transaction(function () use ($request) {
-      $request->validate([
-        'password' => ['required', 'current_password'],
-      ]);
-
-      $user = $request->user();
-
-      Auth::logout();
-
       $user->delete();
-
-      $request->session()->invalidate();
-      $request->session()->regenerateToken();
     });
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
     return Redirect::to('/');
   }

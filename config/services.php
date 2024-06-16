@@ -36,5 +36,13 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         'warehouse_id' => env('STRIPE_WAREHOUSE_ID'),
     ],
+    'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'key' => env('SUPABASE_KEY'),
+        'contacts_bucket' => env('SUPABASE_CONTACTS_BUCKET'),
+        'products_bucket' => env('SUPABASE_PRODUCTS_BUCKET'),
+        'storage_endpoint' => '/storage/v1/object/',
+        'product_path' => '/product',
+    ],
 
 ];

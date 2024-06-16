@@ -3,10 +3,12 @@
   import type { Contact } from '@/types/contact'
   import { ref } from 'vue';
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+  import InputError from '@/Components/InputError.vue';
+  import InputLabel from '@/Components/InputLabel.vue';
 
   const page = usePage()
+  const props = page.props
   const contacts = page.props?.data as Contact[]
-  const supabaseURL = import.meta.env.VITE_SUPABASE_URL + "/storage/v1/object/public/"
   const fileImageElement = ref<HTMLInputElement | null>(null);
 
   const form = useForm({
@@ -14,28 +16,27 @@
     email: '',
     message: '',
     image: [] as File[],
-    path: '',
+    error: '',
   })
 
   const submit = () => {
     form.post(route('contact.store'), {
       preserveScroll: true,
-      preserveState: false,
+      preserveState: (page) => {
+        return Object.keys(page.props.errors).length > 0
+      },
       onSuccess: (response) => {
-        form.reset("name", "email", "message", "image", "path");
+        form.reset("name", "email", "message", "image");
         if (fileImageElement.value) {
             fileImageElement.value.value = "";
         }
       },
-      onFinish: () => {
-        form.reset();
-      },
+      onBefore: post => {form.clearErrors()},
     })
   }
 
   const handleFileChange = (event: Event) => {
     const target = event.target as HTMLInputElement
-    //const file = target.files.[0]
     const file = (target.files as FileList)[0]
     if(file){
       form.image.push(file)
@@ -44,7 +45,6 @@
 
   const clickHandleFile = (event: Event) => {
     event.preventDefault();
-    //document.getElementById("image")?.click()
     fileImageElement.value?.click()
   }
 
@@ -54,12 +54,7 @@
     if (fileImageElement.value) {
         fileImageElement.value.value = "";
     }
-    /*
-    const imageElement = document.getElementById("image") as HTMLInputElement;
-    if (imageElement) {
-      imageElement.value = "";
-    }
-    */
+
   }
 
 </script>
@@ -74,41 +69,38 @@
       <h1 class="text-4xl font-bold p-2">Contact</h1>
       <form @submit.prevent="submit" enctype="multipart/form-data">
         <div class="flex flex-col items-center justify-center w-full max-w-md gap-2">
-          <div>
-            <input type="text" id="name" v-model="form.name" class="border" />
+          <div class="w-full">
+            <InputLabel for="name" value="Name" />
+            <input type="text" id="name" v-model="form.name" class="input input-sm w-full input-bordered" />
+            <InputError class="mt-2" :message="form.errors.name" />
+          </div>
+          <div class="w-full">
+            <InputLabel for="email" value="e-mail" />
+            <input type="email" id="email" v-model="form.email" class="input input-sm w-full input-bordered" />
+            <InputError class="mt-2" :message="form.errors.email" />
           </div>
           <div>
-            <input type="email" id="email" v-model="form.email" class="border" />
-          </div>
-          <div>
-            <textarea type="text" id="message" v-model="form.message" class="border" />
-          </div>
-          <div>
-            <input type="text" id="path" v-model="form.path" class="border" />
+            <InputLabel for="message" value="message" />
+            <textarea type="text" id="message" v-model="form.message" class="textarea textarea-bordered w-full" />
+            <InputError class="mt-2" :message="form.errors.message" />
           </div>
           <div>
             <input type="file" id="image" ref="fileImageElement" class="hidden" accept="image/*" @input="handleFileChange" />
-            <button @click="clickHandleFile">ファイルを選択</button>
+            <button @click="clickHandleFile" class="btn btn-sm">ファイルを選択</button>
             <div v-if="form.image.length > 0">
               <template v-for="file in form.image" :key="file.name">
                 <p :id="`${file.name}`" @click="handleFileDelete" class="cursor-pointer">{{ file.name }}</p>
               </template>
             </div>
           </div>
-          <div v-show="form.errors">
+          <div v-if="form.errors.error">
             <p class="text-sm text-red-600 dark:text-red-400">
-              {{ form.errors.name }}
-            </p>
-            <p class="text-sm text-red-600 dark:text-red-400">
-              {{ form.errors.email }}
-            </p>
-            <p class="text-sm text-red-600 dark:text-red-400">
-              {{ form.errors.message }}
+              {{ form.errors.error }}
             </p>
           </div>
-          <div v-show="page.props.flash">
+          <div v-if="props.flash.success">
             <p class="text-sm text-red-600 dark:text-red-400">
-              {{ page.props.flash.success }}
+              {{ props.flash.success }}
             </p>
           </div>
           <div>
@@ -116,27 +108,6 @@
           </div>
         </div>
       </form>
-  
-      <div v-if="contacts">
-        <template v-for="contact in contacts" :key="contact.id">
-          <div>
-            <p>{{ contact.id }}</p>
-            <p>{{ contact.name }}</p>
-            <p>{{ contact.email }}</p>
-            <p>{{ contact.message }}</p>
-            <p>{{ contact.created_at }}</p>
-            <p>{{ contact.updated_at }}</p>
-            <div v-if="contact.attachments">
-              <template v-for="file in contact.attachments" :key="file.id">
-                <img :src="supabaseURL + file.key" />
-              </template>
-            </div>
-          </div>
-        </template>
-      </div>
-      <div v-else>
-        <p>お問い合わせ履歴はありません</p>
-      </div>
     </main>
   </AuthenticatedLayout>
 </template>

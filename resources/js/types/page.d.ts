@@ -1,6 +1,4 @@
-import type { Product } from "@/types/product"
-
-export type PageData = {
+export type PageData<T> = {
   current_page: number;
   first_page_url: string;
   last_page: number;
@@ -13,7 +11,7 @@ export type PageData = {
   per_page: number;
   last_page: number;
   path: string;
-  data: Product[];
+  data: T[];
   links: PageLink[];
 }
 

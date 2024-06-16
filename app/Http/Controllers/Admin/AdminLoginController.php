@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\AdminLoginRequest;
+use Log;
 
 class AdminLoginController extends Controller
 {
@@ -24,25 +25,17 @@ class AdminLoginController extends Controller
 
   public function store(AdminLoginRequest $request): RedirectResponse
   {
-    DB::transaction(function () use ($request) {
-      $request->authenticate();
-
-      $request->session()->regenerate();
-    });
+    $request->authenticate();
+    $request->session()->regenerate();
     
     return redirect()->intended(route('admin.dashboard', absolute: false));
-    
   }
 
   public function destroy(Request $request): RedirectResponse
   {
-    DB::transaction(function () use ($request) {
-      Auth::guard('admin')->logout();
-
-      $request->session()->invalidate();
-
-      $request->session()->regenerateToken();
-    });
+    Auth::guard('admin')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
 
     return redirect('/');
   }

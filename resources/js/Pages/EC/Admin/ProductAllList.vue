@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { Head, usePage, router, Link } from "@inertiajs/vue3";
+  import type { Product } from '@/types/product'
   import type { PageData } from '@/types/page'
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
@@ -7,14 +8,11 @@
   import Pagination from "@/Components/Pagination.vue"
   import SearchBox from "@/Components/SearchBox.vue"
 
-  const { props } = usePage<PageProps & { pagedata: PageData }>()
+  const { props } = usePage<PageProps & { pagedata: PageData<Product> }>()
   console.log(props)
 
   const searchSubmit = (formdata: { q: string, category_ids: number[], warehouse_check: boolean, price_range: string[] }) => {
     router.get(route('admin.search'), 
-               /*
-      { q: formdata.q, category_ids: formdata.category_ids, warehouse_check: formdata.warehouse_check, price_range: formdata.price_range },
-      */
       formdata,
       {
         preserveState: false,

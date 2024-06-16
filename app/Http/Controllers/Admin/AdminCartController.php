@@ -28,19 +28,26 @@ class AdminCartController extends Controller
    */
   public function store(Request $request): RedirectResponse
   {
-    DB::transaction(function () use ($request) {
       $validated = $request->validate([
          'user_id' => 'required|integer|exists:users,id',
          'product_id' => 'required|integer|exists:products,id',
          'quantity' => 'required|integer|min:1|max:99',
       ]);
 
-      $result = Cart::create([
-        'user_id' => $request->user_id,
-        'product_id' => $request->product_id,
-        'quantity' => $request->quantity,
-      ]);
-    });
+    try{
+      DB::transaction(function () use ($request) {
+        $result = Cart::create([
+          'user_id' => $request->user_id,
+          'product_id' => $request->product_id,
+          'quantity' => $request->quantity,
+        ]);
+      });
+      Log::info('cart create succeeded');
+    }
+    catch(\Exception $e){
+      Log::error('Failed to create cart.', ['error' => $e->getMessage()]);
+      return redirect()->back()->withErrors(['error' => 'Failed to create cart. Please try again.']);
+    }
     
     return redirect()->route('admin.product.show', $request->product_id);
   }
@@ -61,18 +68,25 @@ class AdminCartController extends Controller
    */
   public function update(Request $request, string $id): RedirectResponse
   {
-    DB::transaction(function () use ($request, $id) {
-      $request->validate([
-        'quantity' => 'required|integer|between:1,99',
-      ]);
+    $request->validate([
+      'quantity' => 'required|integer|between:1,99',
+    ]);
 
-      $result = Cart::find($id);
-      $result->quantity = $request->quantity;
+    $result = Cart::find($id);
+    $result->quantity = $request->quantity;
 
-      if ($result->isDirty()) {
-        $result->save();
-      }
-    });
+    try{
+      DB::transaction(function () use ($result) {
+        if ($result->isDirty()) {
+          $result->save();
+        }
+      });
+      Log::info('cart update succeeded');
+    }
+    catch(\Exception $e){
+      Log::error('Failed to update cart.', ['error' => $e->getMessage()]);
+      return redirect()->back()->withErrors(['error' => 'Failed to update cart. Please try again.']);
+    }
 
     return redirect()->route('admin.cart.edit', $id)->with('success', 'カート内容を変更しました');
   }
@@ -82,10 +96,18 @@ class AdminCartController extends Controller
    */
   public function destroy(string $id): RedirectResponse
   {
-    DB::transaction(function () use ($id) {
-      $result = Cart::find($id);
-      $result->delete();
-    });
+    $result = Cart::find($id);
+    
+    try{
+      DB::transaction(function () use ($result) {
+        $result->delete();
+      });
+      Log::info('cart delete succeeded');
+    }
+    catch(\Exception $e){
+      Log::error('Failed to delete cart.', ['error' => $e->getMessage()]);
+      return redirect()->back()->withErrors(['error' => 'Failed to delete cart. Please try again.']);
+    }
 
     return redirect()->route('admin.cart.edit')->with('success', '削除しました');
   }

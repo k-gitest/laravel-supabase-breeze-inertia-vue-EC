@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\Cart;
+use Log;
 
 class CartController extends Controller
 {
@@ -26,6 +27,7 @@ class CartController extends Controller
     $total_price_including_tax = $result->sum(function ($item) {
       return $item->quantity * $item->product->price_including_tax;
     });
+    
     $totalPrice = [
       "total_price_excluding_tax" => $total_price_excluding_tax,
       "total_price_including_tax" => $total_price_including_tax,
@@ -42,20 +44,26 @@ class CartController extends Controller
    */
   public function store(Request $request): RedirectResponse
   {
-    DB::transaction(function () use ($request)
-    {
-      $validated = $request->validate([
-         'user_id' => 'required',
-         'product_id' => 'required',
-         'quantity' => 'required',
-      ]);
+    $validated = $request->validate([
+       'user_id' => 'required',
+       'product_id' => 'required',
+       'quantity' => 'required',
+    ]);
 
-      $result = Cart::create([
-        'user_id' => $request->user_id,
-        'product_id' => $request->product_id,
-        'quantity' => $request->quantity,
-      ]);
-    });
+    try{
+      DB::transaction(function () use ($request){
+        $result = Cart::create([
+          'user_id' => $request->user_id,
+          'product_id' => $request->product_id,
+          'quantity' => $request->quantity,
+        ]);
+      });
+      Log::info('cart create succeeded');
+    }
+    catch(\Exception $e){
+      Log::error('Failed to create cart.', ['error' => $e->getMessage()]);
+      return redirect()->back()->withErrors(['error' => 'Failed to create cart. Please try again.']);
+    }
 
     return redirect()->route('product.show', $request->product_id);
   }
@@ -77,18 +85,25 @@ class CartController extends Controller
    */
   public function update(Request $request, string $id): RedirectResponse
   {
-    DB::transaction(function () use ($request, $id)
-    {
-      $request->validate([
-        "quantity" => "required|numeric",
-      ]);
+    $request->validate([
+      "quantity" => "required|numeric",
+    ]);
 
-      $cart = Cart::find($id);
-      $cart->quantity = $request->quantity;
-      if ($cart->isDirty()){
-        $cart->save();
-      };
-    });
+    $cart = Cart::find($id);
+    $cart->quantity = $request->quantity;
+
+    try{
+      DB::transaction(function () use ($cart) {
+        if ($cart->isDirty()){
+          $cart->save();
+        };
+      });
+      Log::info('cart update succeeded');
+    }
+    catch(\Exception $e){
+      Log::error('Failed to update cart.', ['error' => $e->getMessage()]);
+      return redirect()->back()->withErrors(['error' => 'Failed to update cart. Please try again.']);
+    }
     
     return redirect()->route('cart.edit', $id)->with('success', '更新しました');
   }
@@ -98,11 +113,18 @@ class CartController extends Controller
    */
   public function destroy(string $id): RedirectResponse
   {
-    DB::transaction(function () use ($id)
-    {
-      $result = Cart::find($id);
-      $result->delete();
-    });
+    $result = Cart::find($id);
+    try{
+      DB::transaction(function () use ($result)
+      {
+        $result->delete();
+      });
+      Log::info('cart delete succeeded');
+    }
+    catch(\Exception $e){
+      Log::error('Failed to delete cart.', ['error' => $e->getMessage()]);
+      return redirect()->back()->withErrors(['error' => 'Failed to delete cart. Please try again.']);
+    }
     
     return redirect()->route('cart.index')->with('success', '削除しました');
   }
