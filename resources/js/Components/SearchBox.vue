@@ -1,8 +1,7 @@
 <script setup lang="ts">
-  import { useForm } from "@inertiajs/vue3"
   import type { Category } from "@/types/category";
 
-  const props = defineProps<{
+  defineProps<{
     categories: {
       data: Category[] | undefined,
     },

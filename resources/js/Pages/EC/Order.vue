@@ -1,11 +1,13 @@
 <script setup lang="ts">
   import { Head, Link, usePage } from "@inertiajs/vue3"
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue"
+  import type { PageData } from '@/types/page'
   import type { Order } from '@/types/order'
   import type { PageProps } from '@/types'
   import EcLayout from "@/Layouts/EcLayout.vue"
+  import Pagination from "@/Components/Pagination.vue"
 
-  const { props } = usePage<PageProps & { data: Order[] }>()
+  const { props } = usePage<PageProps & { pagedata: PageData<Order> }>()
 </script>
 
 <template>
@@ -15,7 +17,7 @@
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Order</h2>
     </template>
     <EcLayout>
-      <div v-if="props.data" class="flex flex-col gap-5">
+      <div v-if="props.pagedata.data" class="flex flex-col gap-5">
         <div class="text-center mb-5">
           <p class="font-semibold text-xl text-gray-800">オーダー</p>
           <p>オーダー状況</p>
@@ -32,7 +34,7 @@
               </tr>
             </thead>
             <tbody>
-              <template v-for="order of props.data" :key="order.id">
+              <template v-for="order of props.pagedata.data" :key="order.id">
               <tr>
                 <th>{{order.id}}</th>
                 <td>{{order.created_at}}</td>
@@ -52,6 +54,7 @@
               </template>
             </tbody>
           </table>
+          <Pagination :links="props.pagedata.links" />
         </div>
       </div>
       <div v-else>

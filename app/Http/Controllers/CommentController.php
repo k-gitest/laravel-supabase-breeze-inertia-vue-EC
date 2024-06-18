@@ -17,10 +17,10 @@ class CommentController extends Controller
      */
     public function index(): Response
     {
-        $comment = Comment::with('product')->get();
+        $comment = Comment::with('product')->paginate(12);
 
         return Inertia::render('EC/CommentIndex', [
-            'data' => $comment,
+            'pagedata' => $comment,
         ]);
     }
 

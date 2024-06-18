@@ -18,7 +18,7 @@ class CartController extends Controller
   public function index(): Response
   {
     $id = request()->user()->id;
-    $result = Cart::with(['product.image'])->where('user_id', $id)->get();
+    $result = Cart::with(['product.image'])->where('user_id', $id)->paginate(12);
 
     $total_price_excluding_tax = $result->sum(function ($item) {
       return $item->quantity * $item->product->price_excluding_tax;
@@ -34,7 +34,7 @@ class CartController extends Controller
     ];
 
     return Inertia::render('EC/CartIndex', [
-      "data" => $result,
+      "pagedata" => $result,
       "totalPrice" => $totalPrice,
     ]);
   }

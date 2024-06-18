@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Warehouse;
 use App\Models\Product;
+use Log;
 
 class AdminWarehouseController extends Controller
 {

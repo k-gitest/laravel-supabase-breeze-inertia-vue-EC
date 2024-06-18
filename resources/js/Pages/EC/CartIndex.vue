@@ -1,12 +1,14 @@
 <script setup lang="ts">
   import { Head, Link, usePage, useForm } from "@inertiajs/vue3"
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue"
+  import type { PageData } from '@/types/page'
   import type { Cart } from '@/types/cart'
   import type { PageProps } from '@/types'
   import EcLayout from "@/Layouts/EcLayout.vue"
   import CartTableBody from "@/Components/CartTableBody.vue"
+  import Pagination from "@/Components/Pagination.vue"
 
-  const { props } = usePage<PageProps & { data: Cart[] }>()
+  const { props } = usePage<PageProps & { pagedata: PageData<Cart> }>()
 </script>
 
 <template>
@@ -25,7 +27,7 @@
           {{ props.flash.success }}
         </p>
       </div>
-      <div v-if="props.data" class="overflow-x-auto">
+      <div v-if="props.pagedata.data" class="overflow-x-auto">
         <table class="table">
           <thead>
             <tr>
@@ -36,7 +38,7 @@
             </tr>
           </thead>
 
-          <CartTableBody :carts="props.data" />
+          <CartTableBody :carts="props.pagedata.data" />
           
           <tfoot>
             <tr>
@@ -53,9 +55,10 @@
             </tr>
           </tfoot>
         </table>
-        <div>
+        <div v-if="props.pagedata.data.length">
           <Link :href="route('payment.index')" class="btn">購入画面</Link>
         </div>
+        <Pagination :links="props.pagedata.links" />
       </div>
     </EcLayout>
   </AuthenticatedLayout>

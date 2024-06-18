@@ -16,10 +16,10 @@ class OrderController extends Controller
     public function index(): Response
     {
         $id = auth()->user()->id;
-        $result = Order::with(['orderItems'])->where('user_id', $id)->get();
+        $result = Order::with(['orderItems'])->where('user_id', $id)->paginate(10);
 
         return Inertia::render('EC/Order', [
-            "data" => $result,
+            "pagedata" => $result,
         ]);
     }
 

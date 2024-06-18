@@ -18,10 +18,10 @@ class FavoriteController extends Controller
      */
     public function index(): Response
     {
-        $favorite = Favorite::with('product.category')->get();
+        $favorite = Favorite::with('product.category')->paginate(12);
 
         return Inertia::render('EC/FavoriteIndex', [
-            'data' => $favorite,
+            'pagedata' => $favorite,
         ]);
     }
 
