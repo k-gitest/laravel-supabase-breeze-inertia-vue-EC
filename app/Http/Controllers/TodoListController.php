@@ -10,17 +10,17 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use App\Models\TodoList;
-use App\Http\Requests\TodoRequest;
+use App\Models\User;
 use Log;
 
 class TodoListController extends Controller
-{
+{  
   public function index(Request $request): Response
   {
-    $todoLists = TodoList::all();
+    $todoLists = TodoList::where('user_id', auth()->id())->paginate(12);
     
     return Inertia::render('Todo/Index', [
-        "data" => $todoLists,
+        "pagedata" => $todoLists,
     ]);
   }
 
@@ -31,14 +31,16 @@ class TodoListController extends Controller
   
   public function store(Request $request): RedirectResponse
   {
-      $request->validate([
-        'name' => 'required|string|max:100',
-      ]);
+    Gate::authorize('isGeneral');
+    
+    $request->validate([
+      'name' => 'required|string|max:100',
+    ]);
 
-      $userId = $request->user()->id;
+    $userId = auth()->id(); 
 
     try{
-      DB::transaction(function () use ($request) {
+      DB::transaction(function () use ($request, $userId) {
         $todoList = TodoList::create([
           'name' => $request->name,
           'user_id' => $userId,
@@ -65,15 +67,20 @@ class TodoListController extends Controller
 
   public function update(Request $request, int $id, TodoList $todolist): RedirectResponse
   {
-    if (Gate::allows('update-todo-list', $todolist)) {
-        abort(403);
-    }
+    Gate::authorize('isGeneral');
 
-    $todo = TodoList::find($id);
+    $request->validate([
+      'name' => 'required|string|max:100',
+    ]);
+    
+    $todo = TodoList::findOrFail($id);
+
+    Gate::authorize('update', $todo);
+    
     $todo->name = $request->name;
     
     try{
-      DB::transaction(function () use ($request, $id, $todolist){
+      DB::transaction(function () use ($todo){
         if ($todo->isDirty()) {
             $todo->save();
         }
@@ -90,7 +97,11 @@ class TodoListController extends Controller
 
   public function destroy(Request $request, int $id): RedirectResponse
   {
-    $todo = TodoList::find($id);
+    Gate::authorize('isGeneral');
+    
+    $todo = TodoList::findOrFail($id);
+    
+    Gate::authorize('delete', $todo);
 
     try{
       DB::transaction(function () use ($todo)  {

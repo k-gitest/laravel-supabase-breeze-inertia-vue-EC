@@ -19,6 +19,7 @@
     mode?: string;
     count?: number;
     stock?: number | null;
+    delete_id?: number;
   }>();
 
   const emit = defineEmits<{
@@ -69,7 +70,7 @@
         </div>
         <button v-if="mode === 'favorite.enable'" @click.stop.prevent="handleFavorite(id)" class="btn btn-sm">お気に入りに追加<span class="badge">{{ count }}</span></button>
         <button v-if="mode === 'favorite.disable'" class="btn btn-sm" disabled>お気に入りに追加<span class="badge">{{ count }}</span></button>
-        <button v-if="mode === 'favorite.delete'" @click.stop.prevent="deleteFavorite(id)" class="btn btn-sm">削除</button>
+        <button v-if="mode === 'favorite.delete'" @click.stop.prevent="deleteFavorite(delete_id ?? id)" class="btn btn-sm">削除</button>
       </div>
     </Link>
   </div>

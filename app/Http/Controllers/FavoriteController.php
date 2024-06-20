@@ -8,6 +8,7 @@ use App\Models\Favorite;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use App\Models\Product;
 use Log;
 
@@ -18,7 +19,7 @@ class FavoriteController extends Controller
      */
     public function index(): Response
     {
-        $favorite = Favorite::with('product.category')->paginate(12);
+        $favorite = Favorite::with(['product.image', 'product.category'])->where('user_id', auth()->id())->orderBy('updated_at', 'desc')->paginate(12);
 
         return Inertia::render('EC/FavoriteIndex', [
             'pagedata' => $favorite,
@@ -56,8 +57,12 @@ class FavoriteController extends Controller
      */
     public function destroy(Favorite $favorite, $id): RedirectResponse
     {
+        Gate::authorize('isGeneral');
+        
         $user_id = auth()->user()->id;
         $favorite = Favorite::where('user_id', $user_id)->find($id);
+        
+        Gate::authorize('delete', $favorite);
         
         try{
             DB::transaction(function () use ($favorite){

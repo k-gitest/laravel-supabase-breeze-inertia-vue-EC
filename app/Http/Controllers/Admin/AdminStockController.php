@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Inertia\inertia;
+use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;

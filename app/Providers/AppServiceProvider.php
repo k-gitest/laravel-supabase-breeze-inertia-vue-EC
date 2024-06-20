@@ -4,8 +4,6 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Routing\UrlGenerator;
-use App\Models\User;
-use App\Models\TodoList;
 use Illuminate\Support\Facades\Gate;
 //use App\Services\SupabaseStorageService;
 
@@ -17,7 +15,6 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
       //$this->app->bind('SbStorage', SupabaseStorageService::class);
-
     }
 
     /**
@@ -27,10 +24,5 @@ class AppServiceProvider extends ServiceProvider
     {
       $url->forceScheme('https');
       $this->app['request']->server->set('HTTPS','on');
-
-      Gate::define('update-todo-list', function (User $user, TodoList $todoList){
-        return $user->id === $todoList->user_id;
-      });
-      
     }
 }

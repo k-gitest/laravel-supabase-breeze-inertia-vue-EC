@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\inertia;
+use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Log;
 
 class CommentController extends Controller
@@ -17,7 +18,7 @@ class CommentController extends Controller
      */
     public function index(): Response
     {
-        $comment = Comment::with('product')->paginate(12);
+        $comment = Comment::with('product')->where('user_id', auth()->id())->orderBy('updated_at', 'desc')->paginate(12);
 
         return Inertia::render('EC/CommentIndex', [
             'pagedata' => $comment,
@@ -59,11 +60,15 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment, $id): RedirectResponse
     {
+        Gate::authorize('isGeneral');
+        
         $user_id = auth()->user()->id;
         $comment = Comment::where('user_id', $user_id)->find($id);
 
+        Gate::authorize('delete', $comment);
+
         try{
-            DB::transaction(function () use ($id){
+            DB::transaction(function () use ($comment){
                 $comment->delete();
             });
             Log::info('Comment deleted');

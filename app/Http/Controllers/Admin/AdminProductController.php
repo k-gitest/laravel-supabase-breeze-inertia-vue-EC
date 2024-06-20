@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Inertia\inertia;
+use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -15,7 +15,7 @@ use App\Models\Image;
 use Log;
 
 class AdminProductController extends Controller
-{
+{  
     /**
      * Display a listing of the resource.
      */
@@ -57,7 +57,7 @@ class AdminProductController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request): RedirectResponse
-    {
+    {      
       $request->validate([
         "name" => "required|unique:products,name",
         "price_excluding_tax" => "required|numeric",
@@ -164,6 +164,7 @@ class AdminProductController extends Controller
     public function update(Request $request, $id): RedirectResponse
     {
       $product = Product::find($id);
+      
       $request->validate([
          "name" => "required|unique:products,name,{$product->id}",
          "price_excluding_tax" => "required|numeric",
@@ -279,7 +280,7 @@ class AdminProductController extends Controller
     }
 
     public function bulkDestroy(Product $product, Request $request): RedirectResponse
-    {
+    {      
       $request->validate([
           "ids" => "required|array",
           'ids.*' => 'integer',

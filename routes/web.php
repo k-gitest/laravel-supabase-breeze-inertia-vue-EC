@@ -27,7 +27,7 @@ Route::middleware('auth:admin')->group(function () {
 Route::get('/contact', [ContactController::class, 'create'])->name('contact.create');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
   Route::get('/todo', [TodoListController::class, 'index'])->name('todo.index');
   Route::get('/todo/register', [TodoListController::class, 'create'])->name('todo.register');
   Route::post('/todo/register', [TodoListController::class, 'store'])->name('todo.store');

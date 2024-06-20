@@ -1,10 +1,12 @@
 <script setup lang="ts">
   import { Head, Link, usePage, useForm, router } from '@inertiajs/vue3';
+  import type { PageData } from "@/types/page"
   import type { PageProps } from '@/types'
   import type { Todo } from '@/types/todo'
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+  import Pagination from "@/Components/Pagination.vue"
 
-  const { component, props: { data: todoList }, url, version } = usePage<PageProps & { data: Todo[] }>();
+  const { props } = usePage<PageProps & { pagedata: PageData<Todo> }>();
 
   const form = useForm({})
   const destroy = async (id: string) => {
@@ -23,18 +25,28 @@
     </template>
     <main class="flex flex-col items-center justify-center w-full">
       <h1 class="text-4xl font-bold p-2">todoリストのページ</h1>
-      <Link :href="route('todo.register')" class="btn">
-          新規追加
-      </Link>
-      <div v-if="todoList.length" >
-        <ul v-for="todo in todoList" :key="todo.id">
-          <li>{{todo.id}}</li>
-          <li>{{todo.name}}</li>
-          <li>{{todo.created_at}}</li>
-          <li>{{todo.updated_at}}</li>
-          <li><Link class="btn" :href="route('todo.edit', {id: todo.id})">編集</Link></li>
-          <li><button class="btn" @click="destroy(todo.id)" :disabled="form.processing">削除</button></li>
-        </ul>
+      <div class="mb-5">
+          <Link :href="route('todo.register')" class="btn">
+              新規追加
+          </Link>
+      </div>
+      <div v-if="props.pagedata.data.length">
+        <div class="grid grid-cols-3 gap-5">
+          <template v-for="todo in props.pagedata.data" :key="todo.id">
+            <div class="card w-96 bg-neutral text-neutral-content">
+              <div class="card-body items-center text-center">
+                <h2 class="card-title">{{ todo.id }}</h2>
+                <p>{{ todo.name }}</p>
+                <p>{{ todo.updated_at }}</p>
+                <div class="card-actions justify-end">
+                  <Link class="btn btn-sm" :href="route('todo.edit', {id: todo.id})">編集</Link>
+                  <button class="btn btn-sm" @click="destroy(todo.id)" :disabled="form.processing">削除</button>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+        <Pagination :links="props.pagedata.links" />
       </div>
       <div v-else>
         <p>Todoデータがありません</p>

@@ -9,6 +9,7 @@
   import Pagination from "@/Components/Pagination.vue"
 
   const { props } = usePage<PageProps & { pagedata: PageData<Favorite> }>()
+  console.log(props)
 </script>
 
 <template>
@@ -27,7 +28,7 @@
             <ProductListCard
               :image="favorite.product.image"
               :name="favorite.product.name"
-              :id="favorite.id"
+              :id="favorite.product.id"
               :description="favorite.product.description"
               :price_excluding_tax="favorite.product.price_excluding_tax.toString()"
               :price_including_tax="favorite.product.price_including_tax.toString()"
@@ -35,10 +36,11 @@
               :created_at="favorite.product.created_at"
               :route_show="`product.show`"
               :mode="`favorite.delete`"
+              :delete_id="favorite.id"
             />
           </template>
-          <Pagination :links="props.pagedata.links" />
         </div>
+        <Pagination :links="props.pagedata.links" />
       </div>
       <div v-else>
         お気に入りはありません

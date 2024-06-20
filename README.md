@@ -104,6 +104,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - メールマガジン登録、ジョブキューとスケジュール処理追加
 - テキスト、カテゴリ、店舗在庫、価格帯の検索追加、ページネーション追加
 - 上記の検索結果をソートする機能を追加
+- roleはGateで認可、user_idはpolicyで認可、ガードはミドルウェアで認可、DBはRLS
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル設定
 - supabaseとmailtrapとstripeのenv設定

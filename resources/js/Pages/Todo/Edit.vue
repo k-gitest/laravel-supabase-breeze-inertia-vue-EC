@@ -34,7 +34,7 @@
               <input type="text" id="name" v-model="form.name" class="border" />
             </div>
             <div>
-              <button type="submit" class="btn">送信</button>
+              <button type="submit" class="btn" :disabled="form.processing">送信</button>
             </div>
           </div>
         </form>

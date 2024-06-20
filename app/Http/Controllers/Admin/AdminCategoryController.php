@@ -13,7 +13,7 @@ use App\Models\Product;
 use Log;
 
 class AdminCategoryController extends Controller
-{
+{  
     /**
      * 一覧画面表示
      */
@@ -61,7 +61,7 @@ class AdminCategoryController extends Controller
         return redirect()->back()->withErrors(['error' => 'Failed to create category. Please try again.']);
       }
 
-      return redirect()->route('admin.category.create');
+      return redirect()->route('admin.category.index');
     }
 
     /**

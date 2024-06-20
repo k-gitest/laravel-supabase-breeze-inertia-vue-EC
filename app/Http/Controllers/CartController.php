@@ -7,6 +7,7 @@ use Inertia\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use App\Models\Cart;
 use Log;
 
@@ -17,8 +18,7 @@ class CartController extends Controller
    */
   public function index(): Response
   {
-    $id = request()->user()->id;
-    $result = Cart::with(['product.image'])->where('user_id', $id)->paginate(12);
+    $result = Cart::with(['product.image'])->where('user_id', auth()->id())->paginate(12);
 
     $total_price_excluding_tax = $result->sum(function ($item) {
       return $item->quantity * $item->product->price_excluding_tax;
@@ -75,6 +75,8 @@ class CartController extends Controller
   {
     $result = Cart::with(['product.image'])->find($id);
     
+    Gate::authorize('update', $result);
+    
     return Inertia::render('EC/CartEdit', [
       "data" => $result,
     ]);
@@ -85,11 +87,16 @@ class CartController extends Controller
    */
   public function update(Request $request, string $id): RedirectResponse
   {
+    Gate::authorize('isGeneral');
+    
     $request->validate([
       "quantity" => "required|numeric",
     ]);
 
     $cart = Cart::find($id);
+    
+    Gate::authorize('update', $cart);
+    
     $cart->quantity = $request->quantity;
 
     try{
@@ -113,7 +120,12 @@ class CartController extends Controller
    */
   public function destroy(string $id): RedirectResponse
   {
+    Gate::authorize('isGeneral');
+    
     $result = Cart::find($id);
+    
+    Gate::authorize('delete', $result);
+    
     try{
       DB::transaction(function () use ($result)
       {
