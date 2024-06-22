@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Cart;
+use App\Services\CartPriceService;
 use Log;
 
 class CartController extends Controller
@@ -16,22 +17,11 @@ class CartController extends Controller
   /**
    * Display a listing of the resource.
    */
-  public function index(): Response
+  public function index(CartPriceService $cartPriceService): Response
   {
     $result = Cart::with(['product.image'])->where('user_id', auth()->id())->paginate(12);
 
-    $total_price_excluding_tax = $result->sum(function ($item) {
-      return $item->quantity * $item->product->price_excluding_tax;
-    });
-
-    $total_price_including_tax = $result->sum(function ($item) {
-      return $item->quantity * $item->product->price_including_tax;
-    });
-    
-    $totalPrice = [
-      "total_price_excluding_tax" => $total_price_excluding_tax,
-      "total_price_including_tax" => $total_price_including_tax,
-    ];
+    $totalPrice = $cartPriceService->getTotalPrices($result);
 
     return Inertia::render('EC/CartIndex', [
       "pagedata" => $result,
@@ -44,7 +34,7 @@ class CartController extends Controller
    */
   public function store(Request $request): RedirectResponse
   {
-    $validated = $request->validate([
+    $request->validate([
        'user_id' => 'required',
        'product_id' => 'required',
        'quantity' => 'required',

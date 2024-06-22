@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\TodoRequest;
 use App\Models\TodoList;
 use App\Models\User;
 use Log;
@@ -29,14 +30,8 @@ class TodoListController extends Controller
     return Inertia::render('Todo/Register');
   }
   
-  public function store(Request $request): RedirectResponse
+  public function store(TodoRequest $request): RedirectResponse
   {
-    Gate::authorize('isGeneral');
-    
-    $request->validate([
-      'name' => 'required|string|max:100',
-    ]);
-
     $userId = auth()->id(); 
 
     try{
@@ -65,14 +60,10 @@ class TodoListController extends Controller
     ]);    
   }
 
-  public function update(Request $request, int $id, TodoList $todolist): RedirectResponse
+  public function update(TodoRequest $request, int $id, TodoList $todolist): RedirectResponse
   {
     Gate::authorize('isGeneral');
 
-    $request->validate([
-      'name' => 'required|string|max:100',
-    ]);
-    
     $todo = TodoList::findOrFail($id);
 
     Gate::authorize('update', $todo);

@@ -50,6 +50,7 @@ class ProductController extends Controller
       $isInCart = false;
       $isInComment = false;
       $isInFavorite = false;
+      
       if($auth_check){
         $user_id = auth()->user()->id;
         $cart = Cart::where('user_id', $user_id)->where('product_id', $id)->first();

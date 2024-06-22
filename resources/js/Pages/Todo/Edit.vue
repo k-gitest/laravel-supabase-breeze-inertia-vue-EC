@@ -33,6 +33,11 @@
             <div>
               <input type="text" id="name" v-model="form.name" class="border" />
             </div>
+            <div v-if="form.errors">
+                <p class="text-sm text-red-600 dark:text-red-400">
+                    {{ form.errors.name }}
+                </p>
+            </div>
             <div>
               <button type="submit" class="btn" :disabled="form.processing">送信</button>
             </div>

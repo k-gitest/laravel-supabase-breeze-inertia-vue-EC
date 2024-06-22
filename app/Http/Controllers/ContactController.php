@@ -23,7 +23,7 @@ class ContactController extends Controller
   {
     Log::info('Validation started', ['request' => $request->all()]);
     
-    $validated = $request->validate([
+    $request->validate([
       'name' => 'required|string|max:100',
       'email' => 'required|email|max:255',
       'message' => 'required|string|max:255',
