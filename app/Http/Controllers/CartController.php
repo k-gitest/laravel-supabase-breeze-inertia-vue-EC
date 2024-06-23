@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Cart;
 use App\Services\CartPriceService;
+use App\Http\Requests\CartRequest;
 use Log;
 
 class CartController extends Controller
@@ -32,18 +33,14 @@ class CartController extends Controller
   /**
    * Store a newly created resource in storage.
    */
-  public function store(Request $request): RedirectResponse
+  public function store(CartRequest $request): RedirectResponse
   {
-    $request->validate([
-       'user_id' => 'required',
-       'product_id' => 'required',
-       'quantity' => 'required',
-    ]);
+    $userId = auth()->id();
 
     try{
-      DB::transaction(function () use ($request){
+      DB::transaction(function () use ($request, $userId){
         $result = Cart::create([
-          'user_id' => $request->user_id,
+          'user_id' => $userId,
           'product_id' => $request->product_id,
           'quantity' => $request->quantity,
         ]);
@@ -75,13 +72,9 @@ class CartController extends Controller
   /**
    * Update the specified resource in storage.
    */
-  public function update(Request $request, string $id): RedirectResponse
+  public function update(CartRequest $request, string $id): RedirectResponse
   {
     Gate::authorize('isGeneral');
-    
-    $request->validate([
-      "quantity" => "required|numeric",
-    ]);
 
     $cart = Cart::find($id);
     

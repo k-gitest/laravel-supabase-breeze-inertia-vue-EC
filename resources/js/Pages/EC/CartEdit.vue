@@ -10,6 +10,7 @@
   const { props } = usePage<PageProps & { data: Cart }>()
   const form = useForm({
     quantity: props.data.quantity,
+    product_id: props.data.product_id,
   })
 
   const submit = () => {

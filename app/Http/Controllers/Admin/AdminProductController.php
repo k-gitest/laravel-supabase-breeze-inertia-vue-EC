@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Image;
+use App\Http\Requests\Admin\AdminProductRequest;
 use Log;
 
 class AdminProductController extends Controller
@@ -56,56 +57,33 @@ class AdminProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(AdminProductRequest $request, Product $product): RedirectResponse
     {      
-      $request->validate([
-        "name" => "required|unique:products,name",
-        "price_excluding_tax" => "required|numeric",
-        "description" => "required|string|max:255",
-        "tax_rate" => "required|numeric",
-        "category_id" => "required|exists:categories,id",
-      ]);
-
       $price_including_tax = $this->calculatePriceIncludingTax($request->price_excluding_tax, $request->tax_rate);
+      
+      $validateData = $request->validated();
+      
+      $validateData["price_including_tax"] = $price_including_tax;
 
       try{
-        $result = DB::transaction(function () use ($request, $price_including_tax) {
-          return $result = Product::create([
-            "name" => $request->name,
-            "price_excluding_tax" => $request->price_excluding_tax,
-            "price_including_tax" => $price_including_tax,
-            "description" => $request->description,
-            "tax_rate" => $request->tax_rate,
-            "category_id" => $request->category_id,
-          ]);
+        $result = DB::transaction(function () use ($validateData, $product) {
+          return $result = $product->create($validateData);
         });
-        Log::info('Product created', ['name' => $request->name]);
+        Log::info('Product created', ['name' => $result->name]);
       }
       catch(\Exeption $e){
-        Log::error('Product create error', ['name' => $request->name]);
+        Log::error('Product create error', ['name' => $result->name]);
         return redirect()->back()->with('error', 'Product create error');
       }
       
-      $file = $request->file('image');
-      $filenames = [];
       $product_id = $result->id;
-
-      if ($request->hasFile('image')) {
-          foreach ($request->file('image') as $i => $file) {
-            try{
-              $imageInfo = app()->make("SbStorage")->uploadImageToProducts($file, $product_id, $i);
-              Log::info('product image save success', [$imageInfo]);
-            }
-            catch(\Exception $e){
-              Log::error('product image save error', $e->getMessage());
-            }
-
-            $filenames[] = [
-              "name" => $imageInfo["Id"],
-              "path" => $imageInfo["Key"],
-              "product_id" => $result->id,
-            ];
-          }
+      
+      try{
+        $filenames = $this->handleImageUploads($product_id, $request);
+        Log::info('product image save success');
+      }
+      catch(\Exception $e){
+        Log::error('product image save error', $e->getMessage());
       }
 
       $result = [];
@@ -161,25 +139,13 @@ class AdminProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(AdminProductRequest $request, $id): RedirectResponse
     {
       $product = Product::find($id);
-      
-      $request->validate([
-         "name" => "required|unique:products,name,{$product->id}",
-         "price_excluding_tax" => "required|numeric",
-         "description" => "required|string|max:255",
-         "tax_rate" => "required|numeric",
-         "category_id" => "required|exists:categories,id",
-      ]);
+      $product->fill($request->validated());
 
       $price_including_tax = $this->calculatePriceIncludingTax($request->price_excluding_tax, $request->tax_rate);
-
-      $product->name = $request->name;
-      $product->description = $request->description;
-      $product->price_excluding_tax = $request->price_excluding_tax;
-      $product->tax_rate = $request->tax_rate;
-      $product->category_id = $request->category_id;
+      
       $product->price_including_tax = $price_including_tax;
 
       try{
@@ -195,32 +161,17 @@ class AdminProductController extends Controller
         return redirect()->back()->withErrors(['error' => 'Failed to update product. Please try again.']);
       }
       
-      $file = $request->file('image');
-      $filenames = [];
       $product_id = $product->id;
 
-      if ($request->hasFile('image')) {
-          $latestImage = Image::where('product_id', $id)->latest('created_at')->first();
-          $filename = pathinfo($latestImage->path, PATHINFO_FILENAME);
-          $filenameParts = explode('_', $filename);
-          $latestnumber = end($filenameParts) + 1;
-        
-          foreach ($request->file('image') as $i => $file) {
-            try{
-              $imageInfo = app()->make("SbStorage")->uploadImageToProducts($file, $product_id, $i, $latestnumber);
-              Log::info('Image uploaded.', ['id' => $product->id]);
-            }
-            catch(\Exenption $e){
-              Log::error('Failed to upload image.', ['error' => $e->getMessage()]);
-              return redirect()->back()->withErrors(['error' => 'Failed to upload image. Please try again.']);
-            }
-            
-            $filenames[] = [
-              "name" => $imageInfo["Id"],
-              "path" => $imageInfo["Key"],
-              "product_id" => $id,
-            ];
-          }
+      $latestNumber = $this->getLatestImageNumber($product_id);
+
+      try{
+        $filenames = $this->handleImageUploads($product_id, $request,  $latestNumber);
+        Log::info('Image uploaded.', ['id' => $product->id]);
+      }
+      catch(\Exenption $e){
+        Log::error('Failed to upload image.', ['error' => $e->getMessage()]);
+        return redirect()->back()->withErrors(['error' => 'Failed to upload image. Please try again.']);
       }
 
       $result = [];
@@ -316,9 +267,38 @@ class AdminProductController extends Controller
       return redirect()->back()->with('success', '削除しました');
     }
 
-    public function calculatePriceIncludingTax($priceExcludingTax, $taxRate)
+    private function calculatePriceIncludingTax($priceExcludingTax, $taxRate)
     {
         return $priceExcludingTax + ($priceExcludingTax * $taxRate / 100);
+    }
+
+    private function getLatestImageNumber($product_id)
+    {
+      $latestImage = Image::where('product_id', $product_id)->latest('created_at')->orderBy('id', 'desc')->first();
+      $filename = pathinfo($latestImage->path, PATHINFO_FILENAME);
+      $filenameParts = explode('_', $filename);
+      $latestnumber = end($filenameParts) + 1;
+      return $latestnumber;
+    }
+  
+    private function handleImageUploads($product_id, Request $request, $latestNumber=0)
+    {
+        $filenames = [];
+
+        if ($request->hasFile('image')) {
+            foreach ($request->file('image') as $i => $file) {
+                $fileNumber = $i + $latestNumber;
+                $imageInfo = app()->make("SbStorage")->uploadImageToProducts($file, $product_id, $fileNumber);
+                //$imageInfo = array_change_key_case($imageInfo, CASE_LOWER);
+                $filenames[] = [
+                  "name" => $imageInfo["Id"],
+                  "path" => $imageInfo["Key"],
+                  "product_id" => $product_id,
+                ];
+            }
+        }
+
+        return $filenames;
     }
   
 }

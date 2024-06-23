@@ -21,10 +21,10 @@ class AdminStockController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'product_id' => 'required',
-            'warehouse_id' => 'required',
-            'quantity' => 'required',
-            'reserved_quantity' => 'required',
+            'product_id' => 'required|integer',
+            'warehouse_id' => 'required|integer',
+            'quantity' => 'required|integer',
+            'reserved_quantity' => 'required|integer',
         ]);
 
         try{
@@ -96,12 +96,12 @@ class AdminStockController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         $request->validate([
-           "id" => "required",                
+           "id" => "required|exists:stocks,id",                
         ]);
 
         try{
             DB::transaction(function () use ($request){
-                $stock = Stock::find($request->id);
+                $stock = Stock::findOrFail($request->id);
                 $stock->delete();
             });
             Log::info('Stock delete succeeded');

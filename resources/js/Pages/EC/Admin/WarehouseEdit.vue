@@ -64,12 +64,12 @@
             <label for="updated_at">更新日</label>
             <input type="text" id="updated_at" v-model="form.updated_at" class="border" disabled />
           </div>
-          <div v-show="form.errors">
+          <div v-show="props.errors">
             <p class="text-sm text-red-600 dark:text-red-400">
-              {{ form.errors.name }}
+              {{ props.errors.name }}
             </p>
             <p class="text-sm text-red-600 dark:text-red-400">
-              {{ form.errors.location }}
+              {{ props.errors.location }}
             </p>
           </div>
           <div v-show="props.flash.success">

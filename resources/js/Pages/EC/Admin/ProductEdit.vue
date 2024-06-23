@@ -122,12 +122,13 @@
               @handleFileDelete="handleFileDelete" 
               />
             
-            <div v-show="form.errors">
+            <div v-show="props.errors">
               <p class="text-sm text-red-600 dark:text-red-400">
-                {{ form.errors.name }}
-              </p>
-              <p class="text-sm text-red-600 dark:text-red-400">
-                {{ form.errors.description }}
+                {{ props.errors.name }}
+                {{ props.errors.description }}
+                {{ props.errors.price_excluding_tax }}
+                {{ props.errors.tax_rate }}
+                {{ props.errors.category_id }}
               </p>
             </div>
             <div v-show="props.flash">

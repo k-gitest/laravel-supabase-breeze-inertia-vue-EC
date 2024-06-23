@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AdminWarehouseRequest;
 use App\Models\Warehouse;
 use App\Models\Product;
 use Log;
@@ -37,18 +38,13 @@ class AdminWarehouseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(AdminWarehouseRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255|unique:warehouses,name',
-            'location' => 'required|string|max:255',
-        ]);
-
         try{
             DB::transaction(function () use ($request){
                 $warehouse = Warehouse::create([
                     'name' => $request->name,
-                    'location' => $request->location,                           
+                    'location' => $request->location,                        
                 ]);
             });
             Log::info('Warehouse create succeeded');
@@ -98,13 +94,8 @@ class AdminWarehouseController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(AdminWarehouseRequest $request, string $id): RedirectResponse
     {
-        $request->validate([
-            "name" => "required|string|max:255|unique:warehouses,name,{$warehouse->id}",
-            "location" => "required|string|max:255",               
-        ]);
-
         $warehouse = Warehouse::find($id);
         $warehouse->name = $request->name;
         $warehouse->location = $request->location;

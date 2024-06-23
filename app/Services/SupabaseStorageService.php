@@ -43,12 +43,11 @@ class SupabaseStorageService
       return $this->uploadImage($file, $path, $this->contactsBucket);
     }
   
-    public function uploadImageToProducts($file, $product_id, $index, $latestnumber = 0)
+    public function uploadImageToProducts($file, $product_id, $fileNumber)
     {
       $imageType = getimagesize($file)["mime"];
       $parts = explode("/", $imageType);
       $extension = end($parts);
-      $fileNumber = $index + $latestnumber;
       $path = $this->product_path . "/{$product_id}/{$product_id}_{$fileNumber}.{$extension}";
 
       return $this->uploadImage($file, $path, $this->productsBucket);

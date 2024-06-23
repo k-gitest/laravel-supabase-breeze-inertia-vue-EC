@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\AdminProfileUpdateRequest;
+use App\Http\Requests\Admin\AdminProfileUpdateRequest;
 
 class AdminProfileController extends Controller
 {

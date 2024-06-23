@@ -6,6 +6,7 @@
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
 
   const { props } = usePage<PageProps & { data: Warehouse }>()
+
   const form = useForm({
     name: '',
     location: '',
@@ -13,7 +14,9 @@
 
   const submit = () => {
     form.post(route('admin.warehouse.store'), {
-      preserveState: false,
+      preserveState: () => {
+        return Object.keys(props.errors).length > 0
+      },
       onSuccess: (res) => {
         console.log("success", res)
       },
@@ -39,12 +42,12 @@
             <label for="location">倉庫の住所</label>
             <textarea type="text" id="location" v-model="form.location" class="border" />
           </div>
-          <div v-show="form.errors">
+          <div v-show="props.errors">
             <p class="text-sm text-red-600 dark:text-red-400">
-              {{ form.errors.name }}
+              {{ props.errors.name }}
             </p>
             <p class="text-sm text-red-600 dark:text-red-400">
-              {{ form.errors.location }}
+              {{ props.errors.location }}
             </p>
           </div>
           <div v-show="props.flash">
