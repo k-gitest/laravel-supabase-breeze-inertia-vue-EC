@@ -30,9 +30,10 @@ class AdminContactController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): Response
     {
-        $contact = Contact::find($id);
+        $contact = Contact::findOrFail($id);
+        
         return Inertia::render('Contact/Admin/AdminContactShow', [
           "data" => $contact,
         ]);
@@ -41,26 +42,26 @@ class AdminContactController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request)
+    public function destroy(Request $request): RedirectResponse
     {
+        dd($request);
         $request->validate([
-            'id' => 'required|string|max:255',
+            'id' => 'required|string|max:255|exists:contacts,id',
         ]);
 
-        $contact = Contact::find($request->id);
-
-        if (!$contact) {
-            return redirect()->back()->withErrors(['error' => 'Contact not found.']);
-        }
+        $contact = Contact::findOrFail($request->id);
 
         if($contact->attachments){
             $fileKeys = array_column($contact->attachments, 'key');
             
             try{
-                $path = app()->make('SbStorage')->deleteImage($fileKeys);
+                app()->make('SbStorage')->deleteImage($fileKeys);
             }
             catch (\Exception $e) {
-                Log::error('contact Image delete failed.', ['error' => $e->getMessage()]);
+                Log::error('contact Image delete failed.', [
+                           'error' => $e->getMessage(),
+                           'contact_id' => $contact->id
+                           ]);
                 return redirect()->back()->withErrors(['error' => 'Failed to delete image. Please try again.']);
             }
         }
@@ -73,7 +74,10 @@ class AdminContactController extends Controller
             Log::info('contact delete succeeded');
         }
         catch (\Exception $e) {
-            Log::error('Failed to delete contact.', ['error' => $e->getMessage()]);
+            Log::error('Failed to delete contact.', [
+                       'error' => $e->getMessage(),
+                       'contact_id' => $contact->id
+                       ]);
             return redirect()->back()->withErrors(['error' => 'Failed to delete contact. Please try again.']);
         }
 

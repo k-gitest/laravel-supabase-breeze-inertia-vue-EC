@@ -1,15 +1,14 @@
 <script setup lang="ts">
-  import { Head, Link, usePage, useForm } from "@inertiajs/vue3"
+  import { Head, Link, usePage, router } from "@inertiajs/vue3"
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue"
   import type { Category } from '@/types/category'
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
 
   const { props } = usePage<PageProps & { data: Category[] }>()
-  const form = useForm({})
 
-  const deleteCategory = (id: number) => {
-    form.delete(route('admin.category.destroy', {id}),{
+  const deleteCategory = (id: string) => {
+    router.delete(route('admin.category.destroy', {id: id}),{
       preserveState: false,
       onSuccess: (res) => {
         console.log("success", res)
@@ -32,6 +31,9 @@
           <p class="text-sm text-red-600 dark:text-red-400">
             {{ props.flash.success }}
           </p>
+        </div>
+        <div v-if="props.errors">
+          {{ props.errors.id }}
         </div>
         <ul v-for="category of props.data" :key="category.id">
           <li>{{ category.id }}</li>

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AdminCategoryRequest;
 use App\Models\Category;
 use App\Models\Product;
 use Log;
@@ -40,19 +41,11 @@ class AdminCategoryController extends Controller
     /**
      * 登録処理->DB
      */
-    public function store(Request $request): RedirectResponse
+    public function store(AdminCategoryRequest $request): RedirectResponse
     {
-      $request->validate([
-        "name" => "required|unique:categories,name",
-        "description" => "required",
-      ]);
-
       try{
         DB::transaction(function () use ($request) {
-          $result = Category::create([
-            "name" => $request->name,
-            "description" => $request->description,
-          ]);
+          Category::create($request->validated());
         });
         Log::info('Category create succeeded');
       }
@@ -67,9 +60,13 @@ class AdminCategoryController extends Controller
     /**
      * 編集フォーム画面表示
      */
-    public function edit(Category $category, $id): Response
+    public function edit(Request $request): Response
     {
-      $category = Category::find($id);
+      $request->validate([
+        'id' => 'required|string|exists:categories,id',
+      ]);
+      
+      $category = Category::findOrFail($request->id);
 
       return inertia::render('EC/Admin/CategoryEdit', [
         "data" => $category,
@@ -79,18 +76,11 @@ class AdminCategoryController extends Controller
     /**
      * 編集処理->DB
      */
-    public function update(Request $request, Category $category, $id): RedirectResponse
+    public function update(AdminCategoryRequest $request, Category $category, $id): RedirectResponse
     {
       $category = Category::find($id);
-
-      $request->validate([
-         "name" => "required|unique:categories,name,{$category->id}",
-         "description" => "required",
-      ]);
-
-      $category->name = $request->name;
-      $category->description = $request->description;
-
+      $category->fill($request->validated());
+      
       try{
         $category = DB::transaction(function () use ($category) {
           if ($category->isDirty()) {
@@ -111,9 +101,14 @@ class AdminCategoryController extends Controller
     /**
      * 削除処理->DB
      */
-    public function destroy(Category $category, $id): RedirectResponse
+    public function destroy(Request $request): RedirectResponse
     {
-      $category = Category::find($id);
+      $request->validate([
+        'id' => 'required|string|exists:categories,id',
+      ]);
+      
+      $category = Category::findOrFail($request->id);
+      
       try{
         DB::transaction(function () use ($category) {
           $category->delete();

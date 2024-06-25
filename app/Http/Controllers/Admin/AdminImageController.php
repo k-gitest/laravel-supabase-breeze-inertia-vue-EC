@@ -16,22 +16,25 @@ class AdminImageController extends Controller
      */
     public function destroy(Request $request, string $id): RedirectResponse
     {
-        $images = [$request->path];
+        $request->validate([
+            'image_id' => 'required|exists:images,id',
+            'path' => 'required|string',
+        ]);
+        
+        $imagePaths = [$request->path];
 
-        if($images){
-            try{
-                $imageInfo = app()->make("SbStorage")->deleteImage($images);
-            }
-            catch(\Exception $e){
-                Log::error('Failed to delete image.', ['error' => $e->getMessage()]);
-                return redirect()->back()->withErrors(['error' => 'Failed to delete image. Please try again.']);
-            }
+        try{
+            $imageInfo = app()->make("SbStorage")->deleteImage($imagePaths);
+        }
+        catch(\Exception $e){
+            Log::error('Failed to delete image.', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to delete image. Please try again.']);
         }
         
         try{
-            DB::transaction(function () use ($request, $id) {
-                $result = Image::find($request->image_id);
-                $result->delete();
+            DB::transaction(function () use ($request) {
+                $image = Image::findOrFail($request->image_id);
+                $image->delete();
             });
         }
         catch(\Exception $e){
@@ -39,6 +42,6 @@ class AdminImageController extends Controller
             return redirect()->back()->withErrors(['error' => 'Failed to delete image. Please try again.']);
         }
 
-        return redirect()->route('admin.product.edit', $id);
+        return redirect()->route('admin.product.edit', $id)->with('success', '削除しました');
     }
 }

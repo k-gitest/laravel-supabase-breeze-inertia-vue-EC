@@ -16,11 +16,12 @@
 
   const submit = () => {
     form.put(route('admin.category.update', { id: props.data.id }), {
-      preserveState: false,
+      preserveState: (res) => {
+        return Object.keys(res.props.errors).length > 0
+      },
       onSuccess: (res) => {
         console.log("success", res)
       },
-
     })
   }
 
@@ -59,8 +60,6 @@
           <div v-show="form.errors">
             <p class="text-sm text-red-600 dark:text-red-400">
               {{ form.errors.name }}
-            </p>
-            <p class="text-sm text-red-600 dark:text-red-400">
               {{ form.errors.description }}
             </p>
           </div>

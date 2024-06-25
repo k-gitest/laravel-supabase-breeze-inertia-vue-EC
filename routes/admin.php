@@ -35,9 +35,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth:admi
     Route::get('/category/index', [AdminCategoryController::class, 'index'])->name('category.index');
     Route::get('/category/register', [AdminCategoryController::class, 'create'])->name('category.create');
     Route::post('/category/register', [AdminCategoryController::class, 'store'])->name('category.store');
-    Route::get('/category/edit/{id}', [AdminCategoryController::class, 'edit'])->name('category.edit');
+    Route::get('/category/edit', [AdminCategoryController::class, 'edit'])->name('category.edit');
     Route::put('/category/update/{id}', [AdminCategoryController::class, 'update'])->name('category.update');
-    Route::delete('/category/delete/{id}', [AdminCategoryController::class, 'destroy'])->name('category.destroy');
+    Route::delete('/category/delete', [AdminCategoryController::class, 'destroy'])->name('category.destroy');
 
     Route::get('/product', [AdminProductController::class, 'index'])->name('product.index');
     Route::get('/product/register', [AdminProductController::class, 'create'])->name('product.create');
