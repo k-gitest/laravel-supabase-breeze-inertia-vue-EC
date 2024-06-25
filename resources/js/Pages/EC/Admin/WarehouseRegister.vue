@@ -14,13 +14,12 @@
 
   const submit = () => {
     form.post(route('admin.warehouse.store'), {
-      preserveState: () => {
-        return Object.keys(props.errors).length > 0
+      preserveState: (res) => {
+        return Object.keys(res.props.errors).length > 0
       },
       onSuccess: (res) => {
         console.log("success", res)
-      },
-
+      }
     })
   }
 

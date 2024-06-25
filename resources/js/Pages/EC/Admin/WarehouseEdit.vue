@@ -16,11 +16,12 @@
 
   const submit = () => {
     form.put(route('admin.warehouse.update', { id: props.data.id }), {
-      preserveState: false,
+      preserveState: (res) => {
+        return Object.keys(res.props.errors).length > 0
+      },
       onSuccess: (res) => {
         console.log("success", res)
       },
-
     })
   }
 

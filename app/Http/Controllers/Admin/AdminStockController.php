@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AdminStockRequest;
 use App\Models\Stock;
 use App\Models\Product;
 use App\Models\Warehouse;
@@ -18,23 +19,11 @@ class AdminStockController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(AdminStockRequest $request): RedirectResponse
     {
-        $request->validate([
-            'product_id' => 'required|integer',
-            'warehouse_id' => 'required|integer',
-            'quantity' => 'required|integer',
-            'reserved_quantity' => 'required|integer',
-        ]);
-
         try{
             $stock = DB::transaction(function () use ($request){
-                return $stock = Stock::create([
-                    'product_id' => $request->product_id,
-                    'warehouse_id' => $request->warehouse_id,
-                    'quantity' => $request->quantity,
-                    'reserved_quantity' => $request->reserved_quantity,
-                ]);
+                return $stock = Stock::create($request->validated());
             });
             Log::info('Stock create succeeded');
         }
@@ -63,18 +52,13 @@ class AdminStockController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request): RedirectResponse
+    public function update(AdminStockRequest $request): RedirectResponse
     {
-        $request->validate([
-           "quantity" => "required",
-           "reserved_quantity" => "required",
-        ]);
-
+        $stock = Stock::findOrFail($request->id);
+        $stock->fill($request->validated());
+        
         try{
-            DB::transaction(function () use ($request){
-                $stock = Stock::find($request->id);
-                $stock->quantity = $request->quantity;
-                $stock->reserved_quantity = $request->reserved_quantity;
+            DB::transaction(function () use ($stock){
                 if($stock->isDirty()){
                     $stock->save();
                 }
@@ -86,7 +70,7 @@ class AdminStockController extends Controller
             return redirect()->back()->withErrors(['error' => 'Failed to update stock. Please try again.']);
         }
         
-        return redirect()->route('admin.stock.index')->with('success', '在庫情報を更新しました');
+        return redirect()->back()->with('success', '在庫情報を更新しました');
         
     }
 

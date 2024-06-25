@@ -20,16 +20,30 @@
         reservedQuantity.value[stock.id] = stock.reserved_quantity;
       }
   }
+
+  const form = useForm({
+    id: 0,
+    quantity: 0,
+    reserved_quantity: 0,
+  })
   
   const submit = (id: number, quantity: number, reserved: number) => {
-    router.put('/admin/stock/update', {
-      data: {
-        id: id,
-        quantity: quantity,
-        reserved_quantity: reserved,
+    form.id = id;
+    form.quantity = quantity;
+    form.reserved_quantity = reserved;
+
+    form.put(route('admin.stock.update'), {
+      preserveState: (res) => {
+        return Object.keys(res.props.errors).length > 0
       },
-      preserveState: false,
-    })
+      onSuccess: () => {
+        console.log("success")
+      },
+      onError: (res) => {
+        console.log("error")
+        props.errors = res as typeof props.errors;
+      },
+    });
   }
 
   const deleteStock = (id: number) => {
@@ -63,6 +77,7 @@
             <Link :href="route('admin.product.destroy', { id: props.data.id })" class="btn">商品削除</Link>
             </li>
           </ul>
+          
           <div v-if="props.data.stock && props.data.stock.length">
             <div class="overflow-x-auto">
               <table class="table">
@@ -91,6 +106,18 @@
             </div>
           </div>
 
+          <div v-if="props.errors">
+            <p class="text-sm text-red-600 dark:text-red-400"> 
+              {{ props.errors.quantity }}
+              {{ props.errors.reserved_quantity }}
+            </p>
+          </div>
+          <div v-if="props.flash.success">
+            <p class="text-sm text-red-600 dark:text-red-400"> 
+              {{ props.flash.success }}
+            </p>
+          </div>
+          
           <template v-if="props.data.stock && props.data.stock.length">
             <WarehouseStockSelectbox :warehouses="props.warehouse" :product_id="props.data.id" :stock="props.data.stock" />
           </template>
@@ -98,12 +125,6 @@
             在庫が登録されていません
             <WarehouseStockSelectbox :warehouses="props.warehouse" :product_id="props.data.id" />
           </template>
-
-          <div v-show="props.errors">
-            {{ props.errors.quantity }}
-            {{ props.errors.user_id }}
-            {{ props.errors.product_id }}
-          </div>
         </div>
         
       </div>
