@@ -6,12 +6,14 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Http\Requests\SearchRequest;
 
 class SearchController extends Controller
 {
   public function index(Request $request): Response
   {
     $sortOptions = config('constants.SORT_OPTIONS');
+      
     $sort = $request->query('sort_option', 'newest');
     $sortOption = $sortOptions[$sort] ?? $sortOptions['newest'];
     
@@ -23,28 +25,33 @@ class SearchController extends Controller
     $query = Product::with(['category', 'image', 'favorite', 'stock'])->orderBy($sortOption[0], $sortOption[1])->withSum('stock', 'quantity')->withCount('favorite');
 
     if(!empty($categoryIds)){
-        $query->whereIn('category_id', $categoryIds);
+        $query->where(function ($query) use ($categoryIds) {
+            $query->whereIn('category_id', $categoryIds);
+        });
+    } else {
+        $query->whereNotNull('category_id');
     }
     
     if($searchTerm){
-      $query->where('name', 'like', '%' . $searchTerm . '%');
+        $query->where(function ($query) use ($searchTerm) {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        });
     }
 
     if(!empty($priceRangeKeys)){
-        $priceRanges = config('constants.PRICE_RANGES');
-
-        $minPrice = null;
-        $maxPrice = null;
-
-        foreach ($priceRangeKeys as $key) {
-            [$min, $max] = $priceRanges[$key];
-
-            if ($max === null) {
-                $query->orWhere('price_excluding_tax', '>=', $min);
-            } else {
-                $query->orWhereBetween('price_excluding_tax', [$min, $max]);
+        $query->where(function ($query) use ($priceRangeKeys) {
+            $priceRanges = config('constants.PRICE_RANGES');
+    
+            foreach ($priceRangeKeys as $key) {
+                [$min, $max] = $priceRanges[$key];
+    
+                if ($max === null) {
+                    $query->orWhere('price_excluding_tax', '>=', $min);
+                } else {
+                    $query->orWhereBetween('price_excluding_tax', [$min, $max]);
+                }
             }
-        }
+        });
     }
 
     if($warehouseCheck === "true"){

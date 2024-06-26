@@ -73,6 +73,15 @@
             <div class="text-center mb-5">
               <p class="font-semibold text-xl text-gray-800">商品一覧</p>
             </div>
+            <div v-if="props.errors">
+               <p class="text-sm text-red-600 dark:text-red-400">
+                 {{ props.errors.q }}
+                 {{ props.errors.category_ids }}
+                 {{ props.errors.price_range }}
+                 {{ props.errors.sort_option }}
+                 {{ props.errors.warehouse_check }}
+               </p>
+            </div>
             <div class="text-right mb-5">
               <SortSelect 
                 :sort_option="filters?.sort_option"

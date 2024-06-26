@@ -7,7 +7,7 @@
 
   const { props } = usePage<PageProps & { data: Category[] }>()
 
-  const deleteCategory = (id: string) => {
+  const deleteCategory = (id: number) => {
     router.delete(route('admin.category.destroy', {id: id}),{
       preserveState: false,
       onSuccess: (res) => {
