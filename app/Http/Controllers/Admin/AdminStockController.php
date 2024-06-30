@@ -28,8 +28,8 @@ class AdminStockController extends Controller
             Log::info('Stock create succeeded');
         }
         catch(\Exception $e){
-            Log::error('Failed to create stock.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to create stock. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->route('admin.product.index')->with('success', '在庫登録が成功しました');
@@ -40,7 +40,7 @@ class AdminStockController extends Controller
      */
     public function show(string $id): Response
     {
-        $result = Product::with(['stock.warehouse', 'image'])->find($id);
+        $result = Product::with(['stock.warehouse', 'image'])->findOrFail($id);
         $warehouse = Warehouse::all();
         
         return inertia::render('EC/Admin/StockShow',[
@@ -66,8 +66,8 @@ class AdminStockController extends Controller
             Log::info('Stock update succeeded');
         }
         catch(\Exception $e){
-            Log::error('Failed to update stock.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to update stock. Please try again.']);
+            report($e);
+            return false;
         }
         
         return redirect()->back()->with('success', '在庫情報を更新しました');
@@ -83,16 +83,17 @@ class AdminStockController extends Controller
            "id" => "required|exists:stocks,id",                
         ]);
 
+        $stock = Stock::findOrFail($request->id);
+        
         try{
-            DB::transaction(function () use ($request){
-                $stock = Stock::findOrFail($request->id);
+            DB::transaction(function () use ($stock){ 
                 $stock->delete();
             });
             Log::info('Stock delete succeeded');
         }
         catch(\Exception $e){
-            Log::error('Failed to delete stock.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to delete stock. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->route('admin.stock.index')->with('success', '在庫情報を削除しました');

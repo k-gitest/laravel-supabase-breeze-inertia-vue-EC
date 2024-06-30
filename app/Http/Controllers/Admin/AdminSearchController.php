@@ -7,13 +7,16 @@ use Inertia\Inertia;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Enums\SortOption;
+use App\Enums\PriceRange;
+use App\Http\Requests\Admin\AdminSearchRequest;
 
 class AdminSearchController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
+    public function index(AdminSearchRequest $request): Response
     {
         $categoryIds = $request->query('category_ids', []);
         $searchTerm = $request->query('q');
@@ -23,30 +26,30 @@ class AdminSearchController extends Controller
         $query = Product::with(['image', 'category'])->orderBy('created_at', 'desc');
 
         if(!empty($categoryIds)){
-            $query->whereIn('category_id', $categoryIds);
+            $query->where(function ($query) use ($categoryIds) {
+                $query->whereIn('category_id', $categoryIds);
+            });
         }
 
         if($searchTerm){
-            $query->where('name', 'like', '%' . $searchTerm . '%');
+            $query->where(function ($query) use ($searchTerm) {
+                $query->where('name', 'like', '%' . $searchTerm . '%');
+            });
         }
 
         if(!empty($priceRangeKeys)){
-            $priceRanges = config('constants.PRICE_RANGES');
-
-            $minPrice = null;
-            $maxPrice = null;
-
-            foreach ($priceRangeKeys as $key) {
-                [$min, $max] = $priceRanges[$key];
-                $minPrice = $minPrice === null ? $min : min($minPrice, $min);
-                $maxPrice = $maxPrice === null ? $max : max($maxPrice, $max);
-            }
-
-            if ($maxPrice === null) {
-                $query->where('price_excluding_tax', '>=', $minPrice);
-            } else {
-                $query->whereBetween('price_excluding_tax', [$minPrice, $maxPrice]);
-            }
+            $query->where(function ($query) use ($priceRangeKeys) {
+                foreach ($priceRangeKeys as $key) {
+                    $priceRange = PriceRange::fromRequestKey($key);
+                    [$min, $max] = $priceRange->values();
+                    
+                    if ($max === null) {
+                        $query->orWhere('price_excluding_tax', '>=', $min);
+                    } else {
+                        $query->orWhereBetween('price_excluding_tax', [$min, $max]);
+                    }
+                }
+            });
         }
 
         if($warehouseCheck === "true"){

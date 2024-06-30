@@ -12,6 +12,7 @@ use App\Http\Requests\Admin\AdminWarehouseRequest;
 use App\Models\Warehouse;
 use App\Models\Product;
 use Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AdminWarehouseController extends Controller
 {
@@ -42,16 +43,13 @@ class AdminWarehouseController extends Controller
     {
         try{
             DB::transaction(function () use ($request){
-                $warehouse = Warehouse::create([
-                    'name' => $request->name,
-                    'location' => $request->location,                        
-                ]);
+                $warehouse = Warehouse::create($request->validated());
             });
             Log::info('Warehouse create succeeded');
         }
         catch(\Exception $e){
-            Log::error('Failed to create Warehouse.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to create warehouse. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->route('admin.warehouse.index');
@@ -82,9 +80,9 @@ class AdminWarehouseController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id): Response
+    public function edit(string $id): Response | RedirectResponse
     {
-        $result = Warehouse::find($id);
+        $result = Warehouse::findOrFail($id);
         
         return Inertia::render('EC/Admin/WarehouseEdit', [
             'data' => $result,
@@ -94,13 +92,13 @@ class AdminWarehouseController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(AdminWarehouseRequest $request, string $id): RedirectResponse
+    public function update(AdminWarehouseRequest $request, string $id): RedirectResponse | bool
     {
-        $warehouse = Warehouse::find($id);
-        $warehouse->name = $request->name;
-        $warehouse->location = $request->location;
+        $warehouse = Warehouse::findOrFail($id);
+        $warehouse->fill($request->validated());
 
         try{
+            throw new \Exception("エラーだよ");
             DB::transaction(function () use ($warehouse){
                 if( $warehouse->isDirty() ){
                     $warehouse->save();
@@ -109,8 +107,8 @@ class AdminWarehouseController extends Controller
             Log::info('Warehouse update succeeded');
         }
         catch(\Exception $e){
-            Log::error( 'Failed to update Warehouse.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to update warehouse. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->route('admin.warehouse.edit', $id);
@@ -121,7 +119,7 @@ class AdminWarehouseController extends Controller
      */
     public function destroy(string $id): RedirectResponse
     {
-        $warehouse = Warehouse::find($id);
+        $warehouse = Warehouse::findOrFail($id);
         try{
             DB::transaction(function () use ($warehouse){
                 $warehouse->delete();
@@ -129,8 +127,8 @@ class AdminWarehouseController extends Controller
             Log::info('Warehouse delete succeeded');
         }
         catch(\Exception $e){
-            Log::error('Failed to delete Warehouse.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to delete warehouse. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->route('admin.warehouse.index');

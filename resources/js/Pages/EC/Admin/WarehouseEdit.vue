@@ -22,6 +22,10 @@
       onSuccess: (res) => {
         console.log("success", res)
       },
+      onError: (res) => {
+        console.log("error", res)
+        props.errors = res as typeof props.errors;
+      },
     })
   }
 
@@ -30,6 +34,9 @@
       preserveState: false,
       onSuccess: (res) => {
         console.log("success", res)
+      },
+      onError: (res) => {
+        console.log("error", res)
       },
     })
   }
@@ -68,9 +75,8 @@
           <div v-show="props.errors">
             <p class="text-sm text-red-600 dark:text-red-400">
               {{ props.errors.name }}
-            </p>
-            <p class="text-sm text-red-600 dark:text-red-400">
               {{ props.errors.location }}
+              {{ props.errors.error }}
             </p>
           </div>
           <div v-show="props.flash.success">

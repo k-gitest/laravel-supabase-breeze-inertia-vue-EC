@@ -7,13 +7,14 @@
   import AdminStockTableList from "@/Components/AdminStockTableList.vue"
   import Pagination from "@/Components/Pagination.vue"
   import SearchBox from "@/Components/SearchBox.vue"
+  import { ref } from "vue"
 
   const { props } = usePage<PageProps & { pagedata: PageData<Product> }>()
-  console.log(props)
+  const filters = ref({...props.filters});
 
-  const searchSubmit = (formdata: { q: string, category_ids: number[], warehouse_check: boolean, price_range: string[] }) => {
+  const searchSubmit = () => {
     router.get(route('admin.search'), 
-      formdata,
+      filters.value,
       {
         preserveState: false,
         preserveScroll: true,
@@ -33,7 +34,7 @@
       <SearchBox 
         @searchSubmit="searchSubmit" 
         :categories="props.category" 
-        :filters="props.filters" 
+        v-model:filters="filters" 
         :price_ranges="props.price_ranges"
         />
       <div class="grow">

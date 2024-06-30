@@ -84,7 +84,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 ```
 
 ## 11の主な変更点
-- デフォルトのプロバイダーやミドルウェアに関連するディレクトリとファイルがappから削除されbootstrapに集約
+- デフォルトのプロバイダーやミドルウェアなどに関連するディレクトリとファイルがappから削除されbootstrapに集約
 - プロバイダー登録はbootstrap/providers、ミドルウェア登録はbootstrap/appとrouteで行う
 - イベント・リスナー・プロバイダーは自動的にbootstrap追加される
 - スケジューラーのkernelが削除されroutes/consoleとbootsrap/appで行う
@@ -105,6 +105,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - テキスト、カテゴリ、店舗在庫、価格帯の検索追加、ページネーション追加
 - 上記の検索結果をソートする機能を追加
 - roleはGateで認可、user_idはpolicyで認可、ガードはミドルウェアで認可、DBはRLS
+- Enumで定数バリデーション、ビュー側への定数はconfig/constantsで設定
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル設定
 - supabaseとmailtrapとstripeのenv設定
@@ -125,5 +126,6 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - DB処理後の更新としてrouter.reloadの使いどころは多いと感じる
 - whereHasは言われているほど遅くも重くもない
 - defineModelでオプショナルがあるとbuild時に型は通ってもInvalid assignment targetのエラーが出るので初期値を設定する必要がある
+- withException内でModelNotFoundExceptionが取得できなかったのでNotFoundHttpExceptionで代用しrenderで処理する
 - hotwire/livewireは次の機会に使ってみようと思う
 

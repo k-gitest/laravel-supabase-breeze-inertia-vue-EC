@@ -63,7 +63,7 @@ class ProductController extends Controller
         $isInFavorite = $favorite ? true : false;
       }
 
-      $data = Product::with(['category', 'image', 'comment', 'stock', 'favorite'])->withSum('stock', 'quantity')->find($id);
+      $data = Product::with(['category', 'image', 'comment', 'stock', 'favorite'])->withSum('stock', 'quantity')->findOrFail($id);
 
       if($data){
         return inertia::render('EC/ProductDetail',[

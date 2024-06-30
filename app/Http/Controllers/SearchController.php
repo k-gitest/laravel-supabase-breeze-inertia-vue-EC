@@ -7,22 +7,23 @@ use Inertia\Response;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Http\Requests\SearchRequest;
+use App\Enums\SortOption;
+use App\Enums\PriceRange;
 
 class SearchController extends Controller
 {
-  public function index(Request $request): Response
+  public function index(SearchRequest $request): Response
   {
-    $sortOptions = config('constants.SORT_OPTIONS');
-      
     $sort = $request->query('sort_option', 'newest');
-    $sortOption = $sortOptions[$sort] ?? $sortOptions['newest'];
-    
+    $sortOptions = SortOption::tryFrom($sort)->values() ?? SortOption::tryFrom('newest')->values();
+    list($sortField, $sortDirection) = $sortOptions;
+      
     $categoryIds = $request->query('category_ids', []);
     $searchTerm = $request->query('q');
     $priceRangeKeys = $request->query('price_range', []);
     $warehouseCheck = $request->query('warehouse_check', false);
-    
-    $query = Product::with(['category', 'image', 'favorite', 'stock'])->orderBy($sortOption[0], $sortOption[1])->withSum('stock', 'quantity')->withCount('favorite');
+
+    $query = Product::with(['category', 'image', 'favorite', 'stock'])->orderBy($sortField, $sortDirection)->withSum('stock', 'quantity')->withCount('favorite');
 
     if(!empty($categoryIds)){
         $query->where(function ($query) use ($categoryIds) {
@@ -39,11 +40,10 @@ class SearchController extends Controller
     }
 
     if(!empty($priceRangeKeys)){
-        $query->where(function ($query) use ($priceRangeKeys) {
-            $priceRanges = config('constants.PRICE_RANGES');
-    
+        $query->where(function ($query) use ($priceRangeKeys) {    
             foreach ($priceRangeKeys as $key) {
-                [$min, $max] = $priceRanges[$key];
+                $priceRange = PriceRange::fromRequestKey($key);
+                [$min, $max] = $priceRange->values();
     
                 if ($max === null) {
                     $query->orWhere('price_excluding_tax', '>=', $min);

@@ -48,8 +48,8 @@ class CartController extends Controller
       Log::info('cart create succeeded');
     }
     catch(\Exception $e){
-      Log::error('Failed to create cart.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to create cart. Please try again.']);
+      report($e);
+      return false;
     }
 
     return redirect()->route('product.show', $request->product_id);
@@ -60,7 +60,7 @@ class CartController extends Controller
    */
   public function edit($id): Response
   {
-    $result = Cart::with(['product.image'])->find($id);
+    $result = Cart::with(['product.image'])->findOrFail($id);
     
     Gate::authorize('update', $result);
     
@@ -76,7 +76,7 @@ class CartController extends Controller
   {
     Gate::authorize('isGeneral');
 
-    $cart = Cart::find($id);
+    $cart = Cart::findOrFail($id);
     
     Gate::authorize('update', $cart);
     
@@ -91,8 +91,8 @@ class CartController extends Controller
       Log::info('cart update succeeded');
     }
     catch(\Exception $e){
-      Log::error('Failed to update cart.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to update cart. Please try again.']);
+      report($e);
+      return false;
     }
     
     return redirect()->route('cart.edit', $id)->with('success', '更新しました');
@@ -105,7 +105,7 @@ class CartController extends Controller
   {
     Gate::authorize('isGeneral');
     
-    $result = Cart::find($id);
+    $result = Cart::findOrFail($id);
     
     Gate::authorize('delete', $result);
     
@@ -117,8 +117,8 @@ class CartController extends Controller
       Log::info('cart delete succeeded');
     }
     catch(\Exception $e){
-      Log::error('Failed to delete cart.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to delete cart. Please try again.']);
+      report($e);
+      return false;
     }
     
     return redirect()->route('cart.index')->with('success', '削除しました');

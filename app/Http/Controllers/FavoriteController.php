@@ -45,8 +45,8 @@ class FavoriteController extends Controller
             Log::info('Favorite created');
         }
         catch (\Exception $e){
-            Log::error('Failed to create favorite.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to create favorite. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->back()->with('success', 'お気に入りに追加しました');
@@ -60,7 +60,7 @@ class FavoriteController extends Controller
         Gate::authorize('isGeneral');
         
         $user_id = auth()->user()->id;
-        $favorite = Favorite::where('user_id', $user_id)->find($id);
+        $favorite = Favorite::where('user_id', $user_id)->findOrFail($id);
         
         Gate::authorize('delete', $favorite);
         
@@ -71,8 +71,8 @@ class FavoriteController extends Controller
             Log::info('Favorite deleted');
         }
         catch(\Exception $e){
-            Log::error('Failed to delete favorite.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to delete favorite. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->route('favorite.index')->with('success', 'お気に入りから削除しました');

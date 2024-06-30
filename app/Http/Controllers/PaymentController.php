@@ -42,8 +42,8 @@ class PaymentController extends Controller
       Log::info('paymentIntent create succeeded');
     }
     catch(\Exception $e){
-      Log::error('Failed to create paymentIntent.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to create paymentIntent. Please try again.']);
+      report($e);
+      return false;
     }
     
     return Inertia::render('EC/PaymentComponent', [

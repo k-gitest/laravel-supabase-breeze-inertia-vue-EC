@@ -44,8 +44,8 @@ class TodoListController extends Controller
       Log::info('TodoList create succeeded');
     }
     catch(\Exception $e){
-      Log::error( 'Failed to create TodoList.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to create TodoList. Please try again.']);
+      report($e);
+      return false;
     }
     
     return redirect(route('todo.index', absolute: false));
@@ -79,8 +79,8 @@ class TodoListController extends Controller
       Log::info('TodoList update succeeded');
     }
     catch(\Exception $e){
-      Log::error('Failed to update TodoList.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to update TodoList. Please try again.']);
+      report($e);
+      return false;
     }
 
     return redirect(route('todo.index', absolute: false));
@@ -101,8 +101,8 @@ class TodoListController extends Controller
       Log::info('TodoList delete succeeded');
     }
     catch(\Exception $e){
-      Log::error('Failed to delete TodoList.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to delete TodoList. Please try again.']);
+      report($e);
+      return false;
     }
 
     return redirect()->route('todo.index')->with('message', 'My message');

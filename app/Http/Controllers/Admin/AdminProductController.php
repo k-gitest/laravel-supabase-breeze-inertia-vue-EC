@@ -38,6 +38,13 @@ class AdminProductController extends Controller
       return inertia::render('EC/Admin/ProductAllList', [
           'pagedata' => $data,
           'price_ranges' => $search_price_ranges,
+          'filters'  => [
+               'category_ids' => [],
+               'q'  => "",
+               'price_range' => [],
+               'warehouse_check' => false,
+               'sort_option' => "newest",
+          ],
       ]);
 
     }
@@ -72,8 +79,8 @@ class AdminProductController extends Controller
         Log::info('Product created', ['name' => $result->name]);
       }
       catch(\Exeption $e){
-        Log::error('Product create error', ['name' => $result->name]);
-        return redirect()->back()->with('error', 'Product create error');
+        report($e);
+        return false;
       }
       
       $product_id = $result->id;
@@ -83,7 +90,8 @@ class AdminProductController extends Controller
         Log::info('product image save success');
       }
       catch(\Exception $e){
-        Log::error('product image save error', $e->getMessage());
+        report($e);
+        return false;
       }
 
       $result = [];
@@ -101,8 +109,8 @@ class AdminProductController extends Controller
         Log::info('Product image save success', ['result' => $result]);
       }
       catch(\Exeption $e){
-        Log::error('Product image save error', $e->getMessage());
-        return redirect()->back()->with('error', 'Product image save error');
+        report($e);
+        return false;
       }
 
       return redirect()->route('admin.product.index')->with('success', 'Product created');
@@ -113,7 +121,7 @@ class AdminProductController extends Controller
      */
     public function show(Product $product, $id): Response | RedirectResponse
     {
-      $data = Product::with(['category', 'image'])->find($id);
+      $data = Product::with(['category', 'image'])->findOrFail($id);
       if($data){
         return inertia::render('EC/Admin/ProductDetail',[
             "data" => $data,
@@ -129,7 +137,7 @@ class AdminProductController extends Controller
      */
     public function edit(Product $product, $id): Response
     {
-      $data = Product::with('category', 'image')->find($id);
+      $data = Product::with('category', 'image')->findOrFail($id);
       
       return inertia::render('EC/Admin/ProductEdit',[
           "data" => $data,
@@ -141,7 +149,7 @@ class AdminProductController extends Controller
      */
     public function update(AdminProductRequest $request, $id): RedirectResponse
     {
-      $product = Product::find($id);
+      $product = Product::findOrFail($id);
       $product->fill($request->validated());
 
       $price_including_tax = $this->calculatePriceIncludingTax($request->price_excluding_tax, $request->tax_rate);
@@ -157,8 +165,8 @@ class AdminProductController extends Controller
         Log::info('Product updated.', ['id' => $product->id]);
       }
       catch(\Exception $e){
-        Log::error('Failed to update product.', ['error' => $e->getMessage()]);
-        return redirect()->back()->withErrors(['error' => 'Failed to update product. Please try again.']);
+        report($e);
+        return false;
       }
       
       $product_id = $product->id;
@@ -170,8 +178,8 @@ class AdminProductController extends Controller
         Log::info('Image uploaded.', ['id' => $product->id]);
       }
       catch(\Exenption $e){
-        Log::error('Failed to upload image.', ['error' => $e->getMessage()]);
-        return redirect()->back()->withErrors(['error' => 'Failed to upload image. Please try again.']);
+        report($e);
+        return false;
       }
 
       $result = [];
@@ -189,8 +197,8 @@ class AdminProductController extends Controller
         Log::info('Product updated.', ['id' => $product->id]);
       }
       catch(\Exception $e){
-        Log::error('Failed to update product.', ['error' => $e->getMessage()]);
-        return redirect()->back()->withErrors(['error' => 'Failed to update product. Please try again.']);
+        report($e);
+        return false;
       }
       
       return redirect()->route('admin.product.edit', $id)->with('success', '更新しました');
@@ -210,21 +218,22 @@ class AdminProductController extends Controller
           Log::info('product image delete successed');
         }
         catch(\Exception $e){
-          Log::error('product image delete failed.', ['error' => $e->getMessage()]);
-          return redirect()->back()->withErrors(['error' => 'Failed to delete product image. Please try again.']);
+          report($e);
+          return false;
         }
       }
+
+      $product = Product::findOrFail($id);
       
       try{
         DB::transaction(function () use ($id) {
-          $product = Product::find($id);
           $product->delete();
         });
         Log::info('product delete successed');
       }
       catch(\Exception $e){
-        Log::error('product delete failed.', ['error' => $e->getMessage()]);
-        return redirect()->back()->withErrors(['error' => 'Failed to delete product. Please try again.']);
+        report($e);
+        return false;
       }
       
       return redirect('admin/product')->with('success', '削除しました');
@@ -247,8 +256,8 @@ class AdminProductController extends Controller
             Log::info('product image delete successed');
           }
           catch(\Exception $e){
-            Log::error('product image delete failed.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to delete product image. Please try again.']);
+            report($e);
+            return false;
           }
         }
       }
@@ -260,8 +269,8 @@ class AdminProductController extends Controller
         Log::info('product bulk delete successed');
       }
       catch(\Exception $e){
-        Log::error('product bulk delete failed.', ['error' => $e->getMessage()]);
-        return redirect()->back()->withErrors(['error' => 'Failed to delete product. Please try again.']);
+        report($e);
+        return false;
       }
   
       return redirect()->back()->with('success', '削除しました');

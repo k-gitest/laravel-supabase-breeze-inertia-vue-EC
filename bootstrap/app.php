@@ -5,6 +5,8 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use App\Http\Middleware\AdminRedirectIfAuthenticated;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use App\Services\ErrorLogService;
 
 return Application::configure(basePath: dirname(__DIR__))
   ->withRouting(
@@ -34,5 +36,15 @@ return Application::configure(basePath: dirname(__DIR__))
     
   })
   ->withExceptions(function (Exceptions $exceptions) {
-    //
+   
+    $exceptions->report(function (Exception $e) {
+        ErrorLogService::logError($e);
+        ErrorLogService::Redirect();
+    });
+
+    $exceptions->render(function (NotFoundHttpException $e) {
+        ErrorLogService::logError($e);
+    });
+
+    
   })->create();

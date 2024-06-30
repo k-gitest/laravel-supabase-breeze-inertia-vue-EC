@@ -27,8 +27,8 @@ class AdminImageController extends Controller
             $imageInfo = app()->make("SbStorage")->deleteImage($imagePaths);
         }
         catch(\Exception $e){
-            Log::error('Failed to delete image.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to delete image. Please try again.']);
+            report($e);
+            return false;
         }
         
         try{
@@ -38,8 +38,8 @@ class AdminImageController extends Controller
             });
         }
         catch(\Exception $e){
-            Log::error('Failed to delete image.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to delete image. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->route('admin.product.edit', $id)->with('success', '削除しました');

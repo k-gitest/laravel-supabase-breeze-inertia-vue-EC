@@ -46,8 +46,8 @@ class AdminCartController extends Controller
       Log::info('cart create succeeded');
     }
     catch(\Exception $e){
-      Log::error('Failed to create cart.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to create cart. Please try again.']);
+      report($e);
+      return false;
     }
     
     return redirect()->route('admin.product.show', $request->product_id);
@@ -58,7 +58,7 @@ class AdminCartController extends Controller
    */
   public function edit(string $id): Response
   {
-    $result = Cart::with('product.image')->find($id);
+    $result = Cart::with('product.image')->findOrFail($id);
     return Inertia::render('EC/Admin/CartEdit', [
       'data' => $result,
     ]);
@@ -73,7 +73,7 @@ class AdminCartController extends Controller
       'quantity' => 'required|integer|between:1,99',
     ]);
 
-    $result = Cart::find($id);
+    $result = Cart::findOrFail($id);
     $result->quantity = $request->quantity;
 
     try{
@@ -85,8 +85,8 @@ class AdminCartController extends Controller
       Log::info('cart update succeeded');
     }
     catch(\Exception $e){
-      Log::error('Failed to update cart.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to update cart. Please try again.']);
+      report($e);
+      return false;
     }
 
     return redirect()->route('admin.cart.edit', $id)->with('success', 'カート内容を変更しました');
@@ -97,7 +97,7 @@ class AdminCartController extends Controller
    */
   public function destroy(string $id): RedirectResponse
   {
-    $result = Cart::find($id);
+    $result = Cart::findOrFail($id);
     
     try{
       DB::transaction(function () use ($result) {
@@ -106,8 +106,8 @@ class AdminCartController extends Controller
       Log::info('cart delete succeeded');
     }
     catch(\Exception $e){
-      Log::error('Failed to delete cart.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to delete cart. Please try again.']);
+      report($e);
+      return false;
     }
 
     return redirect()->route('admin.cart.edit')->with('success', '削除しました');

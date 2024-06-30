@@ -34,8 +34,8 @@ class ContactController extends Controller
     try {
         $filenames = $this->handleImageUploads($request);
     } catch (\Exception $e) {
-        Log::error('Image upload failed.', ['error' => $e->getMessage()]);
-        return redirect()->back()->withErrors(['error' => 'Failed to upload image. Please try again.']);
+      report($e);
+      return false;
     }
 
     $chua_mobile = $request->header('Sec-Ch-Ua-Mobile');
@@ -63,8 +63,8 @@ class ContactController extends Controller
       });
     }
     catch (\Exception $e){
-      Log::error('Failed to submit contact form.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to submit contact form. Please try again.']);
+      report($e);
+      return false;
     }
 
     event(new ContactFormSubmitted($request->all()));

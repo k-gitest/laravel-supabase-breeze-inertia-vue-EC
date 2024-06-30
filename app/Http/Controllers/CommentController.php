@@ -48,8 +48,8 @@ class CommentController extends Controller
             Log::info('Comment created');
         }
         catch (\Exception $e){
-            Log::error('Failed to create comment.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to create comment. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->route('product.show', $request->product_id)->with('success', 'コメントを投稿しました');
@@ -63,7 +63,7 @@ class CommentController extends Controller
         Gate::authorize('isGeneral');
         
         $user_id = auth()->user()->id;
-        $comment = Comment::where('user_id', $user_id)->find($id);
+        $comment = Comment::where('user_id', $user_id)->findOrFail($id);
 
         Gate::authorize('delete', $comment);
 
@@ -74,8 +74,8 @@ class CommentController extends Controller
             Log::info('Comment deleted');
         }
         catch(\Exception $e){
-            Log::error('Failed to delete comment.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to delete comment. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->route('comment.index')->with('success', 'コメントを削除しました');

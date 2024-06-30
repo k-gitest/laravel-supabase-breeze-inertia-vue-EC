@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Enums\PriceRange;
 use App\Enums\SortOption;
 
-class SearchRequest extends FormRequest
+class AdminSearchRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -34,12 +34,12 @@ class SearchRequest extends FormRequest
             'warehouse_check' => $value,
         ]);
     }
-    
+
     public function rules(): array
     {
         $priceRanges = array_column(PriceRange::cases(), 'value');
         $sortOptions = array_column(SortOption::cases(), 'value');
-        
+
         return [
             'sort_option' => [Rule::in($sortOptions)],
             'category_ids.*' => ['numeric', 'exists:categories,id'],

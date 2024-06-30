@@ -41,8 +41,8 @@ class AdminRegisterController extends Controller
       Log::info('Admin create succeeded');
     }
     catch (\Exception $e){
-      Log::error('Failed to create admin.', ['error' => $e->getMessage()]);
-      return redirect()->back()->withErrors(['error' => 'Failed to create admin. Please try again.']);
+      report($e);
+      return false;
     }
 
     event(new Registered($admin));

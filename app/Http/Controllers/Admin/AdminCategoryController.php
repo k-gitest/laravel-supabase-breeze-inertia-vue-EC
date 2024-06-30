@@ -50,8 +50,8 @@ class AdminCategoryController extends Controller
         Log::info('Category create succeeded');
       }
       catch (\Exception $e){
-        Log::error('Failed to create category.', ['error' => $e->getMessage()]);
-        return redirect()->back()->withErrors(['error' => 'Failed to create category. Please try again.']);
+        report($e);
+        return false;
       }
 
       return redirect()->route('admin.category.index');
@@ -78,7 +78,7 @@ class AdminCategoryController extends Controller
      */
     public function update(AdminCategoryRequest $request, Category $category, $id): RedirectResponse
     {
-      $category = Category::find($id);
+      $category = Category::findOrFail($id);
       $category->fill($request->validated());
       
       try{
@@ -91,8 +91,8 @@ class AdminCategoryController extends Controller
         Log::info('Category update succeeded');
       }
       catch(\Exception $e){
-        Log::error('Failed to update category.', ['error' => $e->getMessage()]);
-        return redirect()->back()->withErrors(['error' => 'Failed to update category. Please try again.']);
+        report($e);
+        return false;
       }
 
       return redirect()->route('admin.category.edit', $category)->with('success', '更新しました');
@@ -116,8 +116,8 @@ class AdminCategoryController extends Controller
         Log::info('Category delete succeeded');
       }
       catch(\Exception $e){
-        Log::error( 'Failed to delete category.', ['error' => $e->getMessage()]);
-        return redirect()->back()->withErrors(['error' => 'Failed to delete category. Please try again.']);
+        report($e);
+        return false;
       }
 
       return redirect()->route('admin.category.index')->with('success', '削除しました');

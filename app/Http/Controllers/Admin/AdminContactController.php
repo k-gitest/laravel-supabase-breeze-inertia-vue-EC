@@ -44,7 +44,6 @@ class AdminContactController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        dd($request);
         $request->validate([
             'id' => 'required|string|max:255|exists:contacts,id',
         ]);
@@ -58,11 +57,8 @@ class AdminContactController extends Controller
                 app()->make('SbStorage')->deleteImage($fileKeys);
             }
             catch (\Exception $e) {
-                Log::error('contact Image delete failed.', [
-                           'error' => $e->getMessage(),
-                           'contact_id' => $contact->id
-                           ]);
-                return redirect()->back()->withErrors(['error' => 'Failed to delete image. Please try again.']);
+                report($e);
+                return false;
             }
         }
         
@@ -74,11 +70,8 @@ class AdminContactController extends Controller
             Log::info('contact delete succeeded');
         }
         catch (\Exception $e) {
-            Log::error('Failed to delete contact.', [
-                       'error' => $e->getMessage(),
-                       'contact_id' => $contact->id
-                       ]);
-            return redirect()->back()->withErrors(['error' => 'Failed to delete contact. Please try again.']);
+            report($e);
+            return false;
         }
 
         return redirect()->back()->with('success', '削除しました');

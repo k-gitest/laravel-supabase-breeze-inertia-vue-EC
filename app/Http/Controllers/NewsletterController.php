@@ -16,7 +16,7 @@ class NewsletterController extends Controller
         $request->validate([
            'subscribed' => ['required', 'boolean'],                
         ]);
-        $user = User::find(auth()->user()->id);
+        $user = User::findOrFail(auth()->user()->id);
         $user->subscribed = $request->subscribed;
 
         try{
@@ -28,8 +28,8 @@ class NewsletterController extends Controller
             Log::info('Newsletter update succeeded');
         }
         catch(\Exception $e){
-            Log::error( 'Failed to update newsletter.', ['error' => $e->getMessage()]);
-            return redirect()->back()->withErrors(['error' => 'Failed to update newsletter. Please try again.']);
+            report($e);
+            return false;
         }
         
         return redirect()->route('profile.edit')->with('status', 'Subscription updated!');
