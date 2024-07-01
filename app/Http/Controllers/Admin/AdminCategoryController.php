@@ -76,13 +76,13 @@ class AdminCategoryController extends Controller
     /**
      * 編集処理->DB
      */
-    public function update(AdminCategoryRequest $request, Category $category, $id): RedirectResponse
+    public function update(AdminCategoryRequest $request): RedirectResponse|bool
     {
-      $category = Category::findOrFail($id);
-      $category->fill($request->validated());
-      
       try{
-        $category = DB::transaction(function () use ($category) {
+        $category = DB::transaction(function () use ($request) {
+          $category = Category::lockForUpdate()->findOrFail($request->id);
+          $category->fill($request->validated());
+          
           if ($category->isDirty()) {
               $category->save();
           }
@@ -101,16 +101,15 @@ class AdminCategoryController extends Controller
     /**
      * 削除処理->DB
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request): RedirectResponse|bool
     {
       $request->validate([
         'id' => 'required|string|exists:categories,id',
       ]);
       
-      $category = Category::findOrFail($request->id);
-      
       try{
-        DB::transaction(function () use ($category) {
+        DB::transaction(function () use ($request) {
+          $category = Category::lockForUpdate()->findOrFail($request->id);
           $category->delete();
         });
         Log::info('Category delete succeeded');

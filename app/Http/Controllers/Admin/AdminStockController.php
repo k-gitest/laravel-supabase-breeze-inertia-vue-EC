@@ -19,7 +19,7 @@ class AdminStockController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(AdminStockRequest $request): RedirectResponse
+    public function store(AdminStockRequest $request): RedirectResponse|bool
     {
         try{
             $stock = DB::transaction(function () use ($request){
@@ -52,13 +52,13 @@ class AdminStockController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(AdminStockRequest $request): RedirectResponse
+    public function update(AdminStockRequest $request): RedirectResponse|bool
     {
-        $stock = Stock::findOrFail($request->id);
-        $stock->fill($request->validated());
-        
         try{
-            DB::transaction(function () use ($stock){
+            DB::transaction(function () use ($request){
+                $stock = Stock::lockForUpdate()->findOrFail($request->id);
+                $stock->fill($request->validated());
+                
                 if($stock->isDirty()){
                     $stock->save();
                 }
@@ -77,16 +77,15 @@ class AdminStockController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request): RedirectResponse|bool
     {
         $request->validate([
-           "id" => "required|exists:stocks,id",                
+           "id" => "required|integer|exists:stocks,id",                
         ]);
-
-        $stock = Stock::findOrFail($request->id);
         
         try{
-            DB::transaction(function () use ($stock){ 
+            DB::transaction(function () use ($request){ 
+                $stock = Stock::lockForUpdate()->findOrFail($request->id);
                 $stock->delete();
             });
             Log::info('Stock delete succeeded');
@@ -96,7 +95,7 @@ class AdminStockController extends Controller
             return false;
         }
 
-        return redirect()->route('admin.stock.index')->with('success', '在庫情報を削除しました');
+        return redirect()->back()->with('success', '在庫情報を削除しました');
         
     }
 }

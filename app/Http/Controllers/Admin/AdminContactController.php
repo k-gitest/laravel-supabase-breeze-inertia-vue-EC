@@ -42,30 +42,28 @@ class AdminContactController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request): RedirectResponse|bool
     {
         $request->validate([
             'id' => 'required|string|max:255|exists:contacts,id',
         ]);
-
-        $contact = Contact::findOrFail($request->id);
-
-        if($contact->attachments){
-            $fileKeys = array_column($contact->attachments, 'key');
-            
-            try{
-                app()->make('SbStorage')->deleteImage($fileKeys);
-            }
-            catch (\Exception $e) {
-                report($e);
-                return false;
-            }
-        }
         
         try {
-            DB::transaction(function () use ($contact)
+            DB::transaction(function () use ($request)
             {
+                $contact = Contact::lockForUpdate()->findOrFail($request->id);
+                
+                if($contact->attachments){
+                    $attachments = $contact->attachments;
+                }
+                
                 $contact->delete();
+
+                if($attachments){
+                    $fileKeys = array_column($attachments, 'key');
+
+                    app()->make('SbStorage')->deleteImage($fileKeys);
+                }
             });
             Log::info('contact delete succeeded');
         }

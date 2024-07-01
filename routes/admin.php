@@ -61,7 +61,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth:admi
     Route::get('/warehouse/show/{id}', [AdminWarehouseController::class, 'show'])->name('warehouse.show');
     Route::get('/warehouse/edit/{id}', [AdminWarehouseController::class, 'edit'])->name('warehouse.edit');
     Route::put('/warehouse/update/{id}', [AdminWarehouseController::class, 'update'])->name('warehouse.update');
-    Route::delete('/warehouse/delete/{id}', [AdminWarehouseController::class, 'destroy'])->name('warehouse.destroy');
+    Route::delete('/warehouse/delete', [AdminWarehouseController::class, 'destroy'])->name('warehouse.destroy');
 
     Route::get('/product/search', [AdminSearchController::class, 'index'])->name('search');
     

@@ -1,15 +1,15 @@
 <script setup lang="ts">
-  import { Head, Link, usePage, useForm } from "@inertiajs/vue3"
+  import { Head, Link, usePage, router } from "@inertiajs/vue3"
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue"
   import type { Warehouse } from '@/types/warehouse'
   import type { PageProps } from '@/types'
   import AdminEcLayout from "@/Layouts/AdminEcLayout.vue"
 
   const { props } = usePage<PageProps & { data: Warehouse[] }>()
-  const form = useForm({})
 
   const deleteWarehouse = (id: number) => {
-    form.delete(route('admin.warehouse.destroy', {id}),{
+    router.delete(route('admin.warehouse.destroy'),{
+      data: {id},
       preserveState: false,
       onSuccess: (res) => {
         console.log("success", res)

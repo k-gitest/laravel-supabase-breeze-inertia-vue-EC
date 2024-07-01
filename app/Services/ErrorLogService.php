@@ -32,6 +32,6 @@ class ErrorLogService
     }
 
     public static function Redirect(){
-        return redirect()->back()->withErrors(['error' => 'Failed to update warehouse. Please try again.']);
+        return redirect()->back()->withErrors(['error' => 'Failed to action. Please try again.']);
     }
 }

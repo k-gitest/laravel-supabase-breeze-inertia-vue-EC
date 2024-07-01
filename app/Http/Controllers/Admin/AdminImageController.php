@@ -14,27 +14,20 @@ class AdminImageController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, string $id): RedirectResponse
+    public function destroy(Request $request, string $id): RedirectResponse|bool
     {
         $request->validate([
             'image_id' => 'required|exists:images,id',
             'path' => 'required|string',
         ]);
         
-        $imagePaths = [$request->path];
-
-        try{
-            $imageInfo = app()->make("SbStorage")->deleteImage($imagePaths);
-        }
-        catch(\Exception $e){
-            report($e);
-            return false;
-        }
-        
         try{
             DB::transaction(function () use ($request) {
-                $image = Image::findOrFail($request->image_id);
+                $image = Image::lockForUpdate()->findOrFail($request->image_id);
                 $image->delete();
+
+                $imagePaths = [$request->path];
+                $imageInfo = app()->make("SbStorage")->deleteImage($imagePaths);
             });
         }
         catch(\Exception $e){

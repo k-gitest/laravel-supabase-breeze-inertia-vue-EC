@@ -30,7 +30,7 @@
   }
 
   const deleteWarehouse = () => {
-    form.delete(route('admin.warehouse.destroy', {id: props.data.id}),{
+    form.delete(route('admin.warehouse.destroy', { id: props.data.id }),{
       preserveState: false,
       onSuccess: (res) => {
         console.log("success", res)
@@ -86,7 +86,7 @@
           </div>
           <div>
             <button type="submit" class="btn" :disabled="form.processing">編集</button>
-            <button @click="deleteWarehouse" class="btn btn-sm">削除</button>
+            <button @click.prevent="deleteWarehouse" class="btn btn-sm">削除</button>
           </div>
         </div>
       </form>

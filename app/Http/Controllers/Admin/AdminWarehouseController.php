@@ -39,7 +39,7 @@ class AdminWarehouseController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(AdminWarehouseRequest $request): RedirectResponse
+    public function store(AdminWarehouseRequest $request): RedirectResponse|bool
     {
         try{
             DB::transaction(function () use ($request){
@@ -94,12 +94,11 @@ class AdminWarehouseController extends Controller
      */
     public function update(AdminWarehouseRequest $request, string $id): RedirectResponse | bool
     {
-        $warehouse = Warehouse::findOrFail($id);
-        $warehouse->fill($request->validated());
-
         try{
-            throw new \Exception("エラーだよ");
-            DB::transaction(function () use ($warehouse){
+            DB::transaction(function () use ($request, $id){
+                $warehouse = Warehouse::lockForUpdate()->findOrFail($id);
+                $warehouse->fill($request->validated());
+                
                 if( $warehouse->isDirty() ){
                     $warehouse->save();
                 };
@@ -117,11 +116,15 @@ class AdminWarehouseController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id): RedirectResponse
+    public function destroy(Request $request): RedirectResponse|bool
     {
-        $warehouse = Warehouse::findOrFail($id);
+        $request->validate([
+             "id" => "required|integer|exists:warehouses,id",                
+        ]);
+        
         try{
-            DB::transaction(function () use ($warehouse){
+            DB::transaction(function () use ($request){
+                $warehouse = Warehouse::lockForUpdate()->findOrFail($request->id);
                 $warehouse->delete();
             });
             Log::info('Warehouse delete succeeded');
