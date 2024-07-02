@@ -10,7 +10,7 @@
   const { props } = usePage<PageProps & { data: OrderItem[] }>()
   const totalPrice = ref(0)
   props.data.map(product => {
-    totalPrice.value += product.price_inclusing_tax * product.quantity
+    totalPrice.value += product.price_including_tax * product.quantity
   })  
 </script>
 

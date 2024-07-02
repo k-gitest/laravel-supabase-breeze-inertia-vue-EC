@@ -64,51 +64,48 @@ class AdminProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(AdminProductRequest $request, Product $product): RedirectResponse
-    {      
-      $price_including_tax = $this->calculatePriceIncludingTax($request->price_excluding_tax, $request->tax_rate);
-      
-      $validateData = $request->validated();
-      
-      $validateData["price_including_tax"] = $price_including_tax;
+    public function store(AdminProductRequest $request, Product $product): RedirectResponse|bool
+    {     
+      try {
+        DB::transaction(function () use ($request, $product) {
+          $price_including_tax = $this->calculatePriceIncludingTax($request->price_excluding_tax, $request->tax_rate);
 
-      try{
-        $result = DB::transaction(function () use ($validateData, $product) {
-          return $result = $product->create($validateData);
-        });
-        Log::info('Product created', ['name' => $result->name]);
-      }
-      catch(\Exeption $e){
-        report($e);
-        return false;
-      }
-      
-      $product_id = $result->id;
-      
-      try{
-        $filenames = $this->handleImageUploads($product_id, $request);
-        Log::info('product image save success');
-      }
-      catch(\Exception $e){
-        report($e);
-        return false;
-      }
+          $validateData = $request->validated();
 
-      $result = [];
+          $validateData["price_including_tax"] = $price_including_tax;
 
-      try{
-        DB::transaction(function () use ($filenames, $result) {
-          foreach ($filenames as $filename) {
-              $result[] = Image::create([
-                  'name' => $filename['name'],
-                  'path' => $filename['path'],
-                  'product_id' => $filename['product_id'],
-              ]);
+          $result = $product->create($validateData);
+          Log::info('Product created', ['name' => $result->name]);
+
+          $product_id = $result->id;
+          $filenames = $this->handleImageUploads($product_id, $request);
+          Log::info('product image save success');
+
+          try {
+            foreach ($filenames as $filename) {
+                Image::create([
+                    'name' => $filename['name'],
+                    'path' => $filename['path'],
+                    'product_id' => $filename['product_id'],
+                ]);
+            }
           }
-        }, 3);
-        Log::info('Product image save success', ['result' => $result]);
+          catch(\Exception $e){
+            $imagePaths = array_column($filenames, 'path');
+            foreach($imagePaths as $imagePath){
+              try{
+                app()->make('SbStorage')->deleteImage([$imagePath]);
+              }
+              catch(\Exception $e){
+                throw $e;
+              }
+            }
+            throw $e;
+          }
+
+        });
       }
-      catch(\Exeption $e){
+      catch(\Exception $e) {
         report($e);
         return false;
       }
@@ -147,56 +144,55 @@ class AdminProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(AdminProductRequest $request, $id): RedirectResponse
+    public function update(AdminProductRequest $request, $id): RedirectResponse|bool
     {
-      $product = Product::findOrFail($id);
-      $product->fill($request->validated());
+      try {
+        DB::transaction(function () use ($request, $id) {
+          $product = Product::lockForUpdate()->findOrFail($id);
+          $product->fill($request->validated());
 
-      $price_including_tax = $this->calculatePriceIncludingTax($request->price_excluding_tax, $request->tax_rate);
-      
-      $product->price_including_tax = $price_including_tax;
+          $price_including_tax = $this->calculatePriceIncludingTax($request->price_excluding_tax, $request->tax_rate);
 
-      try{
-        DB::transaction(function () use ($product){
+          $product->price_including_tax = $price_including_tax;
+
           if ($product->isDirty()) {
-              $product->save();
+                $product->save();
           }
-        });
-        Log::info('Product updated.', ['id' => $product->id]);
-      }
-      catch(\Exception $e){
-        report($e);
-        return false;
-      }
-      
-      $product_id = $product->id;
+          Log::info('Product updated.', ['id' => $product->id]);
 
-      $latestNumber = $this->getLatestImageNumber($product_id);
+          $product_id = $product->id;
 
-      try{
-        $filenames = $this->handleImageUploads($product_id, $request,  $latestNumber);
-        Log::info('Image uploaded.', ['id' => $product->id]);
-      }
-      catch(\Exenption $e){
-        report($e);
-        return false;
-      }
+          $latestNumber = $this->getLatestImageNumber($product_id);
 
-      $result = [];
+          $filenames = $this->handleImageUploads($product_id, $request,  $latestNumber);
+          Log::info('Update Image uploaded.', ['id' => $product->id]);
 
-      try{
-        DB::transaction(function () use ($result, $filenames){
-          foreach ($filenames as $filename) {
-              $result[] = Image::create([
-                  'name' => $filename['name'],
-                  'path' => $filename['path'],
-                  'product_id' => $filename['product_id'],
-              ]);
+          try{
+            foreach ($filenames as $filename) {
+                Image::create([
+                    'name' => $filename['name'],
+                    'path' => $filename['path'],
+                    'product_id' => $filename['product_id'],
+                ]);
+            }
+            Log::info('Product updated.', ['id' => $product->id]);
           }
+          catch(\Exception $e){
+            $imagePaths = array_column($filenames, 'path');
+            foreach($imagePaths as $imagePath){
+              try{
+                app()->make('SbStorage')->deleteImage([$imagePath]);
+              }
+              catch(\Exception $e){
+                throw $e;
+              }
+            }
+            throw $e;
+          }
+          
         });
-        Log::info('Product updated.', ['id' => $product->id]);
       }
-      catch(\Exception $e){
+      catch (\Exception $e) {
         report($e);
         return false;
       }
@@ -208,28 +204,29 @@ class AdminProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Product $product, $id): RedirectResponse
-    {
-      $images = Image::where('product_id', $id)->pluck('path')->toArray();
-    
-      if($images){
-        try{
-          app()->make("SbStorage")->deleteImage($images);
-          Log::info('product image delete successed');
-        }
-        catch(\Exception $e){
-          report($e);
-          return false;
-        }
-      }
-
-      $product = Product::findOrFail($id);
-      
+    public function destroy(Product $product, $id): RedirectResponse|bool
+    { 
       try{
-        DB::transaction(function () use ($id) {
+        DB::transaction(function () use ($product, $id) {
+          $product = Product::lockForUpdate()->findOrFail($id);
+          
+          $images = Image::where('product_id', $id)->pluck('path')->toArray();
+          
           $product->delete();
+          Log::info('product delete successed');
+
+          if($images){
+            try{
+              app()->make("SbStorage")->deleteImage($images);
+              Log::info('product image delete successed');
+            }
+            catch(\Exception $e){
+              throw $e;
+            }
+          }
+          
         });
-        Log::info('product delete successed');
+        
       }
       catch(\Exception $e){
         report($e);
@@ -239,7 +236,7 @@ class AdminProductController extends Controller
       return redirect('admin/product')->with('success', '削除しました');
     }
 
-    public function bulkDestroy(Product $product, Request $request): RedirectResponse
+    public function bulkDestroy(Product $product, Request $request): RedirectResponse|bool
     {      
       $request->validate([
           "ids" => "required|array",
@@ -248,25 +245,24 @@ class AdminProductController extends Controller
       
       $selectedItems = $request->ids;
       
-      foreach( $selectedItems as $id ){
-        $images = Image::where('product_id', $id)->pluck('path')->toArray();
-        if($images){
-          try{
-            app()->make("SbStorage")->deleteImage($images);
-            Log::info('product image delete successed');
-          }
-          catch(\Exception $e){
-            report($e);
-            return false;
-          }
-        }
-      }
-      
       try{
         DB::transaction(function () use ($selectedItems) {
-          $result = Product::whereIn('id', $selectedItems)->delete();
+          foreach( $selectedItems as $id ){
+            $images = Image::where('product_id', $id)->pluck('path')->toArray();
+            if($images){
+              try{
+                app()->make("SbStorage")->deleteImage($images);
+                Log::info('product image delete successed: ');
+              }
+              catch(\Exception $e){
+                throw $e;
+              }
+            }
+          }
+          
+          Product::whereIn('id', $selectedItems)->delete();
+          Log::info('product bulk delete successed');
         });
-        Log::info('product bulk delete successed');
       }
       catch(\Exception $e){
         report($e);

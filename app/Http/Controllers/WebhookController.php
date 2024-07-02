@@ -78,6 +78,7 @@ class WebhookController extends CashierController
 
             $stock = Stock::where('product_id', $cartItem->product_id)
             ->where('warehouse_id', $paymentIntent->metadata->warehouse_id)
+            ->lockForUpdate()
             ->first();
 
             if ($stock) {
@@ -98,27 +99,40 @@ class WebhookController extends CashierController
         });
     }
     catch(\Exception $e){
-        Log::error('Failed to create order.', ['error' => $e->getMessage()]);
-        return response()->json(['error' => 'Failed to create order. Please try again.'], 400);
+        report($e);
+        return false;
     }
 
   }
 
   protected function handlePaymentIntentFailed($paymentIntent)
   {
-      $userId = $paymentIntent->metadata->user_id;
+      try {
+        $userId = $paymentIntent->metadata->user_id;
 
-      $order = Order::where('payment_intent_id', $paymentIntent->id)->first();
-      if ($order) {
-          $order->status = 'payment_failed';
-          $order->save();
+        $order = Order::where('payment_intent_id', $paymentIntent->id)->first();
+        if ($order) {
+            $order->status = 'payment_failed';
+            $order->save();
+        }
+
+        Log::error('Payment failed', [
+            'user_id' => $userId,
+            'payment_intent_id' => $paymentIntent->id,
+            'error' => $paymentIntent->last_payment_error,
+            'order_id' => $order ? $order->id : null,
+        ]);
+      }
+      catch (\Exception $e) {
+          Log::critical('Failed to process payment failure', [
+              'user_id' => $paymentIntent->metadata->user_id,
+              'payment_intent_id' => $paymentIntent->id,
+              'exception' => $e->getMessage(),
+          ]);
+          report($e);
+          return false;
       }
       
-      Log::error('Payment failed', [
-          'user_id' => $userId,
-          'payment_intent_id' => $paymentIntent->id,
-          'error' => $paymentIntent->last_payment_error
-      ]);
   }
 
 }

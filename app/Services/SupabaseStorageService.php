@@ -37,8 +37,9 @@ class SupabaseStorageService
       $imageType = getimagesize($file)["mime"];
       $parts = explode("/", $imageType);
       $extension = end($parts);
+      $folder = date('Y-m-d');
       $date = date('Y-m-d-H-i-s');
-      $path = "/{$date}/{$imageName}_{$i}_{$date}.{$extension}";
+      $path = "/{$folder}/{$imageName}_{$i}_{$date}.{$extension}";
       
       return $this->uploadImage($file, $path, $this->contactsBucket);
     }
@@ -75,6 +76,7 @@ class SupabaseStorageService
         );
 
       if ($response->successful()) {
+        Log::info("upload success: {$filepath}");
         return $response->json();
       } else {
         Log::error('Failed to upload image to Supabase');
@@ -96,12 +98,12 @@ class SupabaseStorageService
           ->delete($this->baseUrl . $this->storageEndpoint . $key);
 
         if($response->successful()){
-          return $response->json();
           Log::info("Deleted file to Supabase: " . $key);
         } else {
           Log::error('Failed to delete image to Supabase');
           throw new \Exception('Failed to delete image to Supabase: ' . $response->body());
         }
       }
+      return true;
     }
 }

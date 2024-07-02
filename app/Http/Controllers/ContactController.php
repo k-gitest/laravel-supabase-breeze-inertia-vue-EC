@@ -19,7 +19,7 @@ class ContactController extends Controller
     return Inertia::render('Contact/ContactForm');
   }
   
-  public function store(Request $request): RedirectResponse
+  public function store(Request $request): RedirectResponse|bool
   {
     Log::info('Validation started', ['request' => $request->all()]);
     
@@ -29,37 +29,44 @@ class ContactController extends Controller
       'message' => 'required|string|max:255',
     ]);
     
-    Log::info('Validation succeeded');
-
     try {
-        $filenames = $this->handleImageUploads($request);
-    } catch (\Exception $e) {
-      report($e);
-      return false;
-    }
-
-    $chua_mobile = $request->header('Sec-Ch-Ua-Mobile');
-    $device = ($chua_mobile === '?0') ? "desktop" : (($chua_mobile === null) ? "unknown" : "mobile");
-    
-    try {
-      DB::transaction(function () use ($request, $device, $filenames)
+      DB::transaction(function () use ($request)
       {
-          Log::info('Contact create start');
-          Contact::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'message' => $request->message,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'language' => $request->header('Accept-Language'),
-            'previous_url' => $request->session()->get('_previous')['url'],
-            'referrer' => $request->header('Referer'),
-            'device' => $device,
-            'platform' => trim($request->header('Sec-Ch-Ua-Platform'), '"'),
-            'browser' => $request->header('sec-ch-ua'),
-            'attachments' => $filenames,
-          ]);
-          Log::info('Contact create succeeded');
+          $filenames = $this->handleImageUploads($request);
+
+          $chua_mobile = $request->header('Sec-Ch-Ua-Mobile');
+          $device = ($chua_mobile === '?0') ? "desktop" : (($chua_mobile === null) ? "unknown" : "mobile");
+        
+          try{
+            Contact::create([
+              'name' => $request->name,
+              'email' => $request->email,
+              'message' => $request->message,
+              'ip_address' => $request->ip(),
+              'user_agent' => $request->userAgent(),
+              'language' => $request->header('Accept-Language'),
+              'previous_url' => $request->session()->get('_previous')['url'] ?? "unknown",
+              'referrer' => $request->header('Referer'),
+              'device' => $device,
+              'platform' => trim($request->header('Sec-Ch-Ua-Platform'), '"'),
+              'browser' => $request->header('sec-ch-ua'),
+              'attachments' => $filenames,
+            ]);
+            Log::info('Contact create succeeded');
+          }
+          catch(\Exception $e){
+            $imagePaths = array_column($filenames, 'key');
+            foreach($imagePaths as $imagePath){
+              try{
+                app()->make('SbStorage')->deleteImage([$imagePath]);
+              }
+              catch(\Exception $e){
+                throw $e;
+              }
+            }
+            throw $e;
+          }
+          
       });
     }
     catch (\Exception $e){
