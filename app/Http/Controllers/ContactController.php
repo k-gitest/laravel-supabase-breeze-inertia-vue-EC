@@ -10,19 +10,25 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Models\Contact;
 use App\Events\ContactFormSubmitted;
+use App\Services\Admin\AdminImageService;
 use Log;
 
 class ContactController extends Controller
 {
+  protected $adminImageService;
+
+  public function __construct(AdminImageService $adminImageService)
+  {
+    $this->adminImageService = $adminImageService;
+  }
+  
   public function create(): Response
   {
     return Inertia::render('Contact/ContactForm');
   }
   
   public function store(Request $request): RedirectResponse|bool
-  {
-    Log::info('Validation started', ['request' => $request->all()]);
-    
+  {    
     $request->validate([
       'name' => 'required|string|max:100',
       'email' => 'required|email|max:255',
@@ -32,7 +38,7 @@ class ContactController extends Controller
     try {
       DB::transaction(function () use ($request)
       {
-          $filenames = $this->handleImageUploads($request);
+          $filenames = $this->adminImageService->handleContactImageUploads($request);
 
           $chua_mobile = $request->header('Sec-Ch-Ua-Mobile');
           $device = ($chua_mobile === '?0') ? "desktop" : (($chua_mobile === null) ? "unknown" : "mobile");
@@ -55,15 +61,7 @@ class ContactController extends Controller
             Log::info('Contact create succeeded');
           }
           catch(\Exception $e){
-            $imagePaths = array_column($filenames, 'key');
-            foreach($imagePaths as $imagePath){
-              try{
-                app()->make('SbStorage')->deleteImage([$imagePath]);
-              }
-              catch(\Exception $e){
-                throw $e;
-              }
-            }
+            $this->adminImageService->deleteUploadImages($filenames, 'key');
             throw $e;
           }
           
@@ -77,21 +75,6 @@ class ContactController extends Controller
     event(new ContactFormSubmitted($request->all()));
     
     return redirect()->route('contact.create')->with('success', '送信しました');
-  }
-
-  private function handleImageUploads(Request $request)
-  {
-      $filenames = [];
-
-      if ($request->hasFile('image')) {
-          foreach ($request->file('image') as $i => $file) {
-              $imageInfo = app()->make("SbStorage")->uploadImageToContacts($file, $i);
-              $imageInfo = array_change_key_case($imageInfo, CASE_LOWER);
-              $filenames[] = $imageInfo;
-          }
-      }
-
-      return $filenames;
   }
 
 }

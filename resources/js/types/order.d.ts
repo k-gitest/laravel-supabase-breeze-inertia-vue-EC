@@ -19,7 +19,7 @@ export type OrderItem = {
   user_id: number;
   quantity: number;
   price_excluding_tax: number;
-  price_inclusing_tax: number;
+  price_including_tax: number;
   created_at: string;
   updated_at: string;
   product?: Product;

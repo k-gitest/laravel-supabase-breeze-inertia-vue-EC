@@ -129,6 +129,7 @@
                 {{ props.errors.price_excluding_tax }}
                 {{ props.errors.tax_rate }}
                 {{ props.errors.category_id }}
+                {{ props.errors.error }}
               </p>
             </div>
             <div v-show="props.flash">

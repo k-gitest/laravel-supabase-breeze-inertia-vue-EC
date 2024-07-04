@@ -12,11 +12,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Image;
+use App\Services\Admin\AdminImageService;
 use App\Http\Requests\Admin\AdminProductRequest;
 use Log;
 
 class AdminProductController extends Controller
 {  
+    protected $adminImageService;
+  
+    public function __construct(AdminImageService $adminImageService)
+    {
+        $this->adminImageService = $adminImageService;
+    }
+  
     /**
      * Display a listing of the resource.
      */
@@ -78,28 +86,14 @@ class AdminProductController extends Controller
           Log::info('Product created', ['name' => $result->name]);
 
           $product_id = $result->id;
-          $filenames = $this->handleImageUploads($product_id, $request);
+          $filenames = $this->adminImageService->handleImageProductUploads($product_id, $request);
           Log::info('product image save success');
 
           try {
-            foreach ($filenames as $filename) {
-                Image::create([
-                    'name' => $filename['name'],
-                    'path' => $filename['path'],
-                    'product_id' => $filename['product_id'],
-                ]);
-            }
+            $this->adminImageService->saveImages($filenames);
           }
           catch(\Exception $e){
-            $imagePaths = array_column($filenames, 'path');
-            foreach($imagePaths as $imagePath){
-              try{
-                app()->make('SbStorage')->deleteImage([$imagePath]);
-              }
-              catch(\Exception $e){
-                throw $e;
-              }
-            }
+            $this->adminImageService->deleteUploadImages($filenames, 'path');
             throw $e;
           }
 
@@ -162,31 +156,17 @@ class AdminProductController extends Controller
 
           $product_id = $product->id;
 
-          $latestNumber = $this->getLatestImageNumber($product_id);
+          $latestNumber = $this->adminImageService->getLatestImageNumber($product_id);
 
-          $filenames = $this->handleImageUploads($product_id, $request,  $latestNumber);
+          $filenames = $this->adminImageService->handleImageProductUploads($product_id, $request, $latestNumber);
           Log::info('Update Image uploaded.', ['id' => $product->id]);
 
           try{
-            foreach ($filenames as $filename) {
-                Image::create([
-                    'name' => $filename['name'],
-                    'path' => $filename['path'],
-                    'product_id' => $filename['product_id'],
-                ]);
-            }
+            $this->adminImageService->saveImages($filenames);
             Log::info('Product updated.', ['id' => $product->id]);
           }
           catch(\Exception $e){
-            $imagePaths = array_column($filenames, 'path');
-            foreach($imagePaths as $imagePath){
-              try{
-                app()->make('SbStorage')->deleteImage([$imagePath]);
-              }
-              catch(\Exception $e){
-                throw $e;
-              }
-            }
+            $this->adminImageService->deleteUploadImages($filenames, 'path');
             throw $e;
           }
           
@@ -215,15 +195,7 @@ class AdminProductController extends Controller
           $product->delete();
           Log::info('product delete successed');
 
-          if($images){
-            try{
-              app()->make("SbStorage")->deleteImage($images);
-              Log::info('product image delete successed');
-            }
-            catch(\Exception $e){
-              throw $e;
-            }
-          }
+          $this->adminImageService->deleteImages($images);
           
         });
         
@@ -249,15 +221,8 @@ class AdminProductController extends Controller
         DB::transaction(function () use ($selectedItems) {
           foreach( $selectedItems as $id ){
             $images = Image::where('product_id', $id)->pluck('path')->toArray();
-            if($images){
-              try{
-                app()->make("SbStorage")->deleteImage($images);
-                Log::info('product image delete successed: ');
-              }
-              catch(\Exception $e){
-                throw $e;
-              }
-            }
+            $this->adminImageService->deleteImages($images);
+
           }
           
           Product::whereIn('id', $selectedItems)->delete();
@@ -275,35 +240,6 @@ class AdminProductController extends Controller
     private function calculatePriceIncludingTax($priceExcludingTax, $taxRate)
     {
         return $priceExcludingTax + ($priceExcludingTax * $taxRate / 100);
-    }
-
-    private function getLatestImageNumber($product_id)
-    {
-      $latestImage = Image::where('product_id', $product_id)->latest('created_at')->orderBy('id', 'desc')->first();
-      $filename = pathinfo($latestImage->path, PATHINFO_FILENAME);
-      $filenameParts = explode('_', $filename);
-      $latestnumber = end($filenameParts) + 1;
-      return $latestnumber;
-    }
-  
-    private function handleImageUploads($product_id, Request $request, $latestNumber=0)
-    {
-        $filenames = [];
-
-        if ($request->hasFile('image')) {
-            foreach ($request->file('image') as $i => $file) {
-                $fileNumber = $i + $latestNumber;
-                $imageInfo = app()->make("SbStorage")->uploadImageToProducts($file, $product_id, $fileNumber);
-                //$imageInfo = array_change_key_case($imageInfo, CASE_LOWER);
-                $filenames[] = [
-                  "name" => $imageInfo["Id"],
-                  "path" => $imageInfo["Key"],
-                  "product_id" => $product_id,
-                ];
-            }
-        }
-
-        return $filenames;
     }
   
 }

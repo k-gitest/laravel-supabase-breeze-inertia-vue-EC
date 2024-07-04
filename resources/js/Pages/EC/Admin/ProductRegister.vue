@@ -16,12 +16,12 @@
     tax_rate: 0,
     category_id: '',
     image: [] as File[],
+    error: '',
   })
 
   let preview: { name: string; url: string; }[] = []
 
   const submit = () => {
-    console.log(form)
     form.post(route('admin.product.store'), {
       onSuccess: (res) => {
         console.log(res)
@@ -38,7 +38,6 @@
     const file = (target.files as FileList)[0]
     if(file){
       form.image.push(file)
-      console.log(form.image)
       const blob = URL.createObjectURL(file)
       preview.push({name: file.name, url: blob})
       setTimeout(() => {
@@ -123,6 +122,7 @@
             <div v-show="form.errors">
               <p class="text-sm text-red-600 dark:text-red-400">
                 {{ form.errors.name }}
+                {{ form.errors.error }}
               </p>
               <p class="text-sm text-red-600 dark:text-red-400">
                 {{ form.errors.description }}
