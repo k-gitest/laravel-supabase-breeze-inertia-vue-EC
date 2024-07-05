@@ -11,9 +11,13 @@ class AdminImageService
     public function getLatestImageNumber($product_id)
     {
       $latestImage = Image::where('product_id', $product_id)->latest('created_at')->orderBy('id', 'desc')->first();
-      $filename = pathinfo($latestImage->path, PATHINFO_FILENAME);
-      $filenameParts = explode('_', $filename);
-      $latestnumber = end($filenameParts) + 1;
+      if ($latestImage === null) {
+        $latestnumber = 0;
+      } else {
+        $filename = pathinfo($latestImage->path, PATHINFO_FILENAME);
+        $filenameParts = explode('_', $filename);
+        $latestnumber = end($filenameParts) + 1;
+      }
       return $latestnumber;
     }
 

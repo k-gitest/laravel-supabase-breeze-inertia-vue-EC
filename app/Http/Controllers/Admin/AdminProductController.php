@@ -12,17 +12,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Image;
-use App\Services\Admin\AdminImageService;
+use App\Services\Admin\AdminProductService;
 use App\Http\Requests\Admin\AdminProductRequest;
 use Log;
 
 class AdminProductController extends Controller
 {  
-    protected $adminImageService;
+    protected $adminProductService;
   
-    public function __construct(AdminImageService $adminImageService)
+    public function __construct(AdminProductService $adminProductService)
     {
-        $this->adminImageService = $adminImageService;
+        $this->adminProductService = $adminProductService;
     }
   
     /**
@@ -32,26 +32,18 @@ class AdminProductController extends Controller
     {
       $id = config('constants.NET_WAREHOUSE_ID');
       $search_price_ranges = config('constants.PRICE_RANGES');
-      
-      $result = Product::with(['image', 'category'])
-        ->withSum(['stock' => function ($query) use ($id) {
-                      if ($id) {
-                          $query->where('warehouse_id', $id);
-                      }
-                  }],'quantity')
-        ->orderBy('created_at', 'desc');
-      
-      $data = $result->paginate(10);
 
-      return inertia::render('EC/Admin/ProductAllList', [
+      $data = $this->adminProductService->getAllProducts($id, $search_price_ranges);
+
+      return Inertia::render('EC/Admin/ProductAllList', [
           'pagedata' => $data,
           'price_ranges' => $search_price_ranges,
-          'filters'  => [
-               'category_ids' => [],
-               'q'  => "",
-               'price_range' => [],
-               'warehouse_check' => false,
-               'sort_option' => "newest",
+          'filters' => [
+              'category_ids' => [],
+              'q' => "",
+              'price_range' => [],
+              'warehouse_check' => false,
+              'sort_option' => "newest",
           ],
       ]);
 
@@ -75,36 +67,14 @@ class AdminProductController extends Controller
     public function store(AdminProductRequest $request, Product $product): RedirectResponse|bool
     {     
       try {
-        DB::transaction(function () use ($request, $product) {
-          $price_including_tax = $this->calculatePriceIncludingTax($request->price_excluding_tax, $request->tax_rate);
-
-          $validateData = $request->validated();
-
-          $validateData["price_including_tax"] = $price_including_tax;
-
-          $result = $product->create($validateData);
-          Log::info('Product created', ['name' => $result->name]);
-
-          $product_id = $result->id;
-          $filenames = $this->adminImageService->handleImageProductUploads($product_id, $request);
-          Log::info('product image save success');
-
-          try {
-            $this->adminImageService->saveImages($filenames);
-          }
-          catch(\Exception $e){
-            $this->adminImageService->deleteUploadImages($filenames, 'path');
-            throw $e;
-          }
-
-        });
+          $this->adminProductService->createProduct($request, $product);
+      } catch (\Exception $e) {
+          report($e);
+          return false;
       }
-      catch(\Exception $e) {
-        report($e);
-        return false;
-      }
-
+      
       return redirect()->route('admin.product.index')->with('success', 'Product created');
+      
     }
 
     /**
@@ -113,13 +83,10 @@ class AdminProductController extends Controller
     public function show(Product $product, $id): Response | RedirectResponse
     {
       $data = Product::with(['category', 'image'])->findOrFail($id);
-      if($data){
-        return inertia::render('EC/Admin/ProductDetail',[
-            "data" => $data,
-        ]);
-      } else {
-        return redirect("/");
-      }
+
+      return inertia::render('EC/Admin/ProductDetail',[
+          "data" => $data,
+      ]);
 
     }
 
@@ -141,40 +108,10 @@ class AdminProductController extends Controller
     public function update(AdminProductRequest $request, $id): RedirectResponse|bool
     {
       try {
-        DB::transaction(function () use ($request, $id) {
-          $product = Product::lockForUpdate()->findOrFail($id);
-          $product->fill($request->validated());
-
-          $price_including_tax = $this->calculatePriceIncludingTax($request->price_excluding_tax, $request->tax_rate);
-
-          $product->price_including_tax = $price_including_tax;
-
-          if ($product->isDirty()) {
-                $product->save();
-          }
-          Log::info('Product updated.', ['id' => $product->id]);
-
-          $product_id = $product->id;
-
-          $latestNumber = $this->adminImageService->getLatestImageNumber($product_id);
-
-          $filenames = $this->adminImageService->handleImageProductUploads($product_id, $request, $latestNumber);
-          Log::info('Update Image uploaded.', ['id' => $product->id]);
-
-          try{
-            $this->adminImageService->saveImages($filenames);
-            Log::info('Product updated.', ['id' => $product->id]);
-          }
-          catch(\Exception $e){
-            $this->adminImageService->deleteUploadImages($filenames, 'path');
-            throw $e;
-          }
-          
-        });
-      }
-      catch (\Exception $e) {
-        report($e);
-        return false;
+          $this->adminProductService->updateProduct($request, $id);
+      } catch (\Exception $e) {
+          report($e);
+          return false;
       }
       
       return redirect()->route('admin.product.edit', $id)->with('success', '更新しました');
@@ -186,23 +123,11 @@ class AdminProductController extends Controller
      */
     public function destroy(Product $product, $id): RedirectResponse|bool
     { 
-      try{
-        DB::transaction(function () use ($product, $id) {
-          $product = Product::lockForUpdate()->findOrFail($id);
-          
-          $images = Image::where('product_id', $id)->pluck('path')->toArray();
-          
-          $product->delete();
-          Log::info('product delete successed');
-
-          $this->adminImageService->deleteImages($images);
-          
-        });
-        
-      }
-      catch(\Exception $e){
-        report($e);
-        return false;
+      try {
+          $this->adminProductService->deleteProduct($id);
+      } catch (\Exception $e) {
+          report($e);
+          return false;
       }
       
       return redirect('admin/product')->with('success', '削除しました');
@@ -216,30 +141,15 @@ class AdminProductController extends Controller
       ]);
       
       $selectedItems = $request->ids;
-      
-      try{
-        DB::transaction(function () use ($selectedItems) {
-          foreach( $selectedItems as $id ){
-            $images = Image::where('product_id', $id)->pluck('path')->toArray();
-            $this->adminImageService->deleteImages($images);
 
-          }
-          
-          Product::whereIn('id', $selectedItems)->delete();
-          Log::info('product bulk delete successed');
-        });
-      }
-      catch(\Exception $e){
-        report($e);
-        return false;
+      try {
+          $this->adminProductService->bulkDeleteProducts($selectedItems);
+      } catch (\Exception $e) {
+          report($e);
+          return false;
       }
   
       return redirect()->back()->with('success', '削除しました');
-    }
-
-    private function calculatePriceIncludingTax($priceExcludingTax, $taxRate)
-    {
-        return $priceExcludingTax + ($priceExcludingTax * $taxRate / 100);
     }
   
 }
