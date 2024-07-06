@@ -44,6 +44,12 @@
           {{ props.flash.success }}
         </p>
       </div>
+      <div v-show="props.errors">
+        <p class="text-sm text-red-600 dark:text-red-400">
+          {{ props.errors.quantity }}
+          {{ props.errors.product_id }}
+        </p>
+      </div>
       <div v-if="props.data && props.data.product" class="flex gap-5">
         <div>
           <EcImageGallery :images="props.data.product.image" />
@@ -63,7 +69,7 @@
             <li>{{ props.data.created_at }}</li>
             <li class="flex gap-2">
               <button type="submit" class="btn">数量変更</button>
-              <button @click="deleteCartItem(props.data.id)" class="btn">カートから削除</button>
+              <button @click.prevent="deleteCartItem(props.data.id)" class="btn">カートから削除</button>
             </li>
           </ul>
           </form>

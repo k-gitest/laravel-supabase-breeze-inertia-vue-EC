@@ -10,18 +10,18 @@ use Illuminate\Support\Facades\DB;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use App\Models\Cart;
-use App\Services\CartPriceService;
+use App\Services\CartService;
 use Log;
 use Exception;
 
 class PaymentController extends Controller
 {
-  public function index(CartPriceService $cartPriceService): Response
+  public function index(CartService $cartService): Response
   {
     $id = request()->user()->id;
     $result = Cart::with(['product.image'])->where('user_id', $id)->get();
 
-    $totalPrice = $cartPriceService->getTotalPrices($result);
+    $totalPrice = $cartService->getTotalPrices($result);
       
     Stripe::setApiKey(config('services.stripe.secret'));
 

@@ -12,22 +12,27 @@ use App\Http\Requests\Admin\AdminStockRequest;
 use App\Models\Stock;
 use App\Models\Product;
 use App\Models\Warehouse;
+use App\Services\Admin\AdminStockService;
 use Log;
 
 class AdminStockController extends Controller
 {
+    protected $adminStockService;
+
+    public function __construct(AdminStockService $adminStockService)
+    {
+        $this->adminStockService = $adminStockService;
+    }
+    
     /**
      * Store a newly created resource in storage.
      */
     public function store(AdminStockRequest $request): RedirectResponse|bool
     {
-        try{
-            $stock = DB::transaction(function () use ($request){
-                return $stock = Stock::create($request->validated());
-            });
+        try {
+            $this->adminStockService->createStock($request);
             Log::info('Stock create succeeded');
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             report($e);
             return false;
         }
@@ -40,12 +45,11 @@ class AdminStockController extends Controller
      */
     public function show(string $id): Response
     {
-        $result = Product::with(['stock.warehouse', 'image'])->findOrFail($id);
-        $warehouse = Warehouse::all();
+        $data = $this->adminStockService->getProductWithStockAndWarehouse($id);
         
         return inertia::render('EC/Admin/StockShow',[
-            'data' => $result,
-            'warehouse' => $warehouse,
+           'data' => $data['result'],
+           'warehouse' => $data['warehouse'],
         ]);
     }
 
@@ -54,18 +58,10 @@ class AdminStockController extends Controller
      */
     public function update(AdminStockRequest $request): RedirectResponse|bool
     {
-        try{
-            DB::transaction(function () use ($request){
-                $stock = Stock::lockForUpdate()->findOrFail($request->id);
-                $stock->fill($request->validated());
-                
-                if($stock->isDirty()){
-                    $stock->save();
-                }
-            });
+        try {
+            $this->adminStockService->updateStock($request);
             Log::info('Stock update succeeded');
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             report($e);
             return false;
         }
@@ -80,17 +76,13 @@ class AdminStockController extends Controller
     public function destroy(Request $request): RedirectResponse|bool
     {
         $request->validate([
-           "id" => "required|integer|exists:stocks,id",                
+            "id" => "required|integer|exists:stocks,id",
         ]);
-        
-        try{
-            DB::transaction(function () use ($request){ 
-                $stock = Stock::lockForUpdate()->findOrFail($request->id);
-                $stock->delete();
-            });
+
+        try {
+            $this->adminStockService->deleteStock($request);
             Log::info('Stock delete succeeded');
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             report($e);
             return false;
         }

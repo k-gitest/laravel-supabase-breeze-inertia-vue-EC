@@ -10,16 +10,25 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Product;
+use App\Http\Controllers\Controller;
+use App\Services\FavoriteService;
 use Log;
 
 class FavoriteController extends Controller
 {
+    protected $favoriteService;
+
+    public function __construct(FavoriteService $favoriteService)
+    {
+        $this->favoriteService = $favoriteService;
+    }
+    
     /**
      * Display a listing of the resource.
      */
     public function index(): Response
     {
-        $favorite = Favorite::with(['product.image', 'product.category'])->where('user_id', auth()->id())->orderBy('updated_at', 'desc')->paginate(12);
+        $favorite = $this->favoriteService->getFavoritesByUser(auth()->id());
 
         return Inertia::render('EC/FavoriteIndex', [
             'pagedata' => $favorite,
@@ -31,25 +40,13 @@ class FavoriteController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'product_id' => 'required|integer',
-        ]);
+        try {
+                $this->favoriteService->addFavorite($request);
+            } catch (\Exception $e) {
+                return false;
+            }
 
-        try{
-            DB::transaction(function () use ($request){
-                Favorite::create([
-                    'user_id' => auth()->user()->id,
-                    'product_id' => $request->product_id,
-                ]);
-            });
-            Log::info('Favorite created');
-        }
-        catch (\Exception $e){
-            report($e);
-            return false;
-        }
-
-        return redirect()->back()->with('success', 'お気に入りに追加しました');
+            return redirect()->back()->with('success', 'お気に入りに追加しました');
     }
 
     /**
@@ -58,20 +55,10 @@ class FavoriteController extends Controller
     public function destroy(Favorite $favorite, $id): RedirectResponse
     {
         Gate::authorize('isGeneral');
-        
-        $user_id = auth()->user()->id;
-        $favorite = Favorite::where('user_id', $user_id)->findOrFail($id);
-        
-        Gate::authorize('delete', $favorite);
-        
-        try{
-            DB::transaction(function () use ($favorite){
-                $favorite->delete();
-            });
-            Log::info('Favorite deleted');
-        }
-        catch(\Exception $e){
-            report($e);
+
+        try {
+            $this->favoriteService->removeFavorite(auth()->user()->id, $id);
+        } catch (\Exception $e) {
             return false;
         }
 

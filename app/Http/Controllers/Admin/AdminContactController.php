@@ -11,31 +11,46 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Events\ContactFormSubmitted;
+use App\Services\Admin\AdminContactService;
 use Log;
 
 class AdminContactController extends Controller
 {
+
+    protected $adminContactService;
+
+    public function __construct(AdminContactService $adminContactService)
+    {
+        $this->adminContactService = $adminContactService;
+    }
+    
     /**
      * Display a listing of the resource.
      */
     public function index(): Response
     {
-        $contacts = Contact::orderBy('created_at', 'desc')->paginate(10);
+        $contacts = $this->adminContactService->getAllContacts();
 
         return Inertia::render('Contact/Admin/AdminContactIndex', [
-          "pagedata" => $contacts,
+            "pagedata" => $contacts,
         ]);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id): Response
+    public function show(string $id): Response|bool
     {
-        $contact = Contact::findOrFail($id);
-        
+        try {
+            $contact = $this->adminContactService->getContactById($id);
+        } 
+        catch (ModelNotFoundException $e) {
+            report($e);
+            return false;
+        }
+
         return Inertia::render('Contact/Admin/AdminContactShow', [
-          "data" => $contact,
+            "data" => $contact,
         ]);
     }
 
@@ -47,27 +62,11 @@ class AdminContactController extends Controller
         $request->validate([
             'id' => 'required|string|max:255|exists:contacts,id',
         ]);
-        
+
         try {
-            DB::transaction(function () use ($request)
-            {
-                $contact = Contact::lockForUpdate()->findOrFail($request->id);
-                
-                if($contact->attachments){
-                    $attachments = $contact->attachments;
-                }
-                
-                $contact->delete();
-
-                if($attachments){
-                    $fileKeys = array_column($attachments, 'key');
-
-                    app()->make('SbStorage')->deleteImage($fileKeys);
-                }
-            });
+            $this->adminContactService->deleteContact($request);
             Log::info('contact delete succeeded');
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             report($e);
             return false;
         }

@@ -7,10 +7,18 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\Image;
 use App\Http\Controllers\Controller;
+use App\Services\Admin\AdminImageService;
 use Log;
 
 class AdminImageController extends Controller
 {
+    protected $adminImageService;
+
+    public function __construct(AdminImageService $adminImageService)
+    {
+        $this->adminImageService = $adminImageService;
+    }
+    
     /**
      * Remove the specified resource from storage.
      */
@@ -20,17 +28,10 @@ class AdminImageController extends Controller
             'image_id' => 'required|exists:images,id',
             'path' => 'required|string',
         ]);
-        
-        try{
-            DB::transaction(function () use ($request) {
-                $image = Image::lockForUpdate()->findOrFail($request->image_id);
-                $image->delete();
 
-                $imagePaths = [$request->path];
-                $imageInfo = app()->make("SbStorage")->deleteImage($imagePaths);
-            });
-        }
-        catch(\Exception $e){
+        try {
+            $this->adminImageService->deleteImage($request);
+        } catch (\Exception $e) {
             report($e);
             return false;
         }

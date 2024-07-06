@@ -9,24 +9,30 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Cart;
-use App\Services\CartPriceService;
+use App\Services\CartService;
 use App\Http\Requests\CartRequest;
 use Log;
 
 class CartController extends Controller
 {
+  protected $cartService;
+
+  public function __construct(CartService $cartService)
+  {
+      $this->cartService = $cartService;
+  }
+  
   /**
    * Display a listing of the resource.
    */
-  public function index(CartPriceService $cartPriceService): Response
+  public function index(CartService $cartService): Response
   {
-    $result = Cart::with(['product.image'])->where('user_id', auth()->id())->paginate(12);
-
-    $totalPrice = $cartPriceService->getTotalPrices($result);
+    $result = $this->cartService->getCartItems();
+    $totalPrice = $this->cartService->getTotalPrices($result);
 
     return Inertia::render('EC/CartIndex', [
-      "pagedata" => $result,
-      "totalPrice" => $totalPrice,
+        "pagedata" => $result,
+        "totalPrice" => $totalPrice,
     ]);
   }
 
@@ -35,24 +41,14 @@ class CartController extends Controller
    */
   public function store(CartRequest $request): RedirectResponse
   {
-    $userId = auth()->id();
-
-    try{
-      DB::transaction(function () use ($request, $userId){
-        $result = Cart::create([
-          'user_id' => $userId,
-          'product_id' => $request->product_id,
-          'quantity' => $request->quantity,
-        ]);
-      });
-      Log::info('cart create succeeded');
-    }
-    catch(\Exception $e){
-      report($e);
-      return false;
+    try {
+        $this->cartService->createCart($request);
+    } catch (\Exception $e) {
+        report($e);
+        return false;
     }
 
-    return redirect()->route('product.show', $request->product_id);
+    return redirect()->back()->with('success', '商品をカートに追加しました。');
   }
 
   /**
@@ -60,12 +56,11 @@ class CartController extends Controller
    */
   public function edit($id): Response
   {
-    $result = Cart::with(['product.image'])->findOrFail($id);
-    
+    $result = $this->cartService->getCartItem($id);
     Gate::authorize('update', $result);
-    
+
     return Inertia::render('EC/CartEdit', [
-      "data" => $result,
+        "data" => $result,
     ]);
   }
 
@@ -75,27 +70,16 @@ class CartController extends Controller
   public function update(CartRequest $request, string $id): RedirectResponse
   {
     Gate::authorize('isGeneral');
+    Gate::authorize('update', $this->cartService->getCartItem($id));
 
-    $cart = Cart::findOrFail($id);
-    
-    Gate::authorize('update', $cart);
-    
-    $cart->quantity = $request->quantity;
+    try {
+        $this->cartService->updateCart($request, $id);
+    } catch (\Exception $e) {
+        report($e);
+        return false;
+    }
 
-    try{
-      DB::transaction(function () use ($cart) {
-        if ($cart->isDirty()){
-          $cart->save();
-        };
-      });
-      Log::info('cart update succeeded');
-    }
-    catch(\Exception $e){
-      report($e);
-      return false;
-    }
-    
-    return redirect()->route('cart.edit', $id)->with('success', '更新しました');
+    return redirect()->back()->with('success', '更新しました');
   }
 
   /**
@@ -104,23 +88,15 @@ class CartController extends Controller
   public function destroy(string $id): RedirectResponse
   {
     Gate::authorize('isGeneral');
-    
-    $result = Cart::findOrFail($id);
-    
-    Gate::authorize('delete', $result);
-    
-    try{
-      DB::transaction(function () use ($result)
-      {
-        $result->delete();
-      });
-      Log::info('cart delete succeeded');
+    Gate::authorize('delete', $this->cartService->getCartItem($id));
+
+    try {
+        $this->cartService->deleteCart($id);
+    } catch (\Exception $e) {
+        report($e);
+        return false;
     }
-    catch(\Exception $e){
-      report($e);
-      return false;
-    }
-    
+
     return redirect()->route('cart.index')->with('success', '削除しました');
   }
 }

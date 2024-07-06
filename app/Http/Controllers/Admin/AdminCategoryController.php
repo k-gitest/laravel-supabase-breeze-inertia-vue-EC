@@ -9,21 +9,29 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminCategoryRequest;
+use App\Services\Admin\AdminCategoryService;
 use App\Models\Category;
 use App\Models\Product;
 use Log;
 
 class AdminCategoryController extends Controller
 {  
+    protected $adminCategoryService;
+
+    public function __construct(AdminCategoryService $adminCategoryService)
+    {
+        $this->adminCategoryService = $adminCategoryService;
+    }
+  
     /**
      * 一覧画面表示
      */
     public function index(): Response
     {
-      $category = Category::all();
+      $category = $this->adminCategoryService->getAllCategories();
 
       return inertia::render('EC/Admin/CategoryIndex', [
-        "data" => $category,
+          "data" => $category,
       ]);
     }
 
@@ -32,7 +40,8 @@ class AdminCategoryController extends Controller
      */
     public function create(): Response
     {
-      $categoryData = Category::all();
+      $categoryData = $this->adminCategoryService->getAllCategories();
+        
       return Inertia::render('EC/Admin/CategoryRegister', [
           "data" => $categoryData,
       ]);
@@ -43,34 +52,36 @@ class AdminCategoryController extends Controller
      */
     public function store(AdminCategoryRequest $request): RedirectResponse
     {
-      try{
-        DB::transaction(function () use ($request) {
-          Category::create($request->validated());
-        });
-        Log::info('Category create succeeded');
-      }
-      catch (\Exception $e){
-        report($e);
-        return false;
+      try {
+          $this->adminCategoryService->createCategory($request);
+          Log::info('Category create succeeded');
+      } catch (\Exception $e) {
+          report($e);
+          return false;
       }
 
-      return redirect()->route('admin.category.index');
+      return redirect()->back()->with('sucess', 'カテゴリー登録が成功しました');
     }
 
     /**
      * 編集フォーム画面表示
      */
-    public function edit(Request $request): Response
+    public function edit(Request $request): Response|bool
     {
-      $request->validate([
-        'id' => 'required|string|exists:categories,id',
-      ]);
-      
-      $category = Category::findOrFail($request->id);
+        $request->validate([
+              'id' => 'required|string|exists:categories,id',
+        ]);
+    
+        try {
+              $category = $this->adminCategoryService->getCategoryById($request->id);
+        } catch (\Exception $e) {
+              report($e);
+              return false;
+        }
 
-      return inertia::render('EC/Admin/CategoryEdit', [
-        "data" => $category,
-      ]);
+        return inertia::render('EC/Admin/CategoryEdit', [
+              "data" => $category,
+        ]);
     }
 
     /**
@@ -78,24 +89,16 @@ class AdminCategoryController extends Controller
      */
     public function update(AdminCategoryRequest $request): RedirectResponse|bool
     {
-      try{
-        $category = DB::transaction(function () use ($request) {
-          $category = Category::lockForUpdate()->findOrFail($request->id);
-          $category->fill($request->validated());
-          
-          if ($category->isDirty()) {
-              $category->save();
-          }
-          return $category;
-        });
-        Log::info('Category update succeeded');
-      }
-      catch(\Exception $e){
-        report($e);
-        return false;
+      try {
+          $this->adminCategoryService->updateCategory($request);
+          Log::info('Category update succeeded');
+      } catch (\Exception $e) {
+          report($e);
+          return false;
       }
 
-      return redirect()->route('admin.category.edit', $category)->with('success', '更新しました');
+      return redirect()->back()->with('success', '更新しました');
+      
     }
 
     /**
@@ -104,21 +107,17 @@ class AdminCategoryController extends Controller
     public function destroy(Request $request): RedirectResponse|bool
     {
       $request->validate([
-        'id' => 'required|string|exists:categories,id',
+          'id' => 'required|string|exists:categories,id',
       ]);
-      
-      try{
-        DB::transaction(function () use ($request) {
-          $category = Category::lockForUpdate()->findOrFail($request->id);
-          $category->delete();
-        });
-        Log::info('Category delete succeeded');
-      }
-      catch(\Exception $e){
-        report($e);
-        return false;
+
+      try {
+          $this->adminCategoryService->deleteCategory($request);
+          Log::info('Category delete succeeded');
+      } catch (\Exception $e) {
+          report($e);
+          return false;
       }
 
-      return redirect()->route('admin.category.index')->with('success', '削除しました');
+      return redirect()->back()->with('success', '削除しました');
     }
 }

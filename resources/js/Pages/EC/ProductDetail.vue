@@ -98,6 +98,18 @@
                 <button type="submit" class="btn w-full">お気に入りに追加</button>
               </form>
             </div>
+            <div v-show="form.errors">
+              <p class="text-sm text-red-600 dark:text-red-400">
+                {{ form.errors.quantity }}
+                {{ form.errors.user_id }}
+                {{ form.errors.product_id }}
+              </p>
+            </div>
+            <div v-show="props.flash.success">
+              <p class="text-sm text-red-600 dark:text-red-400">
+              {{ props.flash.success }}
+              </p>
+            </div>
             <div v-if="props.isInComment">
               <p>既にコメントを投稿しています</p>
             </div>
@@ -126,18 +138,6 @@
             </div>
             <div v-else>
               コメント投稿はありません
-            </div>
-            <div v-show="form.errors">
-              <p class="text-sm text-red-600 dark:text-red-400">
-                {{ form.errors.quantity }}
-                {{ form.errors.user_id }}
-                {{ form.errors.product_id }}
-              </p>
-            </div>
-            <div v-show="props.errors">
-              {{ props.errors.quantity }}
-              {{ props.errors.user_id }}
-              {{ props.errors.product_id }}
             </div>
           </div>
           <div v-else>

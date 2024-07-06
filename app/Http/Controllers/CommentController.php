@@ -9,19 +9,27 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use App\Services\CommentService;
 use Log;
 
 class CommentController extends Controller
 {
+    protected $commentService;
+
+    public function __construct(CommentService $commentService)
+    {
+        $this->commentService = $commentService;
+    }
+    
     /**
      * Display a listing of the resource.
      */
     public function index(): Response
     {
-        $comment = Comment::with('product')->where('user_id', auth()->id())->orderBy('updated_at', 'desc')->paginate(12);
+        $comments = $this->commentService->getComments();
 
         return Inertia::render('EC/CommentIndex', [
-            'pagedata' => $comment,
+            'pagedata' => $comments,
         ]);
     }
 
@@ -36,18 +44,9 @@ class CommentController extends Controller
             'comment' => 'required|string|max:255',
         ]);
 
-        try{
-            DB::transaction(function () use ($request){
-                Comment::create([
-                    'user_id' => auth()->user()->id,
-                    'product_id' => $request->product_id,
-                    'title' => $request->title,
-                    'content' => $request->comment,
-                ]);
-            });
-            Log::info('Comment created');
-        }
-        catch (\Exception $e){
+        try {
+            $this->commentService->createComment($request);
+        } catch (\Exception $e) {
             report($e);
             return false;
         }
@@ -61,19 +60,15 @@ class CommentController extends Controller
     public function destroy(Comment $comment, $id): RedirectResponse
     {
         Gate::authorize('isGeneral');
-        
+
         $user_id = auth()->user()->id;
-        $comment = Comment::where('user_id', $user_id)->findOrFail($id);
+        $comment = $this->commentService->getCommentById($user_id, $id);
 
         Gate::authorize('delete', $comment);
 
-        try{
-            DB::transaction(function () use ($comment){
-                $comment->delete();
-            });
-            Log::info('Comment deleted');
-        }
-        catch(\Exception $e){
+        try {
+            $this->commentService->deleteComment($user_id, $id);
+        } catch (\Exception $e) {
             report($e);
             return false;
         }

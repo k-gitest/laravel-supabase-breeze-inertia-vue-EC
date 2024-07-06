@@ -10,16 +10,16 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Models\Contact;
 use App\Events\ContactFormSubmitted;
-use App\Services\Admin\AdminImageService;
+use App\Services\ContactService;
 use Log;
 
 class ContactController extends Controller
 {
-  protected $adminImageService;
+  protected $contactService;
 
-  public function __construct(AdminImageService $adminImageService)
+  public function __construct(ContactService $contactService)
   {
-    $this->adminImageService = $adminImageService;
+      $this->contactService = $contactService;
   }
   
   public function create(): Response
@@ -30,50 +30,18 @@ class ContactController extends Controller
   public function store(Request $request): RedirectResponse|bool
   {    
     $request->validate([
-      'name' => 'required|string|max:100',
-      'email' => 'required|email|max:255',
-      'message' => 'required|string|max:255',
+        'name' => 'required|string|max:100',
+        'email' => 'required|email|max:255',
+        'message' => 'required|string|max:255',
     ]);
-    
+
     try {
-      DB::transaction(function () use ($request)
-      {
-          $filenames = $this->adminImageService->handleContactImageUploads($request);
-
-          $chua_mobile = $request->header('Sec-Ch-Ua-Mobile');
-          $device = ($chua_mobile === '?0') ? "desktop" : (($chua_mobile === null) ? "unknown" : "mobile");
-        
-          try{
-            Contact::create([
-              'name' => $request->name,
-              'email' => $request->email,
-              'message' => $request->message,
-              'ip_address' => $request->ip(),
-              'user_agent' => $request->userAgent(),
-              'language' => $request->header('Accept-Language'),
-              'previous_url' => $request->session()->get('_previous')['url'] ?? "unknown",
-              'referrer' => $request->header('Referer'),
-              'device' => $device,
-              'platform' => trim($request->header('Sec-Ch-Ua-Platform'), '"'),
-              'browser' => $request->header('sec-ch-ua'),
-              'attachments' => $filenames,
-            ]);
-            Log::info('Contact create succeeded');
-          }
-          catch(\Exception $e){
-            $this->adminImageService->deleteUploadImages($filenames, 'key');
-            throw $e;
-          }
-          
-      });
-    }
-    catch (\Exception $e){
-      report($e);
-      return false;
+        $this->contactService->createContact($request);
+    } catch (\Exception $e) {
+        report($e);
+        return false;
     }
 
-    event(new ContactFormSubmitted($request->all()));
-    
     return redirect()->route('contact.create')->with('success', '送信しました');
   }
 

@@ -37,6 +37,16 @@
         <div class="text-center mb-5">
           <p class="font-semibold text-xl text-gray-800">コメント投稿一覧</p>
         </div>
+        <div v-show="props.errors">
+          <p class="text-sm text-red-600 dark:text-red-400">
+          {{ props.errors.error }}
+          </p>
+        </div>
+        <div v-show="props.flash.success">
+          <p class="text-sm text-red-600 dark:text-red-400">
+          {{ props.flash.success }}
+          </p>
+        </div>
         <div class="grid grid-cols-3 gap-5">
           <template v-for="comment of props.pagedata.data" :key="comment.id">
             <div class="card w-96 bg-base-100 border">

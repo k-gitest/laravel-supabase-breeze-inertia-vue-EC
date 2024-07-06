@@ -7,15 +7,24 @@ use Inertia\Response;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\OrderService;
 
 class OrderController extends Controller
 {
+    protected $orderService;
+
+    public function __construct(OrderService $orderService)
+    {
+        $this->orderService = $orderService;
+    }
+    
     /**
      * Display a listing of the resource.
      */
     public function index(): Response
     {
-        $result = Order::with(['orderItems'])->where('user_id', auth()->id())->paginate(10);
+        $userId = auth()->id();
+        $result = $this->orderService->getOrderList($userId);
 
         return Inertia::render('EC/Order', [
             "pagedata" => $result,
@@ -27,8 +36,8 @@ class OrderController extends Controller
      */
     public function show(string $id)
     {
-        $user_id = auth()->user()->id;
-        $result = OrderItem::with(['product.image'])->where('order_id', $id)->where('user_id', $user_id)->get();
+        $userId = auth()->user()->id;
+        $result = $this->orderService->getOrderDetails($id, $userId);
 
         return Inertia::render('EC/OrderDetail', [
             "data" => $result,

@@ -6,6 +6,7 @@
         status?: String;
     }>();
     
+    const props = usePage().props;
     const user = usePage().props.auth.user;
     
     const form = useForm({
@@ -42,6 +43,16 @@
                     <button type="submit" class="btn">送信</button>
                 </div>
             </form>
+        </div>
+        <div v-show="props.errors">
+            <p class="text-sm text-red-600 dark:text-red-400">
+                {{ props.errors.error }}
+            </p>
+        </div>
+        <div v-show="props.flash.success">
+            <p class="text-sm text-red-600 dark:text-red-400">
+                {{ props.flash.success }}
+            </p>
         </div>
     </section>
 </template>

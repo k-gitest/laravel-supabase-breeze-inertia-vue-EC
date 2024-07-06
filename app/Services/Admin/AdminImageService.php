@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Models\Image;
 
 class AdminImageService
@@ -99,6 +100,17 @@ class AdminImageService
             $this->deleteUploadImages($filenames);
             throw $e;
         }
+    }
+
+    public function deleteImage(Request $request)
+    {
+        DB::transaction(function () use ($request) {
+            $image = Image::lockForUpdate()->findOrFail($request->image_id);
+            $image->delete();
+
+            $imagePaths = [$request->path];
+            app()->make("SbStorage")->deleteImage($imagePaths);
+        });
     }
     
 }

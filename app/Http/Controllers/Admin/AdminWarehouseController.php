@@ -9,19 +9,26 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminWarehouseRequest;
+use App\Services\Admin\AdminWarehouseService;
 use App\Models\Warehouse;
 use App\Models\Product;
 use Log;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AdminWarehouseController extends Controller
 {
+    protected $adminWarehouseService;
+
+    public function __construct(AdminWarehouseService $adminWarehouseService)
+    {
+        $this->adminWarehouseService = $adminWarehouseService;
+    }
+    
     /**
      * Display a listing of the resource.
      */
     public function index(): Response
     {
-        $result  = Warehouse::all();
+        $result = $this->adminWarehouseService->getAllWarehouses();
 
         return Inertia::render('EC/Admin/WarehouseIndex', [
             'data' => $result,
@@ -41,37 +48,29 @@ class AdminWarehouseController extends Controller
      */
     public function store(AdminWarehouseRequest $request): RedirectResponse|bool
     {
-        try{
-            DB::transaction(function () use ($request){
-                $warehouse = Warehouse::create($request->validated());
-            });
+        try {
+            $this->adminWarehouseService->createWarehouse($request);
             Log::info('Warehouse create succeeded');
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             report($e);
             return false;
         }
 
-        return redirect()->route('admin.warehouse.index');
-        
+        return redirect()->route('admin.warehouse.index')->with('success', '在庫登録が成功しました');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id): Response
+    public function show(string $id): Response|bool
     {
-        $warehouse = Warehouse::findOrFail($id);
-        $result = $warehouse->product()
-            ->with(['category', 'stock', 'image'])
-            ->withSum(['stock' => function ($query) use ($id) {
-                if ($id) {
-                    $query->where('warehouse_id', $id);
-                }
-            }], 'quantity')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-        
+        try {
+            $result = $this->adminWarehouseService->getWarehouseWithProducts($id);
+        } catch (\Exception $e) {
+            report($e);
+            return false;
+        }
+
         return Inertia::render('EC/Admin/WarehouseShow', [
             'pagedata' => $result,
         ]);
@@ -80,10 +79,15 @@ class AdminWarehouseController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id): Response | RedirectResponse
+    public function edit(string $id): Response | bool
     {
-        $result = Warehouse::findOrFail($id);
-        
+        try {
+            $result = $this->adminWarehouseService->getWarehouseById($id);
+        } catch (ModelNotFoundException $e) {
+            report($e);
+            return false;
+        }
+
         return Inertia::render('EC/Admin/WarehouseEdit', [
             'data' => $result,
         ]);
@@ -94,23 +98,15 @@ class AdminWarehouseController extends Controller
      */
     public function update(AdminWarehouseRequest $request, string $id): RedirectResponse | bool
     {
-        try{
-            DB::transaction(function () use ($request, $id){
-                $warehouse = Warehouse::lockForUpdate()->findOrFail($id);
-                $warehouse->fill($request->validated());
-                
-                if( $warehouse->isDirty() ){
-                    $warehouse->save();
-                };
-            });
+        try {
+            $this->adminWarehouseService->updateWarehouse($request, $id);
             Log::info('Warehouse update succeeded');
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             report($e);
             return false;
         }
 
-        return redirect()->route('admin.warehouse.edit', $id);
+        return redirect()->back()->with('success', '更新しました');
     }
 
     /**
@@ -119,21 +115,17 @@ class AdminWarehouseController extends Controller
     public function destroy(Request $request): RedirectResponse|bool
     {
         $request->validate([
-             "id" => "required|integer|exists:warehouses,id",                
+            "id" => "required|integer|exists:warehouses,id",
         ]);
-        
-        try{
-            DB::transaction(function () use ($request){
-                $warehouse = Warehouse::lockForUpdate()->findOrFail($request->id);
-                $warehouse->delete();
-            });
+
+        try {
+            $this->adminWarehouseService->deleteWarehouse($request);
             Log::info('Warehouse delete succeeded');
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             report($e);
             return false;
         }
 
-        return redirect()->route('admin.warehouse.index');
+        return redirect()->route('admin.warehouse.index')->with('success', '削除しました');
     }
 }
