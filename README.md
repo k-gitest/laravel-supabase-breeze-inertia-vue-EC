@@ -29,6 +29,7 @@ laravel11で構築されたwebアプリケーション
 ```text
 /
 ├── app
+│    ├── Enums
 │    ├── Events
 │    ├── Facades
 │    ├── Http
@@ -37,12 +38,16 @@ laravel11で構築されたwebアプリケーション
 │    │    │      └── Admin
 │    │    ├── Middleware
 │    │    └── Requests
+│    │           ├── Admin
 │    │           └── Auth
+│    ├── Jobs
 │    ├── Listeners
+│    ├── Mail
 │    ├── Models
 │    ├── Policies
 │    ├── Providers
 │    └── Services
+│          └── Admin
 ├── bootstrap
 │    ├── app.php
 │    └── providers.php
@@ -57,7 +62,7 @@ laravel11で構築されたwebアプリケーション
 │         │    ├── Contact
 │         │    ├── Profile
 │         │    ├── Todo
-│         │    ├── Ec
+│         │    ├── EC
 │         │    │    └── Admin
 │         │    ├── Dashboard
 │         │    └── Welcome
@@ -80,6 +85,7 @@ laravel11で構築されたwebアプリケーション
 └── vite.config.js
 
 supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
+route -> controller -> service -> (controller)
 
 ```
 
@@ -106,6 +112,7 @@ supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 - 上記の検索結果をソートする機能を追加
 - roleはGateで認可、user_idはpolicyで認可、ガードはミドルウェアで認可、DBはRLS
 - Enumで定数バリデーション、ビュー側への定数はconfig/constantsで設定
+- ビジネスロジックとクエリはサービスへ、リポジトリは現状使用していない
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル設定
 - supabaseとmailtrapとstripeのenv設定
