@@ -30,6 +30,17 @@
               新規追加
           </Link>
       </div>
+      <div v-show="props.errors">
+        <p class="text-sm text-red-600 dark:text-red-400">
+            {{ props.errors.name }}
+            {{ props.errors.error }}
+        </p>
+      </div>
+      <div v-show="props.flash.success">
+        <p class="text-sm text-red-600 dark:text-red-400">
+            {{ props.flash.success }}
+        </p>
+      </div>
       <div v-if="props.pagedata.data.length">
         <div class="grid grid-cols-3 gap-5">
           <template v-for="todo in props.pagedata.data" :key="todo.id">

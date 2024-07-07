@@ -8,6 +8,7 @@
   
   const form = useForm({
     name: todo.name,
+    error: '',
   })
 
   const submit = () => {
@@ -36,6 +37,7 @@
             <div v-if="form.errors">
                 <p class="text-sm text-red-600 dark:text-red-400">
                     {{ form.errors.name }}
+                    {{ form.errors.error }}
                 </p>
             </div>
             <div>

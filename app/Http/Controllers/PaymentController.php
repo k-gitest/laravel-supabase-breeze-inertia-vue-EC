@@ -11,46 +11,41 @@ use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use App\Models\Cart;
 use App\Services\CartService;
+use App\Services\PaymentService;
 use Log;
 use Exception;
 
 class PaymentController extends Controller
 {
-  public function index(CartService $cartService): Response
+  protected $paymentService;
+
+  public function __construct(PaymentService $paymentService)
   {
-    $id = request()->user()->id;
-    $result = Cart::with(['product.image'])->where('user_id', $id)->get();
+      $this->paymentService = $paymentService;
+  }
+  
+  public function index(CartService $cartService): Response|bool
+  {
+    $userId = request()->user()->id;
+    $userEmail = auth()->user()->email;
+    $result = Cart::with(['product.image'])->where('user_id', $userId)->get();
 
     $totalPrice = $cartService->getTotalPrices($result);
-      
-    Stripe::setApiKey(config('services.stripe.secret'));
 
-    $warehouse_id = config('services.stripe.warehouse_id');
+    $warehouseId = config('services.stripe.warehouse_id');
 
-    try{
-      $paymentIntent = DB::transaction(function () use ($totalPrice, $warehouse_id){
-        return $paymentIntent = PaymentIntent::create([
-            'amount' => round($totalPrice["total_price_including_tax"]), 
-            'currency' => 'jpy',
-            'payment_method' => 'pm_card_visa',
-            'metadata' => [
-               'user_id' => auth()->user()->id,
-               'warehouse_id' => $warehouse_id,
-            ],
-        ]);
-      });
-      Log::info('paymentIntent create succeeded');
+    try {
+        $paymentIntent = $this->paymentService->createPaymentIntent($totalPrice, $warehouseId, $userId, $userEmail);
+    } catch (Exception $e) {
+        return false;
     }
-    catch(\Exception $e){
-      report($e);
-      return false;
-    }
-    
+
     return Inertia::render('EC/PaymentComponent', [
         'clientSecret' => $paymentIntent->client_secret,
         'totalPrice' => $totalPrice,
         'data' => $result,
     ]);
+    
   }
   
 }

@@ -61,7 +61,7 @@
         console.error(error);
         error_message.value = error.message;
       } else {
-        router.visit('/cart/index', {
+        router.visit('/order', {
           method: 'get',
           preserveScroll: true,
           preserveState: true,

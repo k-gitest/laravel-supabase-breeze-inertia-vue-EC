@@ -2,23 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Inertia\Inertia;
-use Inertia\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
 use Illuminate\Support\Facades\Gate;
 use App\Http\Requests\TodoRequest;
-use App\Models\TodoList;
-use App\Models\User;
-use Log;
+use App\Services\TodoListService;
 
 class TodoListController extends Controller
 {  
+  protected $todoListService;
+
+  public function __construct(TodoListService $todoListService)
+  {
+      $this->todoListService = $todoListService;
+  }
+  
   public function index(Request $request): Response
   {
-    $todoLists = TodoList::where('user_id', auth()->id())->paginate(12);
+    $todoLists = $this->todoListService->getTodoListItems();
     
     return Inertia::render('Todo/Index', [
         "pagedata" => $todoLists,
@@ -32,80 +35,56 @@ class TodoListController extends Controller
   
   public function store(TodoRequest $request): RedirectResponse
   {
-    $userId = auth()->id(); 
-
     try{
-      DB::transaction(function () use ($request, $userId) {
-        $todoList = TodoList::create([
-          'name' => $request->name,
-          'user_id' => $userId,
-        ]);
-      });
-      Log::info('TodoList create succeeded');
+      $this->todoListService->createTodoList($request);
     }
     catch(\Exception $e){
       report($e);
       return false;
     }
     
-    return redirect(route('todo.index', absolute: false));
+    return redirect(route('todo.index', absolute: false))->with('success', 'TodoListを作成しました。');
   }
 
   public function edit(Request $request, int $id): Response
   {
-    $todo = TodoList::findOrFail($id);
+    $todo = $this->todoListService->getTodoListItem($id);
     
     return Inertia::render('Todo/Edit', [
         'todoList' => $todo,
     ]);    
   }
 
-  public function update(TodoRequest $request, int $id, TodoList $todolist): RedirectResponse
+  public function update(TodoRequest $request, int $id): RedirectResponse|bool
   {
     Gate::authorize('isGeneral');
-
-    $todo = TodoList::findOrFail($id);
-
-    Gate::authorize('update', $todo);
-    
-    $todo->name = $request->name;
+    Gate::authorize('update', $this->todoListService->getTodoListItem($id));
     
     try{
-      DB::transaction(function () use ($todo){
-        if ($todo->isDirty()) {
-            $todo->save();
-        }
-      });
-      Log::info('TodoList update succeeded');
+      $this->todoListService->updateTodoList($request, $id);
     }
     catch(\Exception $e){
       report($e);
       return false;
     }
 
-    return redirect(route('todo.index', absolute: false));
+    return redirect(route('todo.index', absolute: false))->with('success', 'TodoListを更新しました。');
   }
 
-  public function destroy(Request $request, int $id): RedirectResponse
+  public function destroy(Request $request, int $id): RedirectResponse|bool
   {
-    Gate::authorize('isGeneral');
-    
-    $todo = TodoList::findOrFail($id);
-    
-    Gate::authorize('delete', $todo);
+    Gate::authorize('isGeneral');    
+    Gate::authorize('delete', $this->todoListService->getTodoListItem($id));
 
     try{
-      DB::transaction(function () use ($todo)  {
-          $todo->delete();
-      });
-      Log::info('TodoList delete succeeded');
+      $this->todoListService->deleteTodoList($id);
     }
     catch(\Exception $e){
       report($e);
       return false;
     }
 
-    return redirect()->route('todo.index')->with('message', 'My message');
+    return redirect()->route('todo.index')->with('success', 'todoListを削除しました');
   }
   
 }
