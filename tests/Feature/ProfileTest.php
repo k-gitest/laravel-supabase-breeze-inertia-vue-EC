@@ -41,7 +41,7 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
-        $this->assertTrue($user->subscribed);
+        $this->assertSame(1, $user->subscribed);
         $this->assertNull($user->email_verified_at);
     }
 

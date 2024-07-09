@@ -21,9 +21,8 @@ class TodoListFactory extends Factory
     public function definition(): array
     {
         return [
-            //
-            'name' => $this->faker->sentence,
-            'user_id' => User::factory(),
+            'name' => fake()->realText(100),
+            'user_id' => User::inRandomOrder()->first()->id,
         ];
     }
 }

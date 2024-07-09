@@ -41,6 +41,16 @@
         <div class="flex justify-end">
           <Link :href="route('admin.product.create')" class="btn btn-sm">新規作成</Link>
         </div>
+        <div v-show="props.errors">
+          <p class="text-center text-sm text-red-600 dark:text-red-400">
+            {{ props.errors.error }}
+          </p>
+        </div>
+        <div v-show="props.flash.success">
+          <p class="text-center text-sm text-red-600 dark:text-red-400">
+            {{ props.flash.success }}
+          </p>
+        </div>
         <div v-if="props.pagedata.data.length">
           <AdminStockTableList :data="props.pagedata.data" />
         </div>

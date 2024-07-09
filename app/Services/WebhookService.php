@@ -90,6 +90,15 @@ class WebhookService
 
                 $user = $order->user;
                 Mail::to($paymentIntent->metadata->email)->send(new OrderSuccessMail($order));
+                
+                Log::info('Payment succeeded', [
+                    'user_id' => $paymentIntent->metadata->user_id,
+                    'payment_intent_id' => $paymentIntent->id,
+                    'amount_received' => $paymentIntent->amount_received,
+                    'currency' => $paymentIntent->currency,
+                    'order_id' => $order->id,
+                    'order_items' => $orderItem,
+                ]);
             });
         } catch (\Exception $e) {
             report($e);

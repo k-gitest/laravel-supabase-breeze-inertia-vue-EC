@@ -46,6 +46,15 @@
     });
   }
 
+  const deleteProduct = () => {
+    form.delete(route('admin.product.destroy', { id: props.data.id}), {
+      preserveState: false,
+      onSuccess: (res) => {
+        console.log(res)
+      }
+    })
+  }
+
   const deleteStock = (id: number) => {
     router.delete('/admin/stock/delete', {
       data: {
@@ -74,7 +83,7 @@
             <li>{{ props.data.price_including_tax }}</li>
             <li class="flex gap-2">
               <Link :href="route('admin.product.edit', { id: props.data.id })" class="btn">商品編集</Link>
-            <Link :href="route('admin.product.destroy', { id: props.data.id })" class="btn">商品削除</Link>
+              <button @click="deleteProduct" class="btn" :disabled="form.processing">商品削除</button>
             </li>
           </ul>
           

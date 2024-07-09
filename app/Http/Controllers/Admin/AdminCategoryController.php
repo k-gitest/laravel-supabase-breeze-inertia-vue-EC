@@ -60,7 +60,7 @@ class AdminCategoryController extends Controller
           return false;
       }
 
-      return redirect()->back()->with('sucess', 'カテゴリー登録が成功しました');
+      return redirect()->back()->with('success', 'カテゴリー登録が成功しました');
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use DateTimeInterface;
 
 class TodoList extends Model
@@ -17,6 +18,6 @@ class TodoList extends Model
 
     protected function serializeDate(DateTimeInterface $date)
     {
-        return $date->format('Y年m月d日h時m分');
+        return Carbon::instance($date)->format('Y年m月d日H時i分');
     }
 }

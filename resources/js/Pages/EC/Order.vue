@@ -8,6 +8,7 @@
   import Pagination from "@/Components/Pagination.vue"
 
   const { props } = usePage<PageProps & { pagedata: PageData<Order> }>()
+  console.log(props)
 </script>
 
 <template>
@@ -17,7 +18,7 @@
       <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Order</h2>
     </template>
     <EcLayout>
-      <div v-if="props.pagedata.data" class="flex flex-col gap-5">
+      <div v-if="props.pagedata.data.length" class="flex flex-col gap-5">
         <div class="text-center mb-5">
           <p class="font-semibold text-xl text-gray-800">オーダー</p>
           <p>オーダー状況</p>

@@ -38,7 +38,7 @@
 
   const submit = async() => {
     if (stripe.value && clientSecret.value && cardNumber.value && cardExpiry.value && cardCvc.value) {
-      const { error } = await stripe.value.confirmCardPayment(clientSecret.value, {
+      const { paymentIntent, error } = await stripe.value.confirmCardPayment(clientSecret.value, {
         payment_method: {
           card: cardNumber.value,
           billing_details: {
@@ -60,7 +60,7 @@
       if (error) {
         console.error(error);
         error_message.value = error.message;
-      } else {
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         router.visit('/order', {
           method: 'get',
           preserveScroll: true,
