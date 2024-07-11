@@ -36,7 +36,7 @@ class CommentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|bool
     {
         $request->validate([
             'product_id' => 'required|integer',

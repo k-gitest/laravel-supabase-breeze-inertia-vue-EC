@@ -4,19 +4,15 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\User;
+use App\Models\Contact;
 
-class UsersSeeder extends Seeder
+class ContactsSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        User::factory()->create([
-            'email' => 'hoge@hoge.com',
-        ]);
-        
-        User::factory()->count(9)->create();
+        Contact::factory(50)->create();
     }
 }
