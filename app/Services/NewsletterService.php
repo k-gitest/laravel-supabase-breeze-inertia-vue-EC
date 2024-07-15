@@ -26,7 +26,6 @@ class NewsletterService
             });
             Log::info('Newsletter update succeeded');
         } catch (\Exception $e) {
-            report($e);
             throw $e;
         }
     }

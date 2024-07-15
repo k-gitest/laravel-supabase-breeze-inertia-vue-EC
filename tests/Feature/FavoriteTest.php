@@ -28,13 +28,13 @@ class FavoriteTest extends TestCase
         $this->product = Product::factory()->create();
         $this->favorite = Favorite::factory()->create(['user_id' => $this->user->id]);
         $this->actingAs($this->user);    
-        $this->FavoriteService = Mockery::mock(FavoriteService::class);
-        $this->app->instance(FavoriteService::class, $this->FavoriteService);
+        $this->favoriteService = Mockery::mock(FavoriteService::class);
+        $this->app->instance(FavoriteService::class, $this->favoriteService);
     }
     
     public function test_favorite_index(): void
     {
-        $this->FavoriteService->shouldReceive('getFavoritesByUser')
+        $this->favoriteService->shouldReceive('getFavoritesByUser')
             ->with($this->user->id)
             ->once()
             ->andReturn($this->favorite);
@@ -56,7 +56,7 @@ class FavoriteTest extends TestCase
             'product_id' => $this->product->id,
         ];
         
-        $this->FavoriteService->shouldReceive('addFavorite')
+        $this->favoriteService->shouldReceive('addFavorite')
             ->with(Mockery::on(function ($request) use ($data){
                 return $request->all() == $data;
             }))
@@ -72,7 +72,7 @@ class FavoriteTest extends TestCase
 
     public function test_favorite_destroy(): void
     {
-        $this->FavoriteService->shouldReceive('removeFavorite')
+        $this->favoriteService->shouldReceive('removeFavorite')
             ->with($this->user->id, $this->favorite->id)
             ->once();
 
