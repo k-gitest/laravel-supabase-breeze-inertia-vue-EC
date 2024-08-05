@@ -136,3 +136,9 @@ route -> controller -> service -> (controller)
 - withException内でModelNotFoundExceptionが取得できなかったのでNotFoundHttpExceptionで代用しrenderで処理する
 - hotwire/livewireは次の機会に使ってみようと思う
 
+## api
+- laravelをapiとしてフロントはnext/nuxtでsanctumによるspa認証は以下へ
+
+[larave/next](https://github.com/k-gitest/laravel-next)
+
+[larave/nuxt](https://github.com/k-gitest/laravel-nuxt)
