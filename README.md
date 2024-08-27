@@ -116,6 +116,7 @@ route -> controller -> service -> (controller)
 - コードや型チェックでlarastanとeslint、eslintはflat config
 - tailwindとdaisyUIでスタイル設定
 - supabaseとmailtrapとstripeのenv設定
+- 検索サジェストの実装、商品名の予測表示、コンボボックスの実装
 
 ## まとめ
 
@@ -136,9 +137,3 @@ route -> controller -> service -> (controller)
 - withException内でModelNotFoundExceptionが取得できなかったのでNotFoundHttpExceptionで代用しrenderで処理する
 - hotwire/livewireは次の機会に使ってみようと思う
 
-## api
-- laravelをapiとしてフロントはnext/nuxtでsanctumによるspa認証は以下へ
-
-[larave/next](https://github.com/k-gitest/laravel-next)
-
-[larave/nuxt](https://github.com/k-gitest/laravel-nuxt)

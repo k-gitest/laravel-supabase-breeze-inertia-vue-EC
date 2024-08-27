@@ -10,6 +10,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SuggestController;
 
 Route::middleware('auth')->group(function (){
     Route::get('/cart/index', [CartController::class, 'index'])->name('cart.index');
@@ -37,3 +38,4 @@ Route::get('/product', [ProductController::class, 'index'])->name('product.index
 Route::get('/product/show/{id}', [ProductController::class, 'show'])->name('product.show');
 
 Route::get('/product/search', [SearchController::class, 'index'])->name('search');
+Route::get('/product/suggest', [SuggestController::class, 'suggest'])->name('suggest');
