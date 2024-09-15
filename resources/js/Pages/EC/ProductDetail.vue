@@ -1,12 +1,13 @@
 <script setup lang="ts">
-  import { Head, Link, usePage, useForm } from "@inertiajs/vue3";
+  import { Head, Link, usePage, useForm, router } from "@inertiajs/vue3";
   import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
   import type { Product } from '@/types/product'
   import type { PageProps } from '@/types'
   import EcLayout from "@/Layouts/EcLayout.vue"
   import EcImageGallery from "@/Components/EcImageGallery.vue"
+  import ProductListCard from "@/Components/ProductListCard.vue"
 
-  const { props } = usePage<PageProps & { data: Product }>()
+  const { props } = usePage<PageProps & { data: Product, recommendedProducts: Product[] }>()
 
   const form = useForm({
     product_id: props.data.id,
@@ -48,6 +49,20 @@
       onSuccess: (res) => {
         console.log("success", res)
       }
+    })
+  }
+
+  const addFavorite = (id: number) => {
+    router.visit(`/favorite`,{
+      method: 'post',
+      data: {
+        product_id: id,
+      },
+      preserveState: false,
+      preserveScroll: true,
+      onSuccess: (res) => {
+        router.reload();
+      },
     })
   }
   
@@ -146,6 +161,26 @@
             </div>
           </div>
         </div>
+      </div>
+      <h2>類似商品</h2>
+      <div class="grid grid-cols-5 gap-5 justify-items-center">
+        <template v-for="product of props.recommendedProducts" :key="product.id">
+          <ProductListCard
+            :image="product.image"
+            :name="product.name"
+            :id="product.id"
+            :description="product.description"
+            :price_excluding_tax="product.price_excluding_tax.toString()"
+            :price_including_tax="product.price_including_tax.toString()"
+            :category_name="product.category?.name"
+            :created_at="product.created_at"
+            :route_show="`product.show`"
+            :mode="product.favorite?.some(item=> item.user_id === props.auth.user?.id) ? `favorite.disable` : `favorite.enable`"
+            @addFavorite="addFavorite"
+            :count="product.favorite?.length"
+            :stock="product?.stock_sum_quantity"
+          />
+        </template>
       </div>
     </EcLayout>
   </AuthenticatedLayout>

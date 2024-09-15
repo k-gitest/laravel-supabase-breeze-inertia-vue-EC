@@ -7,14 +7,17 @@ use Inertia\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use App\Services\ProductService;
+use App\Services\ViewingHistoryService;
 
 class ProductController extends Controller
 {
     protected $productService;
+    protected $viewingHistoryService;
   
-    public function __construct(ProductService $productService)
+    public function __construct(ProductService $productService, ViewingHistoryService $viewingHistoryService)
     {
         $this->productService = $productService;
+        $this->viewingHistoryService = $viewingHistoryService;
     }
   
     /**
@@ -46,12 +49,14 @@ class ProductController extends Controller
     {
       try {
           $productDetails = $this->productService->getProductDetails($id);
+          $this->viewingHistoryService->saveViewHistory(auth()->id(), $id);
 
           return Inertia::render('EC/ProductDetail', [
               "data" => $productDetails['product'],
               "isInCart" => $productDetails['isInCart'],
               "isInComment" => $productDetails['isInComment'],
               "isInFavorite" => $productDetails['isInFavorite'],
+              "recommendedProducts" => $productDetails['recommendedProducts'],
           ]);
       } catch (\Exception $e) {
           return redirect("/");

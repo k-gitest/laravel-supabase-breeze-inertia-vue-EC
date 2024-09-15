@@ -4,7 +4,35 @@ laravel11で構築されたwebアプリケーション
 
 - laravelのバージョン11がリリースされていたのでTODOとコンタクトフォーム、ECを開発する
 - 認証はbreezeセットでinertia/vue/tsによるSSRでインストール
-- DBはsupabase databaseのpostgres、画像の保存先はsupabase storage、メール送信先はmailtrap、決済はstripe
+- DBはsupabase databaseのpostgres、画像の保存先はsupabase storage、メール送信はmailtrap、決済はstripe
+
+### 主な機能:
+
+- TODO管理: CRUD操作
+- コンタクトフォーム
+- ECサイト:
+
+  - 商品管理 (CRUD)
+  - カート機能
+  - Stripe決済
+  - 注文履歴
+
+
+- 管理者機能:
+
+  - マルチログイン
+  - 在庫管理
+  - 倉庫管理
+
+
+- 検索機能:
+
+  - テキスト検索（サジェスト機能）
+  - カテゴリ検索
+  - 価格帯検索
+  - ソート機能
+
+- レコメンデーション機能 (ベクトル検索)
 
 ## 開発環境
 
@@ -25,6 +53,10 @@ laravel11で構築されたwebアプリケーション
 - supabase database/storage
 - mailtrap
 - stripe
+- mecab
+- ateliee/mecab
+- php-ml
+- pgvector
 
 ```text
 /
@@ -117,6 +149,7 @@ route -> controller -> service -> (controller)
 - tailwindとdaisyUIでスタイル設定
 - supabaseとmailtrapとstripeのenv設定
 - 検索サジェストの実装、商品名の予測表示、コンボボックスの実装
+- ベクトルで商品のレコメンデーション表示を実装
 
 ## まとめ
 
@@ -136,4 +169,14 @@ route -> controller -> service -> (controller)
 - defineModelでオプショナルがあるとbuild時に型は通ってもInvalid assignment targetのエラーが出るので初期値を設定する必要がある
 - withException内でModelNotFoundExceptionが取得できなかったのでNotFoundHttpExceptionで代用しrenderで処理する
 - hotwire/livewireは次の機会に使ってみようと思う
+- コンボボックスはアクセシビリティ設定をした方が良い
+- 日本語形態素解析やベクトル化は外部apiが幾つかあるが、今回はmecab、php-mlで行っている
+- 形態素解析のラッパーmecab-phpはlaravel8以降でエラーが出るのでateliee/mecabを使用する
+- php-mlのストップワードは英語なので、日本語用として幾つか設定する
+- laravelでベクトル型を保存する場合、DBはsupabaseのpostgresなのでpgvectorを有効化しlaravelでpgvector-phpを使用してeloquentに対応させる
+- 商品登録時に再計算するので商品データ保存とは非同期で別にジョブキューでベクトル変換処理を行う
+- ベクトルの次元は500次元の固定長としている
+- pgvector-phpではinsert/upsertが使用できないのでsaveで行っている
+- pgvectorのnearestNeighborsでL2近傍やコサイン類似などのクエリを発行できる
+- pythonの方が機械学習は前処理含めてライブラリや関数も豊富で良いとは思うが、php/laravelでも一応同じような事はできる
 

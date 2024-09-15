@@ -37,5 +37,10 @@ class Product extends Model
   public function stock(){
     return $this->hasMany(Stock::class);
   }
+
+  public function vector()
+  {
+      return $this->hasOne(ProductVector::class);
+  }
   
 }

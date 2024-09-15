@@ -3,7 +3,8 @@
   import axios from "axios";
   import { Head, usePage, router } from "@inertiajs/vue3";
   import { ref, onMounted, onUnmounted } from 'vue';
-
+  import type { Suggestion } from "@/types/suggestion";
+  
   defineProps<{
     categories: {
       data: Category[] | undefined,
@@ -33,7 +34,7 @@
     emit('searchSubmit', filters)
   }
 
-  const suggestions = ref([]);
+  const suggestions = ref<Suggestion[]>([]);
   const showSuggestions = ref(false);
   const selectedIndex = ref(-1);
 
@@ -52,12 +53,12 @@
     }
   }
 
-  const selectSuggestion = (suggestion) => {
+  const selectSuggestion = (suggestion: Suggestion) => {
     filters.value.q = suggestion.name;
     showSuggestions.value = false;
   };
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
     if (!showSuggestions.value) return;
 
     switch (event.key) {
@@ -81,8 +82,10 @@
     }
   };
 
-  const handleClickOutside = (event) => {
-    if (!event.target.closest('.suggestion-container')) {
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement | null;
+    
+    if (target && target.closest('.suggestion-container') === null) {
       showSuggestions.value = false;
     }
   };
@@ -127,7 +130,13 @@
         </li>
       </ul>
     </div>
-
+    <!--
+    <ul v-if="suggestions.length" class="z-10">
+      <li v-for="suggestion in suggestions" :key="suggestion.id">
+        {{ suggestion.name }}
+      </li>
+    </ul>
+    -->
     <div>
       <template v-for="category of categories?.data" :key="category.id">
         <label class="label cursor-pointer">

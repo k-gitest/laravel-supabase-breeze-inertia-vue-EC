@@ -8,15 +8,19 @@ use App\Models\Category;
 use App\Models\Image;
 use App\Http\Requests\Admin\AdminProductRequest;
 use App\Services\Admin\AdminImageService;
+use App\Services\VectorizerService;
+use App\Jobs\VectorizeProduct;
 use Log;
 
 class AdminProductService
 {
     protected $adminImageService;
+    protected $vectorizerService;
 
-    public function __construct(AdminImageService $adminImageService)
+    public function __construct(AdminImageService $adminImageService, VectorizerService $vectorizerService)
     {
         $this->adminImageService = $adminImageService;
+        $this->vectorizerService = $vectorizerService;
     }
 
     public function getAllProducts($id, $search_price_ranges)
@@ -53,6 +57,7 @@ class AdminProductService
                 $this->adminImageService->deleteUploadImages($filenames, 'path');
                 throw $e;
             }
+            VectorizeProduct::dispatch($result->id);
         });
     }
 
