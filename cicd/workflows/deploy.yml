@@ -1,0 +1,52 @@
+name: Deploy Laravel + Inertia/Vue (SSR)
+
+on:
+  push:
+    branches: [ "main" ]   # デプロイ対象ブランチを指定
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: laravel-ssr-app
+  CONTAINER_NAME: laravel-ssr
+  SERVICE_NAME: laravel-ssr-service
+  CLUSTER_NAME: laravel-ssr-cluster
+
+jobs:
+  build-and-deploy:
+    name: Build & Push Docker Image and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # AWS認証
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ECRにログイン
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Docker Build & Push
+      - name: Build, tag, and push image to Amazon ECR
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push ${{ steps.ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=${{ steps.ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # ECSサービス更新(アプリ側で更新する場合)
+      - name: Deploy to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ecs-task-def.json
+          service: ${{ env.SERVICE_NAME }}
+          cluster: ${{ env.CLUSTER_NAME }}
+          image: ${{ steps.build-and-deploy.outputs.image }}
+          wait-for-service-stability: true
