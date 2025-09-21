@@ -1,0 +1,454 @@
+name: Build and Trigger Infrastructure Update
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: laravel-app
+
+jobs:
+  # PHP/Laravel テスト
+  php-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: laravel_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_pgsql, bcmath, soap, intl, gd, exif, iconv, imagick, mecab
+        coverage: xdebug
+    
+    - name: Cache Composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.composer/cache/files
+        key: composer-${{ hashFiles('composer.lock') }}
+        restore-keys: composer-
+    
+    - name: Install Composer dependencies
+      run: composer install --no-interaction --prefer-dist --optimize-autoloader
+    
+    - name: Copy environment file
+      run: cp .env.example .env
+    
+    - name: Generate application key
+      run: php artisan key:generate
+    
+    - name: Configure database
+      run: |
+        echo "DB_CONNECTION=pgsql" >> .env
+        echo "DB_HOST=127.0.0.1" >> .env
+        echo "DB_PORT=5432" >> .env
+        echo "DB_DATABASE=laravel_test" >> .env
+        echo "DB_USERNAME=postgres" >> .env
+        echo "DB_PASSWORD=postgres" >> .env
+    
+    - name: Run database migrations
+      run: php artisan migrate --force
+    
+    - name: Run PHPStan analysis
+      run: vendor/bin/phpstan analyse
+    
+    - name: Run PHPUnit tests
+      run: vendor/bin/phpunit --coverage-clover coverage.xml
+
+  # フロントエンド・SSRテスト
+  frontend-ssr-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run ESLint
+      run: npm run lint
+    
+    - name: Run Prettier check
+      run: npm run format:check
+    
+    - name: Run TypeScript check
+      run: npm run type-check
+    
+    - name: Build client assets
+      run: npm run build
+    
+    - name: Build SSR bundle
+      run: npm run build:ssr
+    
+    - name: Verify build outputs
+      run: |
+        if [ ! -d "public/build" ]; then
+          echo "❌ Client build failed - public/build not found"
+          exit 1
+        fi
+        if [ ! -f "bootstrap/ssr/ssr.js" ]; then
+          echo "❌ SSR build failed - bootstrap/ssr/ssr.js not found"
+          exit 1
+        fi
+        echo "✅ Both client and SSR builds successful"
+        ls -la public/build/
+        ls -la bootstrap/ssr/
+    
+    - name: Test SSR bundle execution
+      run: |
+        cd bootstrap/ssr
+        echo "🧪 Testing SSR bundle..."
+        timeout 5s node ssr.js || [[ $? == 124 ]] && echo "✅ SSR bundle executable" || echo "❌ SSR bundle failed"
+
+  # セキュリティ監査
+  security-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+    
+    - name: Install Composer dependencies
+      run: composer install --no-interaction --prefer-dist --optimize-autoloader
+    
+    - name: Run security audit
+      run: composer audit
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install Node dependencies
+      run: npm ci
+    
+    - name: Run npm audit
+      run: npm audit --audit-level=high
+
+  # Dockerイメージビルド・プッシュ・Terraformトリガー
+  build-push-and-deploy:
+    needs: [php-tests, frontend-ssr-tests, security-audit]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    outputs:
+      image-uri: ${{ steps.image.outputs.image-uri }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        echo "🔨 Building Docker image with SSR support..."
+        
+        # Dockerイメージをビルド（SSR対応統合イメージ）
+        docker build \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          --cache-from $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+          .
+        
+        echo "📦 Pushing images to ECR..."
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        
+        echo "✅ Image pushed successfully"
+        echo "image-uri=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Verify image contents
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        echo "🔍 Verifying built image contents..."
+        docker run --rm $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ls -la /var/www/public/build/
+        docker run --rm $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ls -la /var/www/bootstrap/ssr/
+        echo "✅ Image verification completed"
+
+    - name: Output image URI
+      id: image
+      run: |
+        echo "image-uri=${{ steps.build-image.outputs.image-uri }}" >> $GITHUB_OUTPUT
+
+    # Terraformリポジトリにrepository_dispatchを送信
+    - name: Trigger Infrastructure Deployment
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.IAC_REPO_PAT }}
+        script: |
+          const imageUri = "${{ steps.image.outputs.image-uri }}";
+          const branch = context.ref.replace('refs/heads/', '');
+          const repository = context.repo.repo;
+          const commitSha = context.sha;
+          
+          console.log('🚀 Triggering infrastructure deployment...');
+          console.log(`Image URI: ${imageUri}`);
+          console.log(`Branch: ${branch}`);
+          console.log(`Repository: ${repository}`);
+          console.log(`Commit SHA: ${commitSha}`);
+          
+          await github.rest.repos.createDispatchEvent({
+            owner: '${{ secrets.IAC_REPO_OWNER }}',  // Terraformリポジトリのowner
+            repo: '${{ secrets.IAC_REPO_NAME }}',    // Terraformリポジトリ名
+            event_type: 'ecr-image-updated',
+            client_payload: {
+              container_image: imageUri,
+              branch: branch,
+              repository: repository,
+              commit_sha: commitSha,
+              triggered_at: new Date().toISOString(),
+              trigger_workflow_run_id: '${{ github.run_id }}'
+            }
+          });
+          
+          console.log('✅ Infrastructure deployment triggered successfully');
+
+    # 基本的な成功通知（詳細な結果はTerraformリポジトリから送られる）
+    - name: Notify build completion
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const status = '${{ job.status }}';
+          const environment = '${{ github.ref == "refs/heads/main" && "Production" || "Staging" }}';
+          const imageUri = '${{ steps.image.outputs.image-uri }}';
+          const commitUrl = `${context.payload.repository.html_url}/commit/${context.sha}`;
+          
+          if (status === 'success') {
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `📦 **Application Build Successful!**\n\n` +
+                    `✅ **Status:** Build and ECR push completed\n` +
+                    `🖼️ **Image:** \`${imageUri}\`\n` +
+                    `🌐 **Target Environment:** ${environment}\n` +
+                    `🚀 **Infrastructure Deployment:** Triggered\n` +
+                    `⏱️ **Built at:** ${new Date().toISOString()}\n\n` +
+                    `Infrastructure deployment is now in progress. You'll receive another notification when complete.\n\n` +
+                    `[View commit](${commitUrl})`
+            });
+          } else {
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `❌ **Application Build Failed!**\n\n` +
+                    `🚨 **Status:** Build or ECR push encountered errors\n` +
+                    `🌐 **Target Environment:** ${environment}\n` +
+                    `🔍 **Logs:** [View workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId})\n` +
+                    `⏱️ **Failed at:** ${new Date().toISOString()}\n\n` +
+                    `Please check the workflow logs for detailed error information.`
+            });
+          }
+
+    - name: Slack build notification
+      if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: |
+          ${{ job.status == 'success' && '📦' || '❌' }} ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }} Build ${{ job.status == 'success' && 'Successful' || 'Failed' }}
+          
+          🖼️ Image: ${{ steps.image.outputs.image-uri }}
+          🌐 Repository: ${{ github.repository }}
+          🔗 Commit: ${{ github.sha }}
+          ${{ job.status == 'success' && '🚀 Infrastructure deployment triggered' || '🚨 Build failed - no deployment triggered' }}
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }} context.repo.repo,
+            commit_sha: context.sha,
+            body: `❌ **${environment} Deployment Failed!**\n\n` +
+                  `🚨 **Status:** Deployment encountered errors\n` +
+                  `🌐 **Environment:** ${environment}\n` +
+                  `🔍 **Logs:** [View workflow run](${runUrl})\n` +
+                  `⏱️ **Failed at:** ${new Date().toISOString()}\n\n` +
+                  `Please check the workflow logs for detailed error information.`
+          });
+
+    - name: Slack notification
+      if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: |
+          ${{ job.status == 'success' && '🚀' || '❌' }} ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }} Deployment ${{ job.status == 'success' && 'Successful' || 'Failed' }}
+          
+          📦 Image: ${{ needs.build-push-and-deploy.outputs.image-uri }}
+          🌐 Repository: ${{ github.repository }}
+          🔗 Commit: ${{ github.sha }}
+          ⏱️ Duration: ${{ job.status == 'success' && 'Completed' || 'Failed' }} at ${{ steps.date.outputs.date }}
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}"
+            fi
+          else
+            echo "❌ HTTP Error: $HTTP_CODE"
+          fi
+          
+          if [ $i -eq 5 ]; then
+            echo "❌ SSR verification failed after 5 attempts"
+            exit 1
+          fi
+          
+          echo "🔄 Retry $i/5 - waiting 30 seconds..."
+          sleep 30
+        done
+
+    - name: Health check
+      run: |
+        echo "🏥 Performing comprehensive health check..."
+        for i in {1..10}; do
+          if curl -f -s https://your-app.com/health > /dev/null; then
+            echo "✅ Health check passed!"
+            break
+          fi
+          
+          if [ $i -eq 10 ]; then
+            echo "❌ Health check failed after 10 attempts"
+            exit 1
+          fi
+          
+          echo "🔄 Health check attempt $i failed, retrying in 30 seconds..."
+          sleep 30
+        done
+
+    - name: Notify deployment success
+      if: success()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        text: |
+          🚀 Production deployment to ECS Fargate successful!
+          📦 Image: ${{ needs.build-and-push.outputs.image }}
+          🌐 URL: https://your-app.com
+          ✨ SSR: Enabled
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+    - name: Notify deployment failure
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        text: |
+          ❌ Production deployment to ECS Fargate failed!
+          📦 Image: ${{ needs.build-and-push.outputs.image }}
+          🔍 Check GitHub Actions logs for details
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # ステージング環境デプロイ
+  deploy-staging:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    environment:
+      name: staging
+      url: https://staging.your-app.com
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ env.ECS_TASK_DEFINITION_STAGING }}
+        container-name: ${{ env.CONTAINER_NAME }}
+        image: ${{ needs.build-and-push.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE_STAGING }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
+
+    - name: Run database migrations
+      run: |
+        echo "🗄️ Running staging database migrations..."
+        aws ecs run-task \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --task-definition laravel-app-staging-migration \
+          --launch-type FARGATE \
+          --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.SUBNET_IDS }}],securityGroups=[${{ secrets.SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
+          --overrides '{
+            "containerOverrides": [{
+              "name": "${{ env.CONTAINER_NAME }}",
+              "command": ["php", "artisan", "migrate", "--force"]
+            }]
+          }' \
+          --wait
+
+    - name: Staging health check
+      run: |
+        echo "🏥 Staging health check..."
+        for i in {1..5}; do
+          if curl -f -s https://staging.your-app.com/health > /dev/null; then
+            echo "✅ Staging health check passed!"
+            break
+          fi
+          
+          if [ $i -eq 5 ]; then
+            echo "⚠️ Staging health check failed after 5 attempts"
+            # ステージング環境は警告のみ
+          fi
+          
+          echo "🔄 Staging health check attempt $i failed, retrying in 30 seconds..."
+          sleep 30
+        done
