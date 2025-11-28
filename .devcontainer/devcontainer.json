@@ -1,14 +1,21 @@
 {
-  "name": "Laravel 11",
-  "image": "mcr.microsoft.com/devcontainers/php:1-8.2-bullseye",
-  "postCreateCommand": "bash -c 'docker-php-ext-install bcmath pdo_pgsql zip && composer install && npm install'",
-  "forwardPorts": [8000, 5173],
+  "name": "Laravel 11 Development",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
         "bmewburn.vscode-intelephense-client",
-        "Vue.volar"
-      ]
+        "Vue.volar",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "php.validate.executablePath": "/usr/local/bin/php"
+      }
     }
-  }
+  },
+  "postCreateCommand": "composer install && npm install",
+  "forwardPorts": [8000, 5173],
+  "remoteUser": "vscode"
 }
