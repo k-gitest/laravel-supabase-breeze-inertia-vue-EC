@@ -22,10 +22,23 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     gd \
     intl
 
-# あなたが発見した方法: bcmath拡張を明示的に有効化
+# bcmath拡張を明示的に有効化
 RUN echo "extension=bcmath.so" > /usr/local/etc/php/conf.d/docker-php-ext-bcmath.ini \
     && echo "extension=pdo_pgsql.so" > /usr/local/etc/php/conf.d/docker-php-ext-pdo_pgsql.ini \
     && echo "extension=pgsql.so" > /usr/local/etc/php/conf.d/docker-php-ext-pgsql.ini
+
+# 開発用ツールをインストール
+RUN composer global require \
+    laravel/pint \
+    phpstan/phpstan \
+    && export PATH="$PATH:$HOME/.composer/vendor/bin"
+
+# MeCab（形態素解析用）
+RUN apt-get update && apt-get install -y \
+    mecab \
+    libmecab-dev \
+    mecab-ipadic-utf8 \
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Node.js 20.x をインストール
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \

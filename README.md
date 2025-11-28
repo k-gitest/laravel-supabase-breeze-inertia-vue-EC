@@ -50,6 +50,7 @@ laravel11で構築されたwebアプリケーション
 - eslint 8.57.0
 - daisyui 4.10.1
 - tailwindcss 3.2.1
+- sentry-laravel 4.19
 - supabase database/storage
 - mailtrap
 - stripe
@@ -60,6 +61,9 @@ laravel11で構築されたwebアプリケーション
 
 ```text
 /
+├── .devcontainer
+│    ├── devcontainer.json # 開発環境用の設定
+│    └── Dockerfile # 開発環境用dockerfile
 ├── app
 │    ├── Enums
 │    ├── Events
@@ -114,7 +118,8 @@ laravel11で構築されたwebアプリケーション
 ├── phpstan.neon
 ├── tailwind.config.js
 ├── tsconfig.json
-└── vite.config.js
+├── vite.config.js
+└── Dockerfile # 本番環境用dockerfile
 
 supabase <-> laravel/breeze <-> inertia/ziggy <-> vue
 route -> controller -> service -> (controller)
@@ -153,23 +158,38 @@ route -> controller -> service -> (controller)
 
 ## まとめ
 
+### Laravel 11について
 - laravelは以前に比べてディレクトリもファイルも少なく分かりやすくなった印象
 - イベントやリスナー、ポリシーなど作成するとディレクトリは結局増える
 - スリム化されたのでエイリアス設定が分かり難くなった印象
 - breezeはjetstreamやfortifyと同じくインストール時点でほぼ完成されている
 - DB接続しなくても認証できるのはデフォルトでSQLiteが設定されている
+
+### インフラ・外部サービス連携
 - 今回は使用していないがdiskのs3ドライバでsupabaseもs3互換が使えそう
-- eslintはparserでエラー、flat configに絞った方が上手くいった
 - laravelからsupabase strorageへの接続はSDKを入れるとlaravelの意味がないのでREST APIを使用した
+- sentryを導入してエラートラッキングを実装、本番環境での監視に有効
+
+### エラーハンドリング
+- sentryを導入してエラートラッキングを実装
+- bootstrap/app.phpのwithExceptionsでSentry統合
+- 既存のErrorLogServiceと併用（Sentryは本番用、storage/logs/は開発用）
+- before_sendでStripe決済情報などの機密データをフィルタリング
+
+### フロントエンド開発
+- eslintはparserでエラー、flat configに絞った方が上手くいった
 - mixからviteになっていたが、設定しないと普通に遅い
 - laravelだけでも覚える事が多くinertia/ziggyなどもあるので、フロントエンドの開発者はapi onlyで使った方が分かりやすいかも知れない
 - inertiaのPartial reloadsは検索結果表示やページネーションとの相性が悪いと感じる
 - DB処理後の更新としてrouter.reloadの使いどころは多いと感じる
-- whereHasは言われているほど遅くも重くもない
 - defineModelでオプショナルがあるとbuild時に型は通ってもInvalid assignment targetのエラーが出るので初期値を設定する必要がある
-- withException内でModelNotFoundExceptionが取得できなかったのでNotFoundHttpExceptionで代用しrenderで処理する
-- hotwire/livewireは次の機会に使ってみようと思う
 - コンボボックスはアクセシビリティ設定をした方が良い
+
+### データベース・クエリ
+- whereHasは言われているほど遅くも重くもない
+- withException内でModelNotFoundExceptionが取得できなかったのでNotFoundHttpExceptionで代用しrenderで処理する
+
+### 機械学習・自然言語処理
 - 日本語形態素解析やベクトル化は外部apiが幾つかあるが、今回はmecab、php-mlで行っている
 - 形態素解析のラッパーmecab-phpはlaravel8以降でエラーが出るのでateliee/mecabを使用する
 - php-mlのストップワードは英語なので、日本語用として幾つか設定する
@@ -179,4 +199,141 @@ route -> controller -> service -> (controller)
 - pgvector-phpではinsert/upsertが使用できないのでsaveで行っている
 - pgvectorのnearestNeighborsでL2近傍やコサイン類似などのクエリを発行できる
 - pythonの方が機械学習は前処理含めてライブラリや関数も豊富で良いとは思うが、php/laravelでも一応同じような事はできる
+
+### 今後試したいこと
+- hotwire/livewireは次の機会に使ってみようと思う
+
+## CodespacesでのLaravel環境構築
+
+### よくあるエラー: OpenSSL バージョン不一致
+
+LaravelプロジェクトをCodespacesで開発しようとした際に、以下のエラーが出る場合があります:
+```
+php: /lib/x86_64-linux-gnu/libcrypto.so.1.1: version `OPENSSL_1_1_1' not found
+```
+
+**原因**: PHPがリンクしているOpenSSLライブラリのバージョンが合っていない
+
+このエラーが出ると`php -v`も動作しません。
+
+---
+
+### 解決方法
+
+#### 方法1: devcontainer を使用（推奨）
+
+`.devcontainer/`ディレクトリに開発環境専用の設定を作成することで、自動的に正しい環境が構築されます。
+
+**ディレクトリ構成:**
+```text
+your-project/
+├── .devcontainer/
+│   ├── devcontainer.json
+│   └── Dockerfile # 開発環境用
+├── Dockerfile     # 本番環境用
+└── ...
+```
+
+**`.devcontainer/Dockerfile`:**
+```dockerfile
+FROM mcr.microsoft.com/devcontainers/php:1-8.2-bullseye
+
+# システムライブラリをインストール
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get install -y \
+    libpq-dev libzip-dev libpng-dev libjpeg-dev \
+    libfreetype6-dev libicu-dev curl \
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+# PHP拡張をビルド
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) bcmath pdo_pgsql pgsql zip gd intl
+
+# 拡張を明示的に有効化（重要）
+RUN echo "extension=bcmath.so" > /usr/local/etc/php/conf.d/docker-php-ext-bcmath.ini \
+    && echo "extension=pdo_pgsql.so" > /usr/local/etc/php/conf.d/docker-php-ext-pdo_pgsql.ini
+
+# Node.js 20.x をインストール
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs && npm install -g npm@latest
+
+# Xdebugを無効化
+RUN mv /usr/local/etc/php/conf.d/xdebug.ini \
+       /usr/local/etc/php/conf.d/xdebug.ini.disabled 2>/dev/null || true
+```
+
+**`.devcontainer/devcontainer.json`:**
+```jsonc
+{
+  "name": "Laravel 11 Development",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "postCreateCommand": "composer install && npm install",
+  "forwardPorts": [8000, 5173],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "Vue.volar",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}
+```
+
+コンテナ作成後、VSCodeで`Dev Containers: Rebuild Container`を実行してください。
+
+---
+
+#### 方法2: 手動インストール（一時的な対処）
+
+devcontainerを使わない場合、以下の手順で手動インストールできます。ただし、**コンテナを再作成するたびに再設定が必要**です。
+
+1. **PHP拡張をインストール**
+```bash
+   sudo docker-php-ext-install bcmath
+```
+   この時点では`php -m | grep bcmath`はヒットしません。
+
+2. **拡張を手動で有効化**
+```bash
+   echo "extension=bcmath" | sudo tee /usr/local/etc/php/conf.d/docker-php-ext-bcmath.ini
+```
+   この後`php -m | grep bcmath`でヒットするようになります。
+
+3. **動作確認**
+```bash
+   php -v          # バージョンが表示されればOK
+   php -m | grep bcmath  # bcmathが表示されればOK
+```
+
+4. **Composer依存関係をインストール**
+```bash
+   composer install
+```
+
+---
+
+### Node.jsのインストール
+
+Inertia/Vue開発には Node.js が必要です:
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+npm install
+```
+
+---
+
+### 注意事項
+
+- **本番環境用Dockerfile（ルート）**: 既存のDockerfileは本番環境用です。変更しないでください。
+- **開発環境用Dockerfile（.devcontainer/）**: 開発環境専用の設定です。本番には影響しません。
+- **devcontainerの利点**: 
+  - チーム全員が同じ環境で開発できる
+  - コンテナ再作成時も自動セットアップ
+  - 手動インストールの手間が不要
 
