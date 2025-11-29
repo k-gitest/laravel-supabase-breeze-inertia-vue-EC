@@ -41,6 +41,11 @@ return Application::configure(basePath: dirname(__DIR__))
     // Sentryをグローバルハンドラに登録
     Integration::handles($exceptions);
 
+    // Laravelであることを識別するタグを追加
+    \Sentry\configureScope(function (\Sentry\State\Scope $scope) {
+        $scope->setTag('platform', 'laravel');
+    });
+
     // 既存のreport処理（ErrorLogService）はローカル開発用として維持
     $exceptions->report(function (Exception $e) {
         ErrorLogService::logError($e);

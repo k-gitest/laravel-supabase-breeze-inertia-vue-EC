@@ -171,10 +171,17 @@ route -> controller -> service -> (controller)
 - sentryを導入してエラートラッキングを実装、本番環境での監視に有効
 
 ### エラーハンドリング
-- sentryを導入してエラートラッキングを実装
-- bootstrap/app.phpのwithExceptionsでSentry統合
+- Sentryを導入し、本番環境でのエラートラッキングとパフォーマンス監視を実装しています
+- laravel側では、bootstrap/app.phpのwithExceptionsでSentry統合
 - 既存のErrorLogServiceと併用（Sentryは本番用、storage/logs/は開発用）
 - before_sendでStripe決済情報などの機密データをフィルタリング
+- tagをつけてエラーを分類  
+
+| フィルタ | 説明 |
+|---------|------|
+| `platform:laravel` | Laravelバックエンドのエラー |
+| `platform:vue AND ssr:true` | Vue SSR（サーバー）のエラー |
+| `platform:vue AND ssr:false` | Vueクライアントサイド（ブラウザ）のエラー |
 
 ### フロントエンド開発
 - eslintはparserでエラー、flat configに絞った方が上手くいった
@@ -184,6 +191,7 @@ route -> controller -> service -> (controller)
 - DB処理後の更新としてrouter.reloadの使いどころは多いと感じる
 - defineModelでオプショナルがあるとbuild時に型は通ってもInvalid assignment targetのエラーが出るので初期値を設定する必要がある
 - コンボボックスはアクセシビリティ設定をした方が良い
+- sentryをresource/app.tsとssr.tsに設置しています
 
 ### データベース・クエリ
 - whereHasは言われているほど遅くも重くもない
