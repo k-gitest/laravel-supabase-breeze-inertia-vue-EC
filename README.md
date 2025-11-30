@@ -34,6 +34,32 @@ laravel11で構築されたwebアプリケーション
 
 - レコメンデーション機能 (ベクトル検索)
 
+## セットアップ
+依存関係のインストール (composer install, npm install)
+アプリ起動 (php artisan serve, npm run dev)
+開発用ストレージリンク (php artisan storage:link)
+データベースマイグレーション (php artisan migrate)
+
+## アーキテクチャ
+
+### レイヤー構成
+```
+Route → Controller → Service → Model
+                    ↓
+                 Repository（未使用）
+```
+
+**サービス層の方針**:
+- ビジネスロジックとEloquentクエリを集約
+- リポジトリパターンは未採用（理由：現状のクエリ複雑度では過剰な抽象化）
+- 今後の方針：同じクエリが3箇所以上で重複したらリポジトリ化を検討
+
+### 認可の設計
+- **ロール認可**: Gate（admin/userの判定）
+- **所有者認可**: Policy（user_idチェック）
+- **ガード認可**: Middleware（web/adminガード切り替え）
+- **DB認可**: Supabase RLS
+
 ## 開発環境
 
 - php 8.2
@@ -155,6 +181,100 @@ route -> controller -> service -> (controller)
 - supabaseとmailtrapとstripeのenv設定
 - 検索サジェストの実装、商品名の予測表示、コンボボックスの実装
 - ベクトルで商品のレコメンデーション表示を実装
+
+## 開発上の注意点
+
+### inertiaでputやdeleteでfile送信する場合
+inertiaのフォームを使用してputやdeleteで画像などfileをアップロードするために送信するとエラーになる
+正確には画像などfileを含む送信はエラーにならずなにも送信されなくなる。fileを含めなければputやdeleteも使用できる
+
+原因としては、inertiaはファイルを含むフォームデータがJSON形式ではなく、マルチパート形式で送信されるため。
+
+対処法としては、
+- postで送信する、routeもpostに変更する
+- メソッドはpost、headerでputに変更し、routeはputのままで良い
+- useFormデータ内に、_method: "PUT",を含める
+
+headerでputにする場合、
+```php
+headers: {
+        'X-HTTP-Method-Override': 'PUT'
+      },
+```
+
+- _method: "PUT",とする場合、当然だがこの_method: "PUT",もキーと値として送信される
+- 結論として、Inertiaのフォーム内で **_method: "PUT"** を使用するか、もしくは headers: {'X-HTTP-Method-Override': 'PUT'} を設定する方法が推奨されます
+
+### larastanの設定
+larastanはLaravelに特化した静的解析ツール、PHPStanをベースにしている
+
+インストール
+```bash
+$ composer require nunomaduro/larastan --dev
+```
+
+設定ファイル
+```bash
+$ touch phpstan.neon
+```
+
+実行
+```bash
+$ ./vendor/bin/phpstan analyse
+```
+
+### Stripe WebhookのCSRF保護除外
+Stripeなどの外部サービスから送信されるWebhook（サーバーへの通知）は、セキュリティ上の理由からCSRFトークンを持ちません  
+LaravelのCSRF保護機能がこれらのリクエストをブロックしないよう、該当のエンドポイントを認証から明示的に除外しています  
+エンドポイントをstripe/webhookとして、stripe/*以下をcsrf認証から外しておく  
+bootstrapのappで以下を記載する
+
+```php
+$middleware->validateCsrfTokens(except: [
+        'stripe/*',
+    ]);
+```
+
+## レコメンデーション実装
+1. レコメンデーションのアルゴリズム
+商品名や説明文をベクトルに変換し、その近似値 (類似度) によって類似製品のレコメンデーションを表示します。
+
+**日本語形態素解析**: MeCab (ateliee/mecab) を使用し、テキストを単語(トークン)に分割。
+
+**特徴量抽出**: php-ml を使用し、以下の手法でベクトル化
+
+- TokenCountVectorizer (トークンカウント)
+
+- TfIdfTransformer (TF-IDF変換)
+
+**ベクトルの次元**: 500次元に固定長として設定。足りない場合は0埋めを行います。
+
+2. MeCab (ateliee/mecab) の使用
+日本語解析にはMeCabが必要です。OSへのインストール時、文字化け防止のためUTF-8で言語設定を行います。Laravel8以降で互換性のある ateliee/mecabを使用します。
+**注意点**: php-mlのストップワード機能は主に英語用であるため、MeCabで解析したトークンに対し、別途定義した日本語ストップワードの除外処理を行っています。
+
+3. pgvector によるベクトルデータの永続化
+ベクトルデータをPostgreSQLに効率的に保存し、類似性検索を可能にするため、pgvector拡張機能とpgvector-phpライブラリを使用しています。
+
+**Supabase設定**: ダッシュボードのExtensionsでpgvectorを有効化する際、マイグレーションエラーを避けるためpublicスキーマにインストールしています。
+
+**Laravelでの保存**: pgvector-phpの制約により、ベクトル型のカラムはEloquentのsaveメソッドでのみ保存可能です（insert / upsert は使用不可）。
+
+**インデックス**: HNSWやIVFFlatなどのインデックスを作成することで、類似検索のパフォーマンスを向上させています。
+
+4. 非同期処理 (Job Queue)
+ベクトル変換処理は時間がかかるため、商品登録とは非同期で処理を行うためジョブキューを使用しています。
+
+**Job**: VectorizeProductジョブを作成し、新規登録サービスからディスパッチしています。
+
+5. ベクトル検索 (pgvector-php)
+保存されたベクトルは、L2 DistanceやCosine類似度などの距離関数を使用して類似検索を行います。
+```php
+use Pgvector\Laravel\Distance;
+
+// L2距離で最も近い5件のアイテムを取得
+$neighbors = Item::query()->nearestNeighbors('embedding', $queryVector, Distance::L2)->take(5)->get();
+```
 
 ## まとめ
 
