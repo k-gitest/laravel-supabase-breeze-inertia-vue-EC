@@ -35,10 +35,20 @@ laravel11で構築されたwebアプリケーション
 - レコメンデーション機能 (ベクトル検索)
 
 ## セットアップ
-依存関係のインストール (composer install, npm install)
-アプリ起動 (php artisan serve, npm run dev)
-開発用ストレージリンク (php artisan storage:link)
-データベースマイグレーション (php artisan migrate)
+```bash
+# 依存関係のインストール
+composer install
+npm install
+
+# アプリ起動
+php artisan serve  # http://localhost:8000
+npm run dev        # http://localhost:5173
+
+# データベース
+php artisan migrate
+php artisan storage:link
+```
+詳細は [SETUP.md](./SETUP.md) を参照してください。
 
 ## アーキテクチャ
 
@@ -158,29 +168,25 @@ route -> controller -> service -> (controller)
 - イベント・リスナー・プロバイダーは自動的にbootstrap追加される
 - スケジューラーのkernelが削除されroutes/consoleとbootsrap/appで行う
 
-## 用意
-- todoのCRUD画面、コンタクトフォーム、画像アップローダー
-- todo_listsテーブル、contactsテーブル、imageバケット
-- EC追加、商品CRUD画面、画像アップローダー・プレビュ
-- categories, products, images, carts, usersの各テーブル
-- stripeによる決済、laravel cashierを追加する
-- PaymentIntentとCard Elementを使用、webhookで結果を受け取る
-- Orders,OrderItemsテーブルを追加する、決済／履歴画面追加する
-- productsを中心としたリレーション
-- マルチログイン追加、adminsテーブル追加
-- comments, favoritesテーブル追加、コメント投稿とお気に入り画面追加
-- stocks, warehousesテーブル追加、在庫と倉庫画面追加
-- メールマガジン登録、ジョブキューとスケジュール処理追加
-- テキスト、カテゴリ、店舗在庫、価格帯の検索追加、ページネーション追加
-- 上記の検索結果をソートする機能を追加
-- roleはGateで認可、user_idはpolicyで認可、ガードはミドルウェアで認可、DBはRLS
-- Enumで定数バリデーション、ビュー側への定数はconfig/constantsで設定
-- ビジネスロジックとクエリはサービスへ、リポジトリは現状使用していない
-- コードや型チェックでlarastanとeslint、eslintはflat config
-- tailwindとdaisyUIでスタイル設定
-- supabaseとmailtrapとstripeのenv設定
-- 検索サジェストの実装、商品名の予測表示、コンボボックスの実装
-- ベクトルで商品のレコメンデーション表示を実装
+## データベース設計
+
+### テーブル構成（15テーブル）
+
+**ユーザー関連**:
+- users, admins
+
+**EC機能**:
+- products, categories, images
+- carts, orders, order_items
+
+**在庫管理**:
+- stocks, warehouses
+
+**ユーザー機能**:
+- comments, favorites
+
+**その他**:
+- todo_lists, contacts
 
 ## 開発上の注意点
 
@@ -236,9 +242,26 @@ $middleware->validateCsrfTokens(except: [
 ```
 
 ## レコメンデーション実装
-1. レコメンデーションのアルゴリズム
-商品名や説明文をベクトルに変換し、その近似値 (類似度) によって類似製品のレコメンデーションを表示します。
 
+### なぜこの実装を選んだか
+
+**通常のアプローチ**:
+- Pythonライブラリなど
+- 外部API（OpenAI Embeddings、Cohere等）
+
+**このプロジェクトでの選択**:
+- Laravel（PHP）環境で完結させたい
+- 外部APIコストを避けたい
+- Supabase PostgreSQL（pgvector）を活用したい
+- 学習目的でPHP環境での機械学習を試したい
+
+→ **PHP + MeCab + php-ml + pgvectorという構成**
+
+### 実装の概要
+
+商品名や説明文をベクトルに変換し、類似度によって類似製品のレコメンデーションを表示します。
+
+1. レコメンデーションのアルゴリズム
 **日本語形態素解析**: MeCab (ateliee/mecab) を使用し、テキストを単語(トークン)に分割。
 
 **特徴量抽出**: php-ml を使用し、以下の手法でベクトル化
@@ -252,6 +275,68 @@ $middleware->validateCsrfTokens(except: [
 2. MeCab (ateliee/mecab) の使用
 日本語解析にはMeCabが必要です。OSへのインストール時、文字化け防止のためUTF-8で言語設定を行います。Laravel8以降で互換性のある ateliee/mecabを使用します。
 **注意点**: php-mlのストップワード機能は主に英語用であるため、MeCabで解析したトークンに対し、別途定義した日本語ストップワードの除外処理を行っています。
+
+#### 日本語トークンのクレンジング処理
+
+**課題**: MeCabの出力には不要な文字・記号が含まれる
+
+**実装した正規表現**:
+```php
+preg_match('/^[\p{L}\p{N}ー々〆〤]+$/u', $token)
+```
+
+**この正規表現の意味**:
+- `\p{L}`: すべての文字（Unicode対応）
+- `\p{N}`: すべての数字
+- `ー`: 長音記号（カタカナ用）
+- `々`: 踊り字（「人々」「時々」等）
+- `〆`: 締め字（「〆切」等）
+- `〤`: 日本語記号
+
+**なぜこれが必要か**:
+- MeCabは「人々」を「人」「々」に分割する
+- 「々」を除外すると「人」だけになり意味が変わる
+- 日本語特有の文字を残す必要がある
+
+**試行錯誤**:
+1. 最初: `preg_match('/^[ぁ-ん]+$/u')` → カタカナ・漢字が除外される
+2. 次: `preg_match('/^[\p{Hiragana}\p{Katakana}\p{Han}]+$/u')` → 「ー」が除外される
+3. 最終: 上記の形（日本語特有文字を個別に追加）
+
+---
+
+#### ストップワードの自前実装
+
+**課題**: php-mlのStopWords\Englishは日本語に対応していない
+
+**実装したストップワード**:
+```php
+$this->stopwords = [
+    'これ', 'は', 'です', 'の', 'を', 'が', 'に', 'と', 'も', 'し', 
+    'ます', 'た', 'り', 'な', 'で', 'ない', 'か', 'いう', 'こと',
+    '。', '、', '「', '」', '（', '）'  // 句読点・括弧も除外
+];
+```
+
+**選定基準**:
+- 助詞: 「は」「が」「を」「に」等（文法的機能のみ、意味なし）
+- 補助動詞: 「ます」「です」「た」等（丁寧表現、意味に寄与しない）
+- 代名詞: 「これ」「それ」等（文脈依存、商品説明では無意味）
+- 記号: 句読点、括弧（TF-IDFの計算を歪める）
+
+**検証方法**:
+```php
+// 実際の商品説明で検証
+$text = "この商品は高品質な素材を使用しています。";
+$tokens = $this->tokenizeText($text);
+// 期待: ['商品', '高品質', '素材', '使用']
+// 除外: ['この', 'は', 'を', 'います', '。']
+```
+
+**妥協点**:
+- 実際の商品データで頻出する無意味語を手動追加
+- 完全なストップワードリストは1000語以上
+- 現状30語程度（パフォーマンスと精度のバランス）
 
 3. pgvector によるベクトルデータの永続化
 ベクトルデータをPostgreSQLに効率的に保存し、類似性検索を可能にするため、pgvector拡張機能とpgvector-phpライブラリを使用しています。
@@ -327,141 +412,27 @@ $neighbors = Item::query()->nearestNeighbors('embedding', $queryVector, Distance
 - pgvector-phpではinsert/upsertが使用できないのでsaveで行っている
 - pgvectorのnearestNeighborsでL2近傍やコサイン類似などのクエリを発行できる
 - pythonの方が機械学習は前処理含めてライブラリや関数も豊富で良いとは思うが、php/laravelでも一応同じような事はできる
+- **効果検証が不十分**: 次元数500はphp-mlのサンプルを参考にした程度
+- **精度の定量評価なし**: 手動で目視確認のみ
+- **ベンチマーク未実施**: 大規模データでの性能は未検証
+- **英語商品未対応**: MeCabは日本語専用
 
-### 今後試したいこと
-- hotwire/livewireは次の機会に使ってみようと思う
+### 未実装・今後の課題
 
-## CodespacesでのLaravel環境構築
+#### テスト
+- 決済フローのFeature Test（Stripe Mock使用）
+- ベクトル変換のUnit Test
+- E2Eテスト（Playwright導入検討）
 
-### よくあるエラー: OpenSSL バージョン不一致
+#### パフォーマンス
+- Redis導入（キャッシュ戦略）
+- laravel/telescope導入（N+1監視）
+- ベクトル検索のベンチマーク測定
+- **常駐型サーバーによる高速化の検討**
+    - **Laravel Octane / RoadRunner (または Swoole)** の導入検討
+    - **状態残留リスクの調査とリセット戦略**の確立（`RequestTerminated`イベントの利用検討を含む）
 
-LaravelプロジェクトをCodespacesで開発しようとした際に、以下のエラーが出る場合があります:
-```
-php: /lib/x86_64-linux-gnu/libcrypto.so.1.1: version `OPENSSL_1_1_1' not found
-```
-
-**原因**: PHPがリンクしているOpenSSLライブラリのバージョンが合っていない
-
-このエラーが出ると`php -v`も動作しません。
-
----
-
-### 解決方法
-
-#### 方法1: devcontainer を使用（推奨）
-
-`.devcontainer/`ディレクトリに開発環境専用の設定を作成することで、自動的に正しい環境が構築されます。
-
-**ディレクトリ構成:**
-```text
-your-project/
-├── .devcontainer/
-│   ├── devcontainer.json
-│   └── Dockerfile # 開発環境用
-├── Dockerfile     # 本番環境用
-└── ...
-```
-
-**`.devcontainer/Dockerfile`:**
-```dockerfile
-FROM mcr.microsoft.com/devcontainers/php:1-8.2-bullseye
-
-# システムライブラリをインストール
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y \
-    libpq-dev libzip-dev libpng-dev libjpeg-dev \
-    libfreetype6-dev libicu-dev curl \
-    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
-
-# PHP拡張をビルド
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) bcmath pdo_pgsql pgsql zip gd intl
-
-# 拡張を明示的に有効化（重要）
-RUN echo "extension=bcmath.so" > /usr/local/etc/php/conf.d/docker-php-ext-bcmath.ini \
-    && echo "extension=pdo_pgsql.so" > /usr/local/etc/php/conf.d/docker-php-ext-pdo_pgsql.ini
-
-# Node.js 20.x をインストール
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs && npm install -g npm@latest
-
-# Xdebugを無効化
-RUN mv /usr/local/etc/php/conf.d/xdebug.ini \
-       /usr/local/etc/php/conf.d/xdebug.ini.disabled 2>/dev/null || true
-```
-
-**`.devcontainer/devcontainer.json`:**
-```jsonc
-{
-  "name": "Laravel 11 Development",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
-  "postCreateCommand": "composer install && npm install",
-  "forwardPorts": [8000, 5173],
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "bmewburn.vscode-intelephense-client",
-        "Vue.volar",
-        "bradlc.vscode-tailwindcss"
-      ]
-    }
-  },
-  "remoteUser": "vscode"
-}
-```
-
-コンテナ作成後、VSCodeで`Dev Containers: Rebuild Container`を実行してください。
-
----
-
-#### 方法2: 手動インストール（一時的な対処）
-
-devcontainerを使わない場合、以下の手順で手動インストールできます。ただし、**コンテナを再作成するたびに再設定が必要**です。
-
-1. **PHP拡張をインストール**
-```bash
-   sudo docker-php-ext-install bcmath
-```
-   この時点では`php -m | grep bcmath`はヒットしません。
-
-2. **拡張を手動で有効化**
-```bash
-   echo "extension=bcmath" | sudo tee /usr/local/etc/php/conf.d/docker-php-ext-bcmath.ini
-```
-   この後`php -m | grep bcmath`でヒットするようになります。
-
-3. **動作確認**
-```bash
-   php -v          # バージョンが表示されればOK
-   php -m | grep bcmath  # bcmathが表示されればOK
-```
-
-4. **Composer依存関係をインストール**
-```bash
-   composer install
-```
-
----
-
-### Node.jsのインストール
-
-Inertia/Vue開発には Node.js が必要です:
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
-npm install
-```
-
----
-
-### 注意事項
-
-- **本番環境用Dockerfile（ルート）**: 既存のDockerfileは本番環境用です。変更しないでください。
-- **開発環境用Dockerfile（.devcontainer/）**: 開発環境専用の設定です。本番には影響しません。
-- **devcontainerの利点**: 
-  - チーム全員が同じ環境で開発できる
-  - コンテナ再作成時も自動セットアップ
-  - 手動インストールの手間が不要
+#### ドキュメント
+- API仕様書
+- デプロイ手順書
 
