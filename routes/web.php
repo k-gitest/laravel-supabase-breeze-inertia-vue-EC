@@ -18,11 +18,13 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+/*
 Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/contact', [AdminContactController::class, 'index'])->name('admin.contact.index');
     Route::get('/admin/contact/show/{id}', [AdminContactController::class, 'show'])->name('admin.contact.show');
     Route::delete('/admin/contact/destroy', [AdminContactController::class, 'destroy'])->name('admin.contact.destroy');
 });
+*/
 
 Route::get('/contact', [ContactController::class, 'create'])->name('contact.create');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
@@ -49,5 +51,5 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
-require __DIR__.'/ec.php';
 require __DIR__.'/admin.php';
+require __DIR__.'/ec.php';

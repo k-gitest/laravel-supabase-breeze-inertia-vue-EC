@@ -64,7 +64,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth:admi
     Route::delete('/warehouse/delete', [AdminWarehouseController::class, 'destroy'])->name('warehouse.destroy');
 
     Route::get('/product/search', [AdminSearchController::class, 'index'])->name('search');
-    
+
+    Route::get('/admin/contact', [AdminContactController::class, 'index'])->name('admin.contact.index');
+    Route::get('/admin/contact/show/{id}', [AdminContactController::class, 'show'])->name('admin.contact.show');
+    Route::delete('/admin/contact/destroy', [AdminContactController::class, 'destroy'])->name('admin.contact.destroy');
 });
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => 'auth:admin'], function (){
