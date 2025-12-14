@@ -23,14 +23,23 @@ class FavoriteService
             'product_id' => 'required|integer',
         ]);
 
+        $userId = auth()->user()->id;
+        $productId = $request->product_id;
+
         try {
-            DB::transaction(function () use ($request) {
-                Favorite::create([
-                    'user_id' => auth()->user()->id,
-                    'product_id' => $request->product_id,
-                ]);
+            $favorite = DB::transaction(function () use ($request, $userId, $productId) {
+                $result = Favorite::firstOrCreate([
+                        'user_id' => $userId,
+                        'product_id' => $productId
+                    ]);
+                return $result;
             });
-            Log::info('Favorite created');
+            if ($favorite->wasRecentlyCreated) {
+                Log::info('Favorite created', ['user_id' => $userId, 'product_id' => $productId]);
+            } else {
+                // 既に存在していた場合
+                Log::warning('Attempted to add existing favorite.', ['user_id' => $userId, 'product_id' => $productId]);
+            }
         } catch (\Exception $e) {
             report($e);
             throw $e;
@@ -39,13 +48,17 @@ class FavoriteService
 
     public function removeFavorite($userId, $id)
     {
-        $favorite = Favorite::where('user_id', $userId)->findOrFail($id);
-
         try {
-            DB::transaction(function () use ($favorite) {
-                $favorite->delete();
-            });
-            Log::info('Favorite deleted');
+            $deletedCount = Favorite::where('user_id', $userId)
+                                    ->where('id', $id)
+                                    ->delete(); 
+    
+            if ($deletedCount === 0) {
+                // 削除対象がなければ、404レスポンスを自動生成させるための例外を投げる
+                throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Favorite not found or does not belong to user.');
+            }
+    
+            Log::info('Favorite deleted', ['user_id' => $userId, 'id' => $id]);
         } catch (\Exception $e) {
             report($e);
             throw $e;
