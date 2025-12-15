@@ -26,6 +26,7 @@ class CommentController extends Controller
      */
     public function index(): Response
     {
+        $user_id = auth()->user()->id;
         $comments = $this->commentService->getComments();
 
         return Inertia::render('EC/CommentIndex', [
@@ -38,14 +39,21 @@ class CommentController extends Controller
      */
     public function store(Request $request): RedirectResponse|bool
     {
-        $request->validate([
+        $validated = $request->validate([
             'product_id' => 'required|integer',
             'title' => 'required|string',
             'comment' => 'required|string|max:255',
         ]);
 
+        $data = [
+            'user_id' => auth()->id(),
+            'product_id' => $validated['product_id'],
+            'title' => $validated['title'],
+            'content' => $validated['comment'], 
+        ];
+
         try {
-            $this->commentService->createComment($request);
+            $this->commentService->createComment($data);
         } catch (\Exception $e) {
             report($e);
             return false;
@@ -57,20 +65,16 @@ class CommentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Comment $comment, $id): RedirectResponse
+    public function destroy(Comment $comment): RedirectResponse
     {
         Gate::authorize('isGeneral');
-
-        $user_id = auth()->user()->id;
-        $comment = $this->commentService->getCommentById($user_id, $id);
-
         Gate::authorize('delete', $comment);
 
         try {
-            $this->commentService->deleteComment($user_id, $id);
+            $this->commentService->deleteComment($comment->id); 
         } catch (\Exception $e) {
             report($e);
-            return false;
+            return back()->with('error', 'コメントの削除に失敗しました。');
         }
 
         return redirect()->route('comment.index')->with('success', 'コメントを削除しました');

@@ -9,41 +9,34 @@ use App\Models\Comment;
 
 class CommentService
 {
-    public function getComments()
+    public function getComments(int $user_id)
     {
         return Comment::with('product')
-            ->where('user_id', auth()->id())
+            ->where('user_id', $user_id)
             ->orderBy('updated_at', 'desc')
             ->paginate(12);
     }
 
-    public function createComment(Request $request)
+    public function createComment(array $data)
     {
-        DB::transaction(function () use ($request) {
-            Comment::create([
-                'user_id' => auth()->user()->id,
-                'product_id' => $request->product_id,
-                'title' => $request->title,
-                'content' => $request->comment,
-            ]);
-        });
+        $comment = Comment::create([
+            'user_id'    => $data['user_id'],
+            'product_id' => $data['product_id'],
+            'title'      => $data['title'],
+            'content'    => $data['content'],
+        ]);
 
-        Log::info('Comment created');
+        Log::info('Comment created', ['comment_id' => $comment->id, 'user_id' => $data['user_id']]);
     }
 
-    public function deleteComment($user_id, $id)
+    public function deleteComment(int $commentId)
     {
-        $comment = Comment::where('user_id', $user_id)->findOrFail($id);
+        $deleted = Comment::where('id', $commentId)->delete();
 
-        DB::transaction(function () use ($comment) {
-            $comment->delete();
-        });
-
-        Log::info('Comment deleted');
-    }
-
-    public function getCommentById($user_id, $id)
-    {
-        return Comment::where('user_id', $user_id)->findOrFail($id);
+        if ($deleted) {
+            Log::info('Comment deleted', ['comment_id' => $commentId]);
+            return true;
+        }
+        return false;
     }
 }
