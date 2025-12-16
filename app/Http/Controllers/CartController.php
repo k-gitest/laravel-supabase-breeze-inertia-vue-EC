@@ -42,7 +42,7 @@ class CartController extends Controller
   public function store(CartRequest $request): RedirectResponse
   {
     try {
-        $this->cartService->createCart($request);
+        $this->cartService->createCart($request->validated());
     } catch (\Exception $e) {
         report($e);
         return false;
@@ -73,7 +73,7 @@ class CartController extends Controller
     Gate::authorize('update', $this->cartService->getCartItem($id));
 
     try {
-        $this->cartService->updateCart($request, $id);
+        $this->cartService->updateCart($request->validated(), $id);
     } catch (\Exception $e) {
         report($e);
         return false;

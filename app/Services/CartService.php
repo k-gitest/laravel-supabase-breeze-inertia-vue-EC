@@ -17,6 +17,7 @@ class CartService
 
     public function getTotalPrices($result)
     {
+        /*
         $total_price_excluding_tax = 0;
         $total_price_including_tax = 0;
 
@@ -29,17 +30,22 @@ class CartService
             'total_price_excluding_tax' => $total_price_excluding_tax,
             'total_price_including_tax' => $total_price_including_tax,
         ];
+        */
+        return [
+            'total_price_excluding_tax' => $items->sum(fn ($item) => $item->quantity * $item->product->price_excluding_tax),
+            'total_price_including_tax' => $items->sum(fn ($item) => $item->quantity * $item->product->price_including_tax),
+        ];
     }
 
-    public function createCart(CartRequest $request)
+    public function createCart(array $data)
     {
         $userId = auth()->id();
 
-        DB::transaction(function () use ($request, $userId) {
+        DB::transaction(function () use ($data, $userId) {
             Cart::create([
                 'user_id' => $userId,
-                'product_id' => $request->product_id,
-                'quantity' => $request->quantity,
+                'product_id' => $data['product_id'],
+                'quantity' => $data['quantity'],
             ]);
         });
 
@@ -48,13 +54,13 @@ class CartService
 
     public function getCartItem($id)
     {
-        return Cart::with(['product.image'])->findOrFail($id);
+        return Cart::where('user_id', auth()->id())->findOrFail($id);
     }
 
-    public function updateCart(CartRequest $request, $id)
+    public function updateCart(array $data, $id)
     {
-        $cart = Cart::findOrFail($id);
-        $cart->quantity = $request->quantity;
+        $cart = Cart::where('user_id', auth()->id())->findOrFail($id);
+        $cart->quantity = $data['quantity'];
 
         DB::transaction(function () use ($cart) {
             if ($cart->isDirty()) {
@@ -67,7 +73,7 @@ class CartService
 
     public function deleteCart($id)
     {
-        $cart = Cart::findOrFail($id);
+        $cart = Cart::where('user_id', auth()->id())->findOrFail($id);
 
         DB::transaction(function () use ($cart) {
             $cart->delete();
