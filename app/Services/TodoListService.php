@@ -18,20 +18,28 @@ class TodoListService
     public function createTodoList(TodoRequest $request)
     {
         $userId = auth()->id(); 
-        
-        DB::transaction(function () use ($request, $userId) {
-            $todoList = TodoList::create([
-              'name' => $request->name,
-              'user_id' => $userId,
-            ]);
-          });
-        
-        Log::info('TodoList create succeeded');
+        try{
+            DB::transaction(function () use ($request, $userId) {
+                $todoList = TodoList::create([
+                  'name' => $request->name,
+                  'user_id' => $userId,
+                ]);
+              });
+            
+            Log::info('TodoList create succeeded', ['id' => $todoList->id]);
+            return $todoList;
+        }
+        catch(\Exception $e){
+            report($e);
+            Log::error('TodoList create FAILED.', ['user_id' => $userId, 'error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     public function getTodoListItem(int $id)
     {
-        return TodoList::findOrFail($id);
+        // 認証ユーザーが所有するレコードに限定する
+        return TodoList::where('user_id', auth()->id())->findOrFail($id);
     }
 
     public function updateTodoList(TodoRequest $request, int $id)
