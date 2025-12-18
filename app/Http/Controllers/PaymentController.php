@@ -30,6 +30,10 @@ class PaymentController extends Controller
     $userEmail = auth()->user()->email;
     $result = Cart::with(['product.image'])->where('user_id', $userId)->get();
 
+    if ($result->isEmpty()) {
+        return redirect()->route('cart.index')->with('error', 'カートが空です');
+    }
+
     $totalPrice = $cartService->getTotalPrices($result);
 
     $warehouseId = config('services.stripe.warehouse_id');
