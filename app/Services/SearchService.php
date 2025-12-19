@@ -11,8 +11,10 @@ class SearchService
     public function searchProducts($request)
     {
         $sort = $request->query('sort_option', 'newest');
-        $sortOptions = SortOption::tryFrom($sort)->values() ?? SortOption::tryFrom('newest')->values();
-        list($sortField, $sortDirection) = $sortOptions;
+        #$sortOptions = SortOption::tryFrom($sort)->values() ?? SortOption::tryFrom('newest')->values();
+        #list($sortField, $sortDirection) = $sortOptions;
+        $option = SortOption::tryFrom($sort) ?? SortOption::newest;
+        [$sortField, $sortDirection] = $option->values();
 
         $categoryIds = $request->query('category_ids', []);
         $searchTerm = $request->query('q');
