@@ -71,7 +71,7 @@ class CommentController extends Controller
         Gate::authorize('delete', $comment);
 
         try {
-            $this->commentService->deleteComment($comment->id); 
+            $this->commentService->deleteComment($comment); 
         } catch (\Exception $e) {
             report($e);
             return back()->with('error', 'コメントの削除に失敗しました。');

@@ -29,14 +29,14 @@ class CommentService
         Log::info('Comment created', ['comment_id' => $comment->id, 'user_id' => $data['user_id']]);
     }
 
-    public function deleteComment(int $commentId)
+    public function deleteComment(Comment $comment): void
     {
-        $deleted = Comment::where('id', $commentId)->delete();
-
-        if ($deleted) {
-            Log::info('Comment deleted', ['comment_id' => $commentId]);
-            return true;
+        // $deleted = Comment::where('id', $comment->id)->delete();
+        // すでにコントローラーで認可済みなので、ここでは削除に専念
+        if (!$comment->delete()) {
+            throw new \Exception("Failed to delete comment ID: {$comment->id}");
+            // return true;
         }
-        return false;
+        Log::info('Comment deleted', ['comment_id' => $comment->id]);
     }
 }
