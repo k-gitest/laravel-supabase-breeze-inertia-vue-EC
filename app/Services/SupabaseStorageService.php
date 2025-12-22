@@ -13,7 +13,7 @@ class SupabaseStorageService
     protected $apiKey;
     protected $contactsBucket;
     protected $productsBucket;
-    protected $storage_endpoint;
+    protected $storageEndpoint;
     protected $product_path;
   
     /**
