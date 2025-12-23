@@ -10,10 +10,9 @@ class SearchService
 {
     public function searchProducts($request)
     {
-        $sort = $request->query('sort_option', 'newest');
-        #$sortOptions = SortOption::tryFrom($sort)->values() ?? SortOption::tryFrom('newest')->values();
-        #list($sortField, $sortDirection) = $sortOptions;
-        $option = SortOption::tryFrom($sort) ?? SortOption::newest;
+        // 入力が何であれ、確実に有効な Enum を取得する
+        $option = SortOption::tryFrom($request->query('sort_option')) ?? SortOption::newest;
+        // Enum からソート用の設定を取り出す
         [$sortField, $sortDirection] = $option->values();
 
         $categoryIds = $request->query('category_ids', []);
