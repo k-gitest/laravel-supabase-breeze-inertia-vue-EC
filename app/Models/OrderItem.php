@@ -24,6 +24,11 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
     public function serializeDate(DateTimeInterface $date)
     {
         return Carbon::instance($date)->format('Y年m月d日H時i分');
