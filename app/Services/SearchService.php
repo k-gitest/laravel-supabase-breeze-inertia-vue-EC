@@ -20,10 +20,20 @@ class SearchService
         $priceRangeKeys = $request->query('price_range', []);
         $warehouseCheck = $request->query('warehouse_check', false);
 
-        $query = Product::with(['category', 'image', 'favorite', 'stock'])
+        $query = Product::with(['category', 'image', 'favorite'])
             ->orderBy($sortField, $sortDirection)
-            ->withSum('stock', 'quantity')
             ->withCount('favorite');
+
+        if ($warehouseCheck === "true") {
+            $query->withSum('stock', 'quantity');
+        } else {
+            $warehouseId = config('constants.NET_WAREHOUSE_ID');
+            $query->withSum(['stock' => function ($query) use ($warehouseId) {
+                if ($warehouseId) {
+                    $query->where('warehouse_id', $warehouseId);
+                }
+            }], 'quantity');
+        }
 
         if (!empty($categoryIds)) {
             $query->whereIn('category_id', $categoryIds);
@@ -38,7 +48,8 @@ class SearchService
         if (!empty($priceRangeKeys)) {
             $query->where(function ($query) use ($priceRangeKeys) {
                 foreach ($priceRangeKeys as $key) {
-                    $priceRange = PriceRange::fromRequestKey($key);
+                    $priceRange = PriceRange::tryFrom($key);
+                    if (!$priceRange) continue;
                     [$min, $max] = $priceRange->values();
 
                     if ($max === null) {
@@ -48,17 +59,6 @@ class SearchService
                     }
                 }
             });
-        }
-
-        if ($warehouseCheck === "true") {
-            $query->withSum('stock', 'quantity');
-        } else {
-            $warehouseId = config('constants.NET_WAREHOUSE_ID');
-            $query->withSum(['stock' => function ($query) use ($warehouseId) {
-                if ($warehouseId) {
-                    $query->where('warehouse_id', $warehouseId);
-                }
-            }], 'quantity');
         }
 
         return $query->paginate(12)->withQueryString();
