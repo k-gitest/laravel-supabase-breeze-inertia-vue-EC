@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Enums\PriceRange;
 use App\Enums\SortOption;
+use Illuminate\Validation\Rules\Enum;
 
 class SearchRequest extends FormRequest
 {
@@ -23,6 +24,7 @@ class SearchRequest extends FormRequest
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     protected function prepareForValidation() {
+        /*
         $value = $this->warehouse_check;
 
         if ($value === 'false') {
@@ -33,10 +35,15 @@ class SearchRequest extends FormRequest
         $this->merge([
             'warehouse_check' => $value,
         ]);
+        */
+        $this->merge([
+            'warehouse_check' => $this->boolean('warehouse_check'),
+        ]);
     }
     
     public function rules(): array
     {
+        /*
         $priceRanges = array_column(PriceRange::cases(), 'value');
         $sortOptions = array_column(SortOption::cases(), 'value');
         
@@ -45,6 +52,20 @@ class SearchRequest extends FormRequest
             'category_ids.*' => ['numeric', 'exists:categories,id'],
             'q' => ['nullable', 'string', 'max:255'],
             'price_range.*' => [Rule::in($priceRanges)],
+            'warehouse_check' => ['boolean'],
+        ];
+        */
+        return [
+            'sort_option'     => ['nullable', new Enum(SortOption::class)],
+            
+            'category_ids'    => ['nullable', 'array'],
+            'category_ids.*'  => ['numeric', 'exists:categories,id'],
+            
+            'q'               => ['nullable', 'string', 'max:255'],
+            
+            'price_range'     => ['nullable', 'array'],
+            'price_range.*'   => ['required', new Enum(PriceRange::class)],
+            
             'warehouse_check' => ['boolean'],
         ];
     }
