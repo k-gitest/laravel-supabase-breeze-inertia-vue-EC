@@ -19,19 +19,20 @@ class SearchController extends Controller
     
   public function index(SearchRequest $request): Response
   {
-      $result = $this->searchService->searchProducts($request);
+      $validated = $request->validated();
+      $result = $this->searchService->searchProducts($validated);
       $search_price_ranges = config('constants.PRICE_RANGES');
 
       return Inertia::render('EC/ProductAllList', [
           "pagedata" => $result,
           'price_ranges' => $search_price_ranges,
-          'filters'  => [
-              'category_ids' => $request->query('category_ids', []),
-              'q'  => $request->query('q'),
-              'price_range' => $request->query('price_range', []),
-              'warehouse_check' => $request->query('warehouse_check', false),
-              'sort_option' => $request->query('sort_option', 'newest'),
-          ],
+          'filters'      => array_merge([
+                'sort_option'     => 'newest',
+                'category_ids'    => [],
+                'q'               => '',
+                'price_range'     => [],
+                'warehouse_check' => false,
+            ], $validated),
       ]);
   }
   
