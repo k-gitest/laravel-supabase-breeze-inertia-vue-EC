@@ -29,14 +29,15 @@ class ContactController extends Controller
   
   public function store(Request $request): RedirectResponse|bool
   {    
-    $request->validate([
+    $validated = $request->validate([
         'name' => 'required|string|max:100',
         'email' => 'required|email|max:255',
         'message' => 'required|string|max:255',
     ]);
 
     try {
-        $this->contactService->createContact($request);
+        // (ヘッダー情報等が必要なため $request も一緒に渡す)
+        $this->contactService->createContact($validated, $request);
     } catch (\Exception $e) {
         report($e);
         return false;

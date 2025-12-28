@@ -18,7 +18,7 @@ class ContactService
         $this->adminImageService = $adminImageService;
     }
 
-    public function createContact(Request $request)
+    public function createContact(array $data, Request $request)
     {
         $filenames = $this->adminImageService->handleContactImageUploads($request);
 
@@ -26,11 +26,11 @@ class ContactService
         $device = ($chua_mobile === '?0') ? "desktop" : (($chua_mobile === null) ? "unknown" : "mobile");
 
         try {
-            DB::transaction(function () use ($request, $filenames, $device) {
+            DB::transaction(function () use ($data, $request, $filenames, $device) {
                 Contact::create([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'message' => $request->message,
+                    'name' => $data['name'],
+                    'email' => $data['email'],
+                    'message' => $data['message'],
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
                     'language' => $request->header('Accept-Language'),
@@ -48,6 +48,6 @@ class ContactService
             throw $e;
         }
 
-        event(new ContactFormSubmitted($request->all()));
+        event(new ContactFormSubmitted($data));
     }
 }
