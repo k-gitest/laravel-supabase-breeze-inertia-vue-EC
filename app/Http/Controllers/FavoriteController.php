@@ -40,8 +40,12 @@ class FavoriteController extends Controller
      */
     public function store(Request $request): RedirectResponse|bool
     {
+        $validated = $request->validate([
+            'product_id' => 'required|integer|exists:products,id', // 商品が存在するかまでチェック
+        ]);
+
         try {
-                $this->favoriteService->addFavorite($request);
+                $this->favoriteService->addFavorite(auth()->id(), $validated['product_id']);
             } catch (\Exception $e) {
                 return false;
             }
