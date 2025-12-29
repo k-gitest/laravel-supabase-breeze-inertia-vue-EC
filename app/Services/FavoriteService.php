@@ -17,16 +17,19 @@ class FavoriteService
             ->paginate(12);
     }
 
-    public function addFavorite(Request $request)
+    public function addFavorite(int $userId, int $productId)
     {
+        /*
         $request->validate([
             'product_id' => 'required|integer',
         ]);
+        */
 
-        $userId = auth()->user()->id;
-        $productId = $request->product_id;
+        // $userId = auth()->user()->id;
+        // $productId = $request->product_id;
 
         try {
+            /*
             $favorite = DB::transaction(function () use ($request, $userId, $productId) {
                 $result = Favorite::firstOrCreate([
                         'user_id' => $userId,
@@ -34,6 +37,12 @@ class FavoriteService
                     ]);
                 return $result;
             });
+            */
+            $favorite = Favorite::firstOrCreate([
+                'user_id' => $userId,
+                'product_id' => $productId
+            ]);
+
             if ($favorite->wasRecentlyCreated) {
                 Log::info('Favorite created', ['user_id' => $userId, 'product_id' => $productId]);
             } else {
