@@ -23,7 +23,13 @@ class NewsletterController extends Controller
     public function update(NewsletterRequest $request): RedirectResponse|bool
     {
         try {
-            $this->newsletterService->updateSubscription($request, auth()->user()->id);
+            // $this->newsletterService->updateSubscription($request, auth()->user()->id);
+            // auth()->id() でログインユーザーIDを取得し、
+            // $request->boolean() で確実に論理値として渡す
+            $this->newsletterService->updateSubscription(
+                auth()->id(), 
+                $request->boolean('subscribed')
+            );
         } catch (\Exception $e) {
             report($e);
             return false;

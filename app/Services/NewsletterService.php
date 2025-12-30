@@ -9,14 +9,16 @@ use Illuminate\Support\Facades\Log;
 
 class NewsletterService
 {
-    public function updateSubscription(Request $request, $userId)
+    public function updateSubscription(int $userId, bool $subscribed)
     {
+        /*
         $request->validate([
             'subscribed' => ['required', 'boolean'],                
         ]);
+        */
 
         $user = User::findOrFail($userId);
-        $user->subscribed = $request->subscribed;
+        //$user->subscribed = $request->subscribed;
 
         try {
             DB::transaction(function () use ($user) {
